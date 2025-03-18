@@ -221,7 +221,7 @@ export function typeOfUniform(uniform) {
       return UniformType.VEC2
     if (name === "vector3")
       return UniformType.VEC3
-    if (name === "vector4" || name === "color")
+    if (name === "vector4" || name === "color" || name == "quaternion")
       return UniformType.VEC4
     if (name === "matrix2")
       return UniformType.MAT2
