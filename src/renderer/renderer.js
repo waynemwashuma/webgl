@@ -1,11 +1,13 @@
 import { Camera } from "../camera.js"
 import { createUBO } from "../core/index.js"
+import { AmbientLight } from "../light/index.js"
 
 export class Renderer {
   _ubocounter = 0
   _UBOs = {}
   meshes = []
   camera = new Camera()
+  ambientLight = new AmbientLight()
   domElement = null
   /**
    * @type {WebGL2RenderingContext}
@@ -38,6 +40,8 @@ export class Renderer {
       "projection": this.camera.projection,
       "camPosition": this.camera.transform.position
     })
+    this.setGlobalUBO("AmbientLight", this.ambientLight)
+    console.log(this._UBOs)
   }
   setGlobalUBO(name, data) {
     this._UBOs[name] = createUBO(
@@ -75,7 +79,7 @@ export class Renderer {
     let id = this.meshes.indexOf(mesh)
     this.meshes.splice(id, 1)
   }
-  clearMeshes(){
+  clearMeshes() {
     this.meshes.length = 0
   }
   clear(color = true, depth = true, stencil = true) {
@@ -99,9 +103,15 @@ export class Renderer {
         "camera", "camPosition", this.camera.transform.position
       )
     }
+    this.updateUBO(
+      "AmbientLight", "color", this.ambientLight.color
+    )
+    this.updateUBO(
+      "AmbientLight", "intensity", this.ambientLight.intensity
+    )
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
-      this.meshes[i].renderGL(this.gl, this.camera.view, this.camera.projection)
+      this.meshes[i].renderGL(this.gl)
     }
   }
   setViewport(w, h) {
