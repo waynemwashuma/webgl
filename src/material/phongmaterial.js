@@ -38,6 +38,11 @@ let fshader =
   in vec3 v_normal;
   in vec3 camDirection;
   
+  uniform AmbientLight {
+    float intensity;
+    vec4 color;
+  } ambient_light;
+  
   uniform sampler2D mainTexture;
   uniform sampler2D mainz;
   uniform vec3 lightDir;
@@ -64,7 +69,7 @@ let fshader =
     vec3 baseColor = texture(mainz,v_uv).xyz * color.xyz;
     if(baseColor == vec3(0.0,0.0,0.0))
       baseColor = color.xyz;
-    vec3 ambient = ambientColor.xyz * ambientIntensity;
+    vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
     
     float diffusebrightness = calcBrightness(v_normal,lightDir);
     vec3 diffuse = diffuseColor.xyz * diffusebrightness * diffuseIntensity;

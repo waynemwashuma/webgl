@@ -41,7 +41,6 @@ export class Renderer {
       "camPosition": this.camera.transform.position
     })
     this.setGlobalUBO("AmbientLight", this.ambientLight)
-    console.log(this._UBOs)
   }
   setGlobalUBO(name, data) {
     this._UBOs[name] = createUBO(
@@ -68,11 +67,6 @@ export class Renderer {
 
   add(mesh) {
     mesh.init(this.gl)
-    for (var name in this._UBOs) {
-      let ubo = this._UBOs[name]
-
-      mesh.material.prepareUBO(this.gl, ubo)
-    }
     this.meshes.push(mesh)
   }
   remove(mesh) {
@@ -104,14 +98,14 @@ export class Renderer {
       )
     }
     this.updateUBO(
-      "AmbientLight", "color", this.ambientLight.color
+      "AmbientLight", "intensity", this.ambientLight.intensity
     )
     this.updateUBO(
-      "AmbientLight", "intensity", this.ambientLight.intensity
+      "AmbientLight", "color", this.ambientLight.color
     )
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
-      this.meshes[i].renderGL(this.gl)
+      this.meshes[i].renderGL(this.gl, this._UBOs)
     }
   }
   setViewport(w, h) {

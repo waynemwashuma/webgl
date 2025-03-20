@@ -8,7 +8,7 @@ export class UBO {
     this.items = {}
 
     for (let i = 0; i < aryCalc.length; i++) {
-      this.items[aryCalc[i].name] = { offset: aryCalc[i].offset, size: aryCalc[i].dataLen / 4 };
+      this.items[aryCalc[i].name] = { offset: aryCalc[i].offset, size: aryCalc[i].dataLen };
     }
 
     this.name = name;
@@ -19,17 +19,20 @@ export class UBO {
     gl.bufferData(gl.UNIFORM_BUFFER, bufSize, gl.DYNAMIC_DRAW)
     gl.bindBuffer(gl.UNIFORM_BUFFER, null)
     gl.bindBufferBase(gl.UNIFORM_BUFFER, point, this.buffer)
-
   }
   /**
    * @param {string} name
    * @param {Float32Array} data
    */
   update(gl, name, data) {
+    //hack - data should always be a float32array.
+    if(typeof data === "number"){
+      data = new Float32Array(data)
+    }
     gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
     gl.bufferSubData(gl.UNIFORM_BUFFER,
       this.items[name].offset, data, 0,
-      this.items[name].size
+      this.items[name].size / 4
     );
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
     return this;
@@ -120,6 +123,6 @@ export class UBO {
 export function createUBO(gl, name, point, uniforms) {
   var [data, bufSize] = UBO.calculate(uniforms);
   let ubo = new UBO(gl, name, point, bufSize, data);
-
+  console.log(ubo)
   return ubo
 }

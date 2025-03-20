@@ -1,4 +1,5 @@
 import { Transform3D } from "../math/index.js"
+import { UBO } from "../core/index.js"
 import {
   UNI_CAM_MAT,
   UNI_PROJ_MAT,
@@ -14,27 +15,31 @@ export class Mesh {
     this.material = material
   }
   init(gl) {
-    this.material.setUniform(UNI_MODEL_MAT,this.transform.matrix)
+    this.material.setUniform(UNI_MODEL_MAT, this.transform.matrix)
     this.material.init(gl)
-    this.geometry.init(gl,this.material.program)
+    this.geometry.init(gl, this.material.program)
   }
   update() {
     this.transform.updateMatrix(this.parent?.transform)
   }
   /**
    * @param {WebGL2RenderingContext} gl
+   * @param {Record<string,UBO>} ubos
    */
-  renderGL(gl) {
+  renderGL(gl, ubos) {
     let material = this.material
     let geometry = this.geometry
     let attributes = geometry.attributes
     let drawMode = material.drawMode
-    
-    gl.blendFunc(material.srcBlendFunc,material.distBlendFunc)
+    for (const name in ubos) {
+      const ubo = ubos[name]
+      this.material.prepareUBO(gl,ubo)
+    }
+    gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
     material.activate(gl)
     gl.bindVertexArray(this.geometry.VAO)
-    material.updateUniform(UNI_MODEL_MAT,this.transform.matrix)
+    material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
     //drawing
     if (attributes.indices) {
       gl.drawElements(drawMode,

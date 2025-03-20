@@ -68,7 +68,6 @@ export class Shader {
    */
   prepareUBO(gl, ubo) {
     let index = gl.getUniformBlockIndex(this.program, ubo.name)
-
     gl.uniformBlockBinding(this.program, index, ubo.point)
   }
   /**
