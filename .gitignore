@@ -2,6 +2,3 @@ node_modules
 dist
 docs
 *.txt
-
-demos
-circle.js
