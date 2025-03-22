@@ -1,4 +1,4 @@
-import { Matrix4, Transform3D} from "./math/index.js"
+import { Matrix4, Transform3D } from "./math/index.js"
 
 export class Camera {
   transform = new Transform3D()
@@ -13,7 +13,7 @@ export class Camera {
       .rotateX(this.transform.orientation.x)
       .rotateY(this.transform.orientation.y)
       .rotateZ(this.transform.orientation.z)
-
+    
     this.view.copy(this.transform.matrix).inverse()
   }
   updateProjection(width = 2, height = 2, near = -1000, far = 1000) {
@@ -21,5 +21,22 @@ export class Camera {
   }
   makePerspective(fov = 45, near = 0.1, far = 1000) {
     this.projection.makePerspective(fov, innerWidth / innerHeight, near, far)
+  }
+  
+  getLayout() {
+    return {
+      name: "camera",
+      size: 144
+    }
+  }
+  getData() {
+    return {
+      name: "camera",
+      data: new Float32Array([
+        ...this.view,
+        ...this.projection,
+        ...this.transform.position
+      ]).buffer
+    }
   }
 }

@@ -33,7 +33,9 @@ export class Mesh {
     let drawMode = material.drawMode
     for (const name in ubos) {
       const ubo = ubos[name]
-      this.material.prepareUBO(gl,ubo)
+      
+      // This should happen during initialization time, not per frame.
+      this.material.prepareUBO(gl,name,ubo)
     }
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program

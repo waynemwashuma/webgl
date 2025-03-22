@@ -1,5 +1,5 @@
 import { Camera } from "../camera.js"
-import { createUBO } from "../core/index.js"
+import { UBO } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 
 export class Lights {
@@ -29,10 +29,10 @@ export class Renderer {
   constructor(canvas) {
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
-
+    
     this.gl = canvas.getContext("webgl2")
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-
+    
     if (this.culling) {
       this.gl.enable(this.gl.CULL_FACE)
       this.gl.cullFace(this.gl.BACK)
@@ -44,36 +44,31 @@ export class Renderer {
       this.gl.enable(this.gl.BLEND)
       this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
     }
-    this.setGlobalUBO("camera", {
-      "view": this.camera.view,
-      "projection": this.camera.projection,
-      "camPosition": this.camera.transform.position
-    })
-    this.setGlobalUBO("AmbientLight", this.lights.ambientLight)
+    
+    const cameraLayout = this.camera.getLayout()
+    const ambientLightLayout = this.camera.getLayout()
+    
+    this.setGlobalUBO(cameraLayout.name, cameraLayout)
+    this.setGlobalUBO(ambientLightLayout.name, ambientLightLayout)
   }
-  setGlobalUBO(name, data) {
-    this._UBOs[name] = createUBO(
-      this.gl, name, this.getUBOpoint(), data
+  setGlobalUBO(name, layout) {
+    this._UBOs[name] = new UBO(
+      this.gl,
+      this.getUBOpoint(),
+      layout.size
     )
   }
   getUBOpoint() {
     return this._ubocounter++;
   }
-  updateUBO(uboName, name, value) {
-    let data = new Float32Array(16)
-    if (typeof value !== "object")
-      data = value
-    else
-      value.toArray(data)
-
-    if (uboName in this._UBOs) {
-      let ubo = this._UBOs[uboName]
-      ubo.update(
-        this.gl, name, data
-      )
+  updateUBO(dataForm) {
+    const { data, name } = dataForm
+    if (name in this._UBOs) {
+      const ubo = this._UBOs[name]
+      ubo.update(this.gl, data)
     }
   }
-
+  
   add(mesh) {
     mesh.init(this.gl)
     this.meshes.push(mesh)
@@ -96,22 +91,9 @@ export class Renderer {
     this.clear()
     if (this.camera) {
       this.camera.updateMatrix()
-      this.updateUBO(
-        "camera", "view", this.camera.view
-      )
-      this.updateUBO(
-        "camera", "projection", this.camera.projection
-      )
-      this.updateUBO(
-        "camera", "camPosition", this.camera.transform.position
-      )
+      this.updateUBO(this.camera.getData())
     }
-    this.updateUBO(
-      "AmbientLight", "intensity", this.lights.ambientLight.intensity
-    )
-    this.updateUBO(
-      "AmbientLight", "color", this.lights.ambientLight.color
-    )
+    this.updateUBO(this.lights.ambientLight.getData())
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
       this.meshes[i].renderGL(this.gl, this._UBOs)
