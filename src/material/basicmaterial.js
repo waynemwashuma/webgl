@@ -1,5 +1,5 @@
 import { Shader } from "./shader.js"
-import { Color } from "../Math/index.js"
+import { Color } from "../math/index.js"
 import { basicVertex, basicFragment } from "../shader/index.js"
 
 export class BasicMaterial extends Shader {

@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "module": "esnext",
+    "target": "esnext",
+    "paths": {
+      "webgllis":["/src/index.js"]
+    }
+  },
+}

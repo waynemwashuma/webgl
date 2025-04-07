@@ -23,15 +23,9 @@ export class Camera {
     this.projection.makePerspective(fov, innerWidth / innerHeight, near, far)
   }
   
-  getLayout() {
-    return {
-      name: "camera",
-      size: 144
-    }
-  }
   getData() {
     return {
-      name: "camera",
+      name: "Camera",
       data: new Float32Array([
         ...this.view,
         ...this.projection,

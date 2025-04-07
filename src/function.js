@@ -25,7 +25,7 @@ export function createshader(gl, src, type) {
   let shader = gl.createShader(type)
   gl.shaderSource(shader, src)
   gl.compileShader(shader)
-
+  
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.log(`Shader could not compile: 
     ${src}
@@ -42,7 +42,7 @@ export function createshader(gl, src, type) {
  */
 export function createTexture(gl, img, flipY) {
   let tex = gl.createTexture()
-
+  
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
   gl.bindTexture(gl.TEXTURE_2D, tex)
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
@@ -50,12 +50,12 @@ export function createTexture(gl, img, flipY) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
   gl.generateMipmap(gl.TEXTURE_2D)
   gl.bindTexture(gl.TEXTURE_2D, null)
-
+  
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return tex
 }
 /**
- * @param {WebGLRenderingContext} gl
+ * @param {WebGL2RenderingContext} gl
  */
 export function createProgram(gl, vshader, fshader) {
   let program = gl.createProgram()
@@ -77,17 +77,21 @@ export function createProgram(gl, vshader, fshader) {
   if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
     console.log(`Program could not be validated: 
     ========================================
-    ${gl.getProgramInfoLog(shader)}
+    ${gl.getProgramInfoLog(program)}
     `);
-    gl.deleteProgram(shader)
+    gl.deleteProgram(program)
     return null
   }
-
+  
   gl.detachShader(program, vshader)
   gl.detachShader(program, fshader)
   gl.deleteShader(vshader)
   gl.deleteShader(fshader)
-  return program
+  return {
+    program,
+    uniforms:getActiveUniforms(gl, program),
+    uniformBlocks:getActiveUniformBlocks(gl,program)
+  }
 }
 
 /**
@@ -97,7 +101,7 @@ export function createVAO(gl, indices, vertices, normals, uv) {
   let vao = {
     drawMode: gl.TRIANGLES,
     attributes: {
-
+      
     }
   }
   vao.vao = gl.createVertexArray()
@@ -108,10 +112,9 @@ export function createVAO(gl, indices, vertices, normals, uv) {
     dict.buffer = buffer
     dict.size = 1
     dict.count = indices.length
-
+    
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
-    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null)
   }
   if (vertices != void 0) {
     let dict = vao.attributes.position = {}
@@ -141,7 +144,7 @@ export function createVAO(gl, indices, vertices, normals, uv) {
     dict.buffer = buffer
     dict.size = 2;
     dict.count = vertices.length / dict.size
-
+    
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW)
     gl.enableVertexAttribArray(ATTR_UV_LOC)
@@ -173,7 +176,7 @@ export function sizeofUniform(uniform) {
     case UniformType.INT:
     case UniformType.FLOAT:
     case UniformType.BOOL:
-    case UniformType.TEXTURE:
+    case UniformType.SAMPLER_2D:
       return 1
     case UniformType.MAT4:
       return 16
@@ -186,23 +189,6 @@ export function sizeofUniform(uniform) {
     case UniformType.VEC4:
     case UniformType.MAT2:
       return 4
-    case UniformType.ARR_FLOAT:
-      return uniform.value.length
-    case UniformType.ARR_FLOAT:
-    case UniformType.ARR_BOOL:
-    case UniformType.ARR_INT:
-      return uniform.value.length
-    case UniformType.ARR_VEC2:
-      return uniform.value.length * 2
-    case UniformType.ARR_VEC3:
-      return uniform.value.length * 3
-    case UniformType.ARR_VEC4:
-    case UniformType.ARR_MAT2:
-      return uniform.value.length * 4
-    case UniformType.ARR_MAT3:
-      return uniform.value.length * 9
-    case UniformType.ARR_MAT4:
-      return uniform.value.length * 16
     default:
       return 0
   }
@@ -211,7 +197,7 @@ export function typeOfUniform(uniform) {
   if (uniform === void 0) return -1
   let name = uniform.constructor.name.toLowerCase()
   let type = typeof uniform
-
+  
   if (type == "boolean")
     return UniformType.BOOL
   if (type == "number")
@@ -230,38 +216,85 @@ export function typeOfUniform(uniform) {
     if (name === "matrix4")
       return UniformType.MAT4
     if (name === "texture")
-      return UniformType.TEXTURE
-    if (name === "array") {
-      let eltype = typeOfUniform(uniform[0])
-      return convertToArrUniType(eltype)
-    }
-    return UniformType.ARR
-    if (name === "object")
-      return UniformType.STRUCT
-    //Todo : add UBO for objects here
+      return UniformType.SAMPLER_2D
   }
   throw "Unsupported type of uniform value  \'" + name + "\'";
 }
 
-function convertToArrUniType(type) {
-  switch (type) {
-    case UniformType.INT:
-      return UniformType.ARR_INT
-    case UniformType.FLOAT:
-      return UniformType.ARR_FLOAT
-    case UniformType.BOOL:
-      return UniformType.ARR_BOOL
-    case UniformType.MAT4:
-      return UniformType.ARR_MAT4
-    case UniformType.MAT3:
-      return UniformType.ARR_MAT3
-    case UniformType.VEC2:
-      return UniformType.ARR_VEC2
-    case UniformType.VEC3:
-      return UniformType.ARR_VEC3
-    case UniformType.VEC4:
-      return UniformType.ARR_VEC4
-    default:
-      return 0
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLProgram} program
+ * @param {number} index
+ */
+function getUBOLayout(gl, program, index) {
+  const size = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_DATA_SIZE
+  )
+  const numUniforms = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS
+  );
+  
+  const uniformIndices = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES
+  )
+  const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
+  const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
+  
+  const fields = {}
+  uniformIndices.forEach((index, i) => {
+    const info = gl.getActiveUniform(program, index);
+    return fields[info.name] = {
+      type: info.type,
+      size: info.size,
+      offset: offsets[i],
+      stride: strides[i]
+    }
+  });
+  return {
+    name,
+    size,
+    fields
   }
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLProgram} program
+ */
+function getActiveUniforms(gl, program) {
+  const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+  const array = {}
+  for (let i = 0; i < numUniforms; i++) {
+    const info = gl.getActiveUniform(program, i);
+    const [blockIndex] = gl.getActiveUniforms(
+      program,
+      [i],
+      gl.UNIFORM_BLOCK_INDEX
+    )
+    if (blockIndex !== -1) continue
+    array[info.name] = {
+      size: info.size,
+      type: info.type,
+      location: gl.getUniformLocation(program, info.name)
+    }
+  }
+  
+  return array
+}
+
+function getActiveUniformBlocks(gl, program) {
+  const results = {}
+  const numBlocks = gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS);
+  
+  for (let i = 0; i < numBlocks; i++) {
+    const name = gl.getActiveUniformBlockName(program, i);
+    results[name] = getUBOLayout(gl, program, i)
+  }
+  return results
 }

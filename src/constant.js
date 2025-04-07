@@ -13,27 +13,64 @@ export const UNI_MODEL_MAT = "model"
  * @enum {number}
  */
 export const UniformType = {
-  BOOL: 0,
-  FLOAT: 1,
-  INT: 2,
-  VEC2: 3,
-  VEC3: 4,
-  VEC4: 5,
-  MAT2: 6,
-  MAT3: 7,
-  MAT4: 8,
-  TEXTURE: 9,
-  ARR_FLOAT: 10,
-  ARR_INT: 11,
-  ARR_VEC2: 12,
-  ARR_VEC3: 13,
-  ARR_VEC4: 14,
-  ARR_MAT2: 15,
-  ARR_MAT3: 16,
-  ARR_MAT4: 17,
-  ARR_BOOL: 18,
-  STRUCT: 19
-}
+  // Scalars
+  FLOAT: 0x1406,
+  INT: 0x1404,
+  UINT: 0x1405, // WebGL2
+  BOOL: 0x8B56,
+
+  // Float vectors
+  VEC2: 0x8B50,
+  VEC3: 0x8B51,
+  VEC4: 0x8B52,
+
+  // Int vectors
+  IVEC2: 0x8B53,
+  IVEC3: 0x8B54,
+  IVEC4: 0x8B55,
+
+  // Unsigned int vectors (WebGL2)
+  UVEC2: 0x8DC6,
+  UVEC3: 0x8DC7,
+  UVEC4: 0x8DC8,
+
+  // Bool vectors
+  BVEC2: 0x8B57,
+  BVEC3: 0x8B58,
+  BVEC4: 0x8B59,
+
+  // Matrices
+  MAT2: 0x8B5A,
+  MAT3: 0x8B5B,
+  MAT4: 0x8B5C,
+  MAT2x3: 0x8B65, // WebGL2
+  MAT2x4: 0x8B66, // WebGL2
+  MAT3x2: 0x8B67, // WebGL2
+  MAT3x4: 0x8B68, // WebGL2
+  MAT4x2: 0x8B69, // WebGL2
+  MAT4x3: 0x8B6A, // WebGL2
+
+  // Samplers
+  SAMPLER_2D: 0x8B5E,
+  SAMPLER_CUBE: 0x8B60,
+  SAMPLER_2D_SHADOW: 0x8B62, // WebGL2
+  SAMPLER_2D_ARRAY: 0x8DC1, // WebGL2
+  SAMPLER_2D_ARRAY_SHADOW: 0x8DC4, // WebGL2
+  SAMPLER_CUBE_SHADOW: 0x8DC5, // WebGL2
+
+  // Int samplers (WebGL2)
+  ISAMPLER_2D: 0x8DCA,
+  ISAMPLER_3D: 0x8DCB,
+  ISAMPLER_CUBE: 0x8DCC,
+  ISAMPLER_2D_ARRAY: 0x8DCF,
+
+  // Unsigned int samplers (WebGL2)
+  USAMPLER_2D: 0x8DD2,
+  USAMPLER_3D: 0x8DD3,
+  USAMPLER_CUBE: 0x8DD4,
+  USAMPLER_2D_ARRAY: 0x8DD7,
+};
+
 /**
  * @readonly
  * @enum {number}

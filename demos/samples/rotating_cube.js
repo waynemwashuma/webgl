@@ -1,7 +1,7 @@
 import {
   Mesh,
   Texture,
-  PhongMaterial,
+  LambertMaterial,
   BoxGeometry,
   Vector3,
   Quaternion,
@@ -15,7 +15,7 @@ export function rotatingCube({
   const tex = textureLoader.get('uv')
   const origin = new Mesh(
     new BoxGeometry(1, 1, 1),
-    new PhongMaterial({
+    new LambertMaterial({
       mainTexture: tex,
       lightDir: new Vector3(0, -3, -3),
       specularShininess: 4,
