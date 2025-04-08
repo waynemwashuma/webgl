@@ -17,7 +17,6 @@ export class TextureLoader {
    * @param {TextureSettings} settings
    */
   load(settings) {
-    settings.name = settings.name ?? settings.src
     settings.generateMipmaps = settings.generateMipmaps ?? true
     settings.flipY = settings.flipY ?? true
     settings.wrapS = settings.wrapS ?? TextureWrap.REPEAT
@@ -28,25 +27,48 @@ export class TextureLoader {
     settings.internalFormat = settings.internalFormat ?? settings.format
     settings.dataFormat = settings.dataFormat ?? GlDataType.UNSIGNED_BYTE
 
-    const tex = loadTexture(this.gl,settings)
+    // @ts-ignore
+    const tex = loadTexture(this.gl, settings)
     const texture = new Texture(tex)
-    
+
     this.textures.set(settings.name, texture)
-    
+
     return texture
   }
+
+  /**
+   * @param {CubeTextureSettings} settings
+   */
+  loadCube(settings) {
+    settings.flipY = settings.flipY ?? true
+    settings.wrapS = settings.wrapS ?? TextureWrap.CLAMP
+    settings.wrapT = settings.wrapT ?? TextureWrap.CLAMP
+    settings.minfilter = settings.minfilter ?? TextureFilter.LINEAR
+    settings.magfilter = settings.magfilter ?? TextureFilter.LINEAR
+    settings.format = settings.format ?? TextureFormat.RGBA
+    settings.internalFormat = settings.internalFormat ?? settings.format
+    settings.dataFormat = settings.dataFormat ?? GlDataType.UNSIGNED_BYTE
+
+    // @ts-ignore
+    const tex = loadCubeTexture(this.gl, settings)
+    const texture = new Texture(tex)
+
+    this.textures.set(settings.name, texture)
+
+    return texture
+  }
+
   /**
    * @param {string} name
    * @returns {Texture}
    */
-  get(name){
+  get(name) {
     return this.textures.get(name)
   }
 }
 
 /**
  * @param {WebGLRenderingContext} gl
- * @param {string} url
  * @param {Required<TextureSettings>} settings
  */
 function loadTexture(gl, settings) {
@@ -86,22 +108,89 @@ function loadTexture(gl, settings) {
       settings.dataFormat,
       image,
     )
-    if (settings.generateMipmap)
+    if (settings.generateMipmaps)
       gl.generateMipmap(gl.TEXTURE_2D)
   }
   return texture;
 }
-/***
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Required<CubeTextureSettings>} settings
+ */
+function loadCubeTexture(gl, settings) {
+  const level = 0
+  const width = 1
+  const height = 1
+  const border = 0
+  const pixel = new Uint8Array([255, 0, 255, 255])
+  const texture = gl.createTexture()
+
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
+  for (let i = 0; i < settings.src.length; i++) {
+    const src = settings.src[i];
+
+    gl.texImage2D(
+      gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+      level,
+      settings.internalFormat,
+      width,
+      height,
+      border,
+      settings.format,
+      settings.dataFormat,
+      pixel,
+    )
+    
+    const image = new Image()
+    image.src = settings.src[i]
+    image.onload = () => {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+      gl.texImage2D(
+        gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+        level,
+        settings.internalFormat,
+        settings.format,
+        settings.dataFormat,
+        image,
+      )
+    }
+  }
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, settings.wrapS)
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, settings.wrapT)
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, settings.minfilter)
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, settings.magfilter)
+
+  return texture;
+}
+
+/**
  * @typedef TextureSettings
+ * @property {string} name
  * @property {string} src
- * @property {boolean} [generatemipmap=true]
- * @property {TextureWrap} [wraps]
+ * @property {boolean} [generateMipmaps=true]
+ * @property {TextureWrap} [wrapS]
  * @property {TextureWrap} [wrapT]
  * @property {TextureWrap} [wrapR]
  * @property {TextureFormat} [internalFormat]
  * @property {TextureFormat} [format]
  * @property {TextureFilter} [minfilter]
- * @property {TextureFilter.LINEAR | TextureFilter.NEAREST} [magfilter]
- * @property {GlDataType} [dataformat]
+ * @property {TextureFilter} [magfilter]
+ * @property {GlDataType} [dataFormat]
+ * @property {boolean} [flipY=true]
+ */
+
+/***
+ * @typedef CubeTextureSettings
+ * @property {string} name
+ * @property {[string,string,string,string,string,string]} src
+ * @property {TextureWrap} [wrapS]
+ * @property {TextureWrap} [wrapT]
+ * @property {TextureFormat} [internalFormat]
+ * @property {TextureFormat} [format]
+ * @property {TextureFilter} [minfilter]
+ * @property {TextureFilter} [magfilter]
+ * @property {GlDataType} [dataFormat]
  * @property {boolean} [flipY=true]
  */
