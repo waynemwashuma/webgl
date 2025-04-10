@@ -35,12 +35,13 @@ export const phongFragment =
  }
  
  void main(){
+    vec3 normal = normalize(v_normal);
     vec3 baseColor = texture(mainz,v_uv).xyz * color.xyz;
     if(baseColor == vec3(0.0,0.0,0.0))
       baseColor = color.xyz;
     vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
     
-    float diffusebrightness = calcBrightness(v_normal,lightDir);
+    float diffusebrightness = calcBrightness(normal,lightDir);
     vec3 diffuse = diffuseColor.xyz * diffusebrightness * diffuseIntensity;
     
     vec3 reflectNorm = reflect(lightDir,v_normal);

@@ -14,9 +14,9 @@ function random(min, max) {
 export class Color {
 
   /**
-   * @param {number} [r=0] - red component [0 .. 255]
-   * @param {number} [g=0] - green component [0 .. 255]
-   * @param {number} [b=0] - blue component [0 .. 255]
+   * @param {number} [r=1] - red component [0 .. 255]
+   * @param {number} [g=1] - green component [0 .. 255]
+   * @param {number} [b=1] - blue component [0 .. 255]
    * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
    */
   constructor(r = 1, g = 1, b = 1, alpha = 1.0) {

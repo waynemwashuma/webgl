@@ -11,6 +11,7 @@ import {
 } from "webgllis"
 
 export function materials({renderer}) {
+  renderer.lights.ambientLight.intensity = 0.15
   const geometry1 = new BoxGeometry(1, 1)
   const geometry2 = new UVSphereGeometry(0.7)
   const materials = [
@@ -23,7 +24,7 @@ export function materials({renderer}) {
     }),
     new PhongMaterial({
       lightDir: new Vector3(-1, -1, -1).normalize(),
-      specularShininess: 4,
+      specularShininess: 3,
       specularStrength: 2,
       diffuseIntensity: 0.1
     })
