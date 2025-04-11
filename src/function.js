@@ -89,8 +89,8 @@ export function createProgram(gl, vshader, fshader) {
   gl.deleteShader(fshader)
   return {
     program,
-    uniforms:getActiveUniforms(gl, program),
-    uniformBlocks:getActiveUniformBlocks(gl,program)
+    uniforms: getActiveUniforms(gl, program),
+    uniformBlocks: getActiveUniformBlocks(gl, program)
   }
 }
 
@@ -167,6 +167,7 @@ export function createProgramFromSrc(gl, vshader, fshader) {
     return null
   }
   let program = createProgram(gl, v, f)
+  
   return program
 }
 

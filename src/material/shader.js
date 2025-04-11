@@ -38,10 +38,10 @@ export class Shader {
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
-
+    
     for (const name in this.uniformBlocks) {
       const ubo = ubos.getorSet(gl, name, this.uniformBlocks[name])
-
+      
       this.prepareUBO(gl, name, ubo)
     }
   }
@@ -49,15 +49,15 @@ export class Shader {
    * @param {WebGL2RenderingContext} gl
    */
   activate(gl) {
-
+    
     // TODO: Separate to diferent texture types
     let texIndex = 0
     gl.useProgram(this.program)
     for (const [name, value] of this.uniformValues) {
       const uniform = this.uniforms[name]
-      if(!uniform){
+      if (!uniform) {
         console.log(`Uniform "${name}" is not avaiable in "${this.constructor.name}"`)
-        continue 
+        continue
       }
       const {location,type} = uniform
       updateUniform(gl,location, value.value, texIndex, type)
@@ -84,7 +84,7 @@ export class Shader {
   setUniform(name, value) {
     return this.updateUniform(name, value)
   }
-
+  
   updateUniform(name, value) {
     const item = this.uniformValues.get(name)
     if (item) {

@@ -175,6 +175,26 @@ export class Matrix4 {
     return this
   }
   
+  transform(vector) {
+    const result = mat4.multiplyVec3(this.raw, [...vector])
+    
+    
+    vector.x = result[0]
+    vector.y = result[1]
+    vector.z = result[2]
+    
+    return this
+  }
+  transformDirection(vector) {
+    const result = mat4.multiplyVec3(this.raw, [...vector])
+    
+    vector.x = result[0] - this.raw[13]
+    vector.y = result[1] - this.raw[14]
+    vector.z = result[2] - this.raw[15]
+    
+    return this
+  }
+  
   *[Symbol.iterator]() {
     for (let i = 0; i < this.raw.length; i++) {
       yield this.raw[i]

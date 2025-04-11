@@ -13,7 +13,6 @@ export class SkyBox {
   parent = null
   constructor({night, day, lerp = 0}) {
     this.geometry = new BoxGeometry()
-    console.log(this.geometry);
     
     this.material = new Shader(skyboxVertex,skyboxFragment,{
       day,

@@ -5,23 +5,27 @@ import { AmbientLight } from "../light/index.js"
 export class DirectionalLights {
   lights = []
   maxNumber = 10
-
-  getLayout() {
-    return {
-      name: "DirectionalLights",
-      size: 20
-    }
+  
+  add(light) {
+    this.lights.push(light)
   }
   getData() {
+    const buffer = [
+      this.lights.length,
+      0, 0, 0,
+      ...this.lights.flatMap(light => light.pack())
+    ]
+    
     return {
-      name: "DirectionalLights",
-      data: new ArrayBuffer(10)
+      name: this.constructor.name,
+      data: new Float32Array(buffer)
     }
   }
 }
 
 export class Lights {
   ambientLight = new AmbientLight()
+  directionalLights = new DirectionalLights()
 }
 export class Renderer {
   _UBOs = new UBOs()
@@ -40,10 +44,10 @@ export class Renderer {
   constructor(canvas) {
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
-
+    
     this.gl = canvas.getContext("webgl2")
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-
+    
     if (this.culling) {
       this.gl.enable(this.gl.CULL_FACE)
       this.gl.cullFace(this.gl.BACK)
@@ -62,12 +66,12 @@ export class Renderer {
   updateUBO(dataForm) {
     const { data, name } = dataForm
     const ubo = this._UBOs.get(name)
-
-    if(!ubo) return
-
+    
+    if (!ubo) return
+    
     ubo.update(this.gl, data)
   }
-
+  
   add(mesh) {
     mesh.init(this.gl, this._UBOs)
     this.meshes.push(mesh)
@@ -92,8 +96,13 @@ export class Renderer {
       this.camera.updateMatrix()
       this.updateUBO(this.camera.getData())
     }
-
+    
     this.updateUBO(this.lights.ambientLight.getData())
+    this.updateUBO(this.lights.directionalLights.getData())
+    
+    for (var i = 0; i < this.lights.directionalLights.lights.length; i++) {
+      this.lights.directionalLights.lights[i].update()
+    }
     
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
@@ -102,7 +111,7 @@ export class Renderer {
   }
   setViewport(w, h) {
     let canvas = this.gl.canvas
-    if(canvas instanceof HTMLCanvasElement){
+    if (canvas instanceof HTMLCanvasElement) {
       canvas.style.width = w + "px"
       canvas.style.height = h + "px"
     }
