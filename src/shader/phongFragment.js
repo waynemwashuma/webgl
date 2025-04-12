@@ -30,9 +30,9 @@ export const phongFragment =
   uniform float specularShininess;
   uniform float specularStrength;
   
-  out vec4 FragColor;
+  out vec4 fragment_color;
  
- float calcBrightness(vec3 normal, vec3 dir) {
+ float calculate_brightness(vec3 normal, vec3 dir) {
    return max(dot(normal, dir), 0.0);
  }
  
@@ -41,10 +41,10 @@ export const phongFragment =
     float opacity = color.w;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     vec3 normal = normalize(v_normal);
-    vec3 baseColor = texture(mainTexture,v_uv).xyz * color.xyz;
+    vec3 base_color = texture(mainTexture,v_uv).xyz * color.xyz;
     
-    if(baseColor == vec3(0.0,0.0,0.0))
-      baseColor = color.xyz;
+    if(base_color == vec3(0.0,0.0,0.0))
+      base_color = color.xyz;
     
     vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
     
@@ -54,16 +54,16 @@ export const phongFragment =
       vec3 reflection_direction = reflect(light.direction, normal);
       
       //Remember you set the dir to negative because light direction is the opposite direction of dir.
-      float diffusebrightness = calcBrightness(normal,-light.direction);
-      vec3 diffuse = light.color.xyz * diffusebrightness * light.intensity;
+      float diffuse_brightness = calculate_brightness(normal,-light.direction);
+      vec3 diffuse = base_color * light.color.xyz * diffuse_brightness * light.intensity;
     
-      float specularBrightness = calcBrightness(reflection_direction,view_direction);
-      vec3 specular = pow(specularBrightness,specularShininess) * light.color.xyz * specularStrength;
+      float specular_brightness = calculate_brightness(reflection_direction,view_direction);
+      vec3 specular = pow(specular_brightness,specularShininess) * light.color.xyz * specularStrength;
       accumulate_light_contribution += specular + diffuse;
     }
   
-    vec3 finalColor = baseColor * (ambient + accumulate_light_contribution );
+    vec3 final_color = base_color * ambient + accumulate_light_contribution;
     
-    FragColor = vec4(finalColor,opacity);
+    fragment_color = vec4(final_color, opacity);
 }
 `

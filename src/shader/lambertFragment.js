@@ -27,9 +27,9 @@ export const lambertFragment =
     DirectionalLight lights[MAX_DIRECTIONAL_LIGHTS];
   } directional_lights;
   
-  out vec4 FragColor;
+  out vec4 fragment_color;
 
- float calcBrightness(vec3 normal, vec3 dir) {
+ float calculate_brightness(vec3 normal, vec3 dir) {
    return max(
      dot(normalize(normal), dir),
      0.0
@@ -40,24 +40,24 @@ export const lambertFragment =
     float opacity = color.w;
     vec3 normal = normalize(v_normal);
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
-    vec3 baseColor = texture(mainTexture,v_uv).xyz * color.xyz;
-    if(baseColor == vec3(0.0,0.0,0.0))
-      baseColor = color.xyz;
+    vec3 base_color = texture(mainTexture,v_uv).xyz * color.xyz;
+    if(base_color == vec3(0.0,0.0,0.0))
+      base_color = color.xyz;
     vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
     
-    vec3 accumulativeDiffuse = vec3(0.0, 0.0, 0.0);
+    vec3 accumulative_diffuse = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < directional_light_count; i++) {
       DirectionalLight light = directional_lights.lights[i];
       
       //Remember you set the dir to negative because direction to light is the opposite direction of dir.
-      float brightness = calcBrightness(normal, -light.direction);
-      vec3 diffuse = light.color.xyz * brightness * light.intensity;
+      float brightness = calculate_brightness(normal, -light.direction);
+      vec3 diffuse = base_color * light.color.xyz * brightness * light.intensity;
       
-      accumulativeDiffuse += baseColor * diffuse;
+      accumulative_diffuse += base_color * diffuse;
     }
     
-    vec3 finalColor =  (ambient * baseColor + accumulativeDiffuse);
+    vec3 final_color = ambient * base_color + accumulative_diffuse;
     
-    FragColor = vec4(finalColor,opacity);
+    fragment_color = vec4(final_color,opacity);
   }
 `
