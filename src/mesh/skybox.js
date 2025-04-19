@@ -1,12 +1,12 @@
 import { Transform3D } from "../math/index.js"
 import {
   UNI_MODEL_MAT,
-  ATTR_POSITION_NAME,
   CullFace
 } from "../constant.js"
 import { BoxGeometry } from "../geometry/index.js"
-import { Shader } from "../material/shader.js"
+import { Shader } from "../material/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
+import { Attribute, UBOs } from "../core/index.js"
 
 export class SkyBox {
   transform = new Transform3D()
@@ -21,11 +21,16 @@ export class SkyBox {
     })
     this.material.cullFace = CullFace.FRONT
   }
-  init(gl, ubos) {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {UBOs} ubos
+   * @param {Map<string, Attribute>} attributes
+   */
+  init(gl, ubos, attributes) {
     this.transform.scale.multiplyScalar(10)
     this.material.setUniform(UNI_MODEL_MAT, this.transform.matrix)
-    this.material.init(gl, ubos)
-    this.geometry.init(gl)
+    this.material.init(gl, ubos, attributes)
+    this.geometry.init(gl, attributes)
   }
   update() {
     this.transform.updateMatrix(this.parent?.transform)
@@ -36,7 +41,7 @@ export class SkyBox {
   renderGL(gl) {
     let material = this.material
     let geometry = this.geometry
-    let attributes = geometry.attributes
+    let {attributes, indices} = geometry
     let drawMode = material.drawMode
 
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
@@ -44,17 +49,12 @@ export class SkyBox {
     material.activate(gl)
     gl.bindVertexArray(this.geometry.VAO)
     material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
-    //drawing
 
-    if (attributes.indices) {
+    if (indices) {
       gl.drawElements(drawMode,
-        attributes["indices"].count,
+        indices.length,
         gl.UNSIGNED_SHORT, 0
       );
-    } else {
-      gl.drawArrays(drawMode, 0,
-        attributes[ATTR_POSITION_NAME].count
-      )
     }
     gl.bindVertexArray(null)
     material.deactivate(gl)

@@ -33,7 +33,7 @@ export function textureWrap({
   })
 
   const geometry = new QuadGeometry(1, 1)
-  const uvs = geometry._attributes['uv'].value
+  const uvs = geometry._attributes.get('uv').value
   for (let i in uvs) {
     uvs[i] *= 2
   }

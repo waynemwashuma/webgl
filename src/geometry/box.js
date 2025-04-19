@@ -121,9 +121,7 @@ export class BoxGeometry extends Geometry {
         i, i + 2, i + 3
       )
     }
-    this.setAttribute("indices",
-      new AttributeData(new Uint16Array(indices), 1)
-    )
+    this.indices = new Uint16Array(indices)
     this.setAttribute("position",
       new AttributeData(new Float32Array(vertices), 3)
     )

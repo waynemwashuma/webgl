@@ -1,23 +1,39 @@
+import { Attribute, UBOs } from "../core/index.js"
+import { Geometry } from "../geometry/index.js"
 import { Transform3D } from "../math/index.js"
-import { UBO } from "../core/index.js"
+import { Shader } from "../material/index.js"
 import {
-  UNI_CAM_MAT,
-  UNI_PROJ_MAT,
-  UNI_MODEL_MAT,
-  ATTR_POSITION_NAME
+  UNI_MODEL_MAT
 } from "../constant.js"
 
 export class Mesh {
   transform = new Transform3D()
   parent = null
+
+  /**
+   * @type {Geometry}
+   */
+  geometry
+
+  /**
+   * @type {Shader}
+   */
+  material
   constructor(geometry, material) {
     this.geometry = geometry
     this.material = material
   }
-  init(gl, ubos) {
+
+  /**
+   * 
+   * @param {WebGL2RenderingContext} gl 
+   * @param {UBOs} ubos
+   * @param {Map<string,Attribute>} attributes 
+   */
+  init(gl, ubos, attributes) {
     this.material.setUniform(UNI_MODEL_MAT, this.transform.matrix)
-    this.material.init(gl, ubos)
-    this.geometry.init(gl, this.material.program)
+    this.material.init(gl, ubos, attributes)
+    this.geometry.init(gl, attributes)
   }
   update() {
     this.transform.updateMatrix(this.parent?.transform)
@@ -26,10 +42,10 @@ export class Mesh {
    * @param {WebGL2RenderingContext} gl
    */
   renderGL(gl) {
-    let material = this.material
-    let geometry = this.geometry
-    let attributes = geometry.attributes
-    let drawMode = material.drawMode
+    const material = this.material
+    const geometry = this.geometry
+    const { attributes, indices } = geometry
+    const drawMode = material.drawMode
 
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
@@ -38,15 +54,14 @@ export class Mesh {
     material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
     //drawing
 
-    if (attributes.indices) {
+    if (indices) {
       gl.drawElements(drawMode,
-        attributes["indices"].count,
+        indices.length,
         gl.UNSIGNED_SHORT, 0
       );
     } else {
-      gl.drawArrays(drawMode, 0,
-        attributes[ATTR_POSITION_NAME].count
-      )
+      const position = attributes.get("position")
+      gl.drawArrays(drawMode, 0, position.value.length / 3)
     }
     gl.bindVertexArray(null)
     material.deactivate(gl)

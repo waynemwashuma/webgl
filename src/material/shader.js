@@ -8,6 +8,7 @@ import {
   CullFace
 } from "../constant.js"
 import { UBOs } from "../core/ubo.js"
+import { Attribute } from "../core/index.js"
 
 export class Shader {
   drawMode = DrawMode.TRIANGLES
@@ -31,10 +32,12 @@ export class Shader {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {UBOs} ubos
+   * @param {Map<string, Attribute>} attributes 
+   * 
    */
-  init(gl, ubos) {
+  init(gl, ubos, attributes) {
     if (this.program) return
-    const programInfo = createProgramFromSrc(gl, this.vSrc, this.fSrc)
+    const programInfo = createProgramFromSrc(gl, this.vSrc, this.fSrc, attributes)
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
