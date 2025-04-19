@@ -44,8 +44,9 @@ textureLoader.loadCube({
     "./assets/skybox/miramar_left.png",
     "./assets/skybox/miramar_top.png",
     "./assets/skybox/miramar_bottom.png",
+    "./assets/skybox/miramar_back.png",
     "./assets/skybox/miramar_front.png",
-    "./assets/skybox/miramar_back.png"
+
   ],
   name: "day"
 })
@@ -56,8 +57,8 @@ textureLoader.loadCube({
     "./assets/skybox/grimmnight_left.png",
     "./assets/skybox/grimmnight_top.png",
     "./assets/skybox/grimmnight_bottom.png",
+    "./assets/skybox/grimmnight_back.png",
     "./assets/skybox/grimmnight_front.png",
-    "./assets/skybox/grimmnight_back.png"
   ],
   name: "night"
 })
