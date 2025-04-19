@@ -8,12 +8,8 @@ import {
   IcosphereGeometry,
   CylinderGeometry,
   QuadGeometry,
-  Texture,
   Vector3,
-  Quaternion,
-  Color,
-  DrawMode,
-  CullFace
+  Quaternion
 } from "webgllis"
 
 export function geometries({
@@ -22,7 +18,7 @@ export function geometries({
 }) {
   const texture = textureLoader.get('uv')
   const material = new BasicMaterial({
-    texture
+    mainTexture:texture
   })
   const geometries = [
     new QuadGeometry(1, 1),

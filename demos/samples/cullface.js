@@ -20,7 +20,7 @@ export function cullface({
       mainTexture: tex
     }),
     new BasicMaterial({
-      texture: tex
+      mainTexture: tex
     }),
     new BasicMaterial({
       mainTexture: tex

@@ -96,7 +96,7 @@ function loadTexture(gl, settings) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, settings.minfilter)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, settings.magfilter)
   const image = new Image()
-  image.src = settings.src
+  image.src = settings.path
   image.onload = () => {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, settings.flipY)
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -127,8 +127,8 @@ function loadCubeTexture(gl, settings) {
   const texture = gl.createTexture()
 
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
-  for (let i = 0; i < settings.src.length; i++) {
-    const src = settings.src[i];
+  for (let i = 0; i < settings.paths.length; i++) {
+    const src = settings.paths[i];
 
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -143,7 +143,7 @@ function loadCubeTexture(gl, settings) {
     )
     
     const image = new Image()
-    image.src = settings.src[i]
+    image.src = settings.paths[i]
     image.onload = () => {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
@@ -168,7 +168,7 @@ function loadCubeTexture(gl, settings) {
 /**
  * @typedef TextureSettings
  * @property {string} name
- * @property {string} src
+ * @property {string} path
  * @property {boolean} [generateMipmaps=true]
  * @property {TextureWrap} [wrapS]
  * @property {TextureWrap} [wrapT]
@@ -184,7 +184,7 @@ function loadCubeTexture(gl, settings) {
 /***
  * @typedef CubeTextureSettings
  * @property {string} name
- * @property {[string,string,string,string,string,string]} src
+ * @property {[string,string,string,string,string,string]} paths
  * @property {TextureWrap} [wrapS]
  * @property {TextureWrap} [wrapT]
  * @property {TextureFormat} [internalFormat]
