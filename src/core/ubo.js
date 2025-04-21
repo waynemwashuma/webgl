@@ -1,3 +1,4 @@
+import { UBOLayout } from "./layouts/UBOLayout.js"
 
 
 export class UBOBlockPointAllocator {
@@ -19,22 +20,36 @@ export class UBOs {
 
   allocator = new UBOBlockPointAllocator()
 
-  set(gl,name,item){
+  /**
+   * @param {WebGL2RenderingContext} gl 
+   * @param {string} name 
+   * @param {UBOLayout} layout 
+   */
+  set(gl, name, layout) {
     const index = this.allocator.reserve()
-    this.list.set(name,new UBO(gl,index,item.size))
+    this.list.set(name, new UBO(gl, index, layout.size))
   }
 
-  get(name){
+  /**
+   * @param {string} name
+   */
+  get(name) {
     return this.list.get(name)
   }
-  getorSet(gl, name, item){
+
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {string} name
+   * @param {UBOLayout} layout
+   */
+  getorSet(gl, name, layout) {
     const ubo = this.get(name)
 
-    if(ubo){
+    if (ubo) {
       return ubo
     }
 
-    this.set(gl, name, item)
+    this.set(gl, name, layout)
     return this.get(name)
   }
 }
@@ -42,6 +57,11 @@ export class UBOs {
  * @param {WebGL2RenderingContext} gl
  */
 export class UBO {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {number} point
+   * @param {number} bufSize
+   */
   constructor(gl, point, bufSize) {
     this.point = point;
     this.buffer = gl.createBuffer();
