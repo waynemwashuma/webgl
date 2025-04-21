@@ -1,4 +1,8 @@
 import {
+  CompareFunction,
+  TextureCompareMode,
+  TextureFilter,
+  TextureWrap,
   UniformType
 } from "./constant.js"
 import { Attribute, AttributeData } from "./core/index.js"
@@ -20,7 +24,7 @@ export function createshader(gl, src, type) {
   let shader = gl.createShader(type)
   gl.shaderSource(shader, src)
   gl.compileShader(shader)
-  
+
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.log(`Shader could not compile: 
     ${src}
@@ -32,12 +36,69 @@ export function createshader(gl, src, type) {
   }
   return shader
 }
+
+/**
+ * 
+ * @param {WebGL2RenderingContext} gl 
+ * @param {SamplerSettings} settings
+ */
+export function createSampler(gl, settings) {
+  const sampler = gl.createSampler()
+
+  updateSampler(gl,sampler,settings)
+
+  return sampler
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLSampler} sampler
+ * @param {SamplerSettings} settings
+ */
+function updateSampler(gl, sampler,settings) {
+  const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
+
+  gl.samplerParameteri(sampler, gl.TEXTURE_MAG_FILTER, settings.magnificationFilter)
+  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_S, settings.wrapS)
+  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_T, settings.wrapT)
+  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_R, settings.wrapR)
+  gl.samplerParameteri(sampler, gl.TEXTURE_MIN_LOD, settings.lod.min)
+  gl.samplerParameteri(sampler, gl.TEXTURE_MAX_LOD, settings.lod.max)
+
+  if (settings.minificationFilter === TextureFilter.LINEAR) {
+    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    }
+    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    }
+  }
+
+  if (settings.minificationFilter === TextureFilter.NEAREST) {
+    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+    }
+    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+    }
+  }
+  if (anisotropyExtenstion) {
+    gl.samplerParameterf(sampler, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, settings.anisotropy)
+  }
+
+  if (settings.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
+    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_FUNC, settings.compare)
+  } else {
+    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_MODE, gl.NONE);
+  }
+}
 /**
  * @param {WebGLRenderingContext} gl
  */
 export function createTexture(gl, img, flipY) {
   let tex = gl.createTexture()
-  
+
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
   gl.bindTexture(gl.TEXTURE_2D, tex)
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
@@ -45,7 +106,7 @@ export function createTexture(gl, img, flipY) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
   gl.generateMipmap(gl.TEXTURE_2D)
   gl.bindTexture(gl.TEXTURE_2D, null)
-  
+
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return tex
 }
@@ -62,7 +123,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
   gl.attachShader(program, fshader)
 
   for (const [name, attribute] of attributes) {
-    gl.bindAttribLocation(program, attribute.id, attribute.name)    
+    gl.bindAttribLocation(program, attribute.id, attribute.name)
   }
   gl.linkProgram(program)
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -82,7 +143,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
     gl.deleteProgram(program)
     return null
   }
-  
+
   gl.detachShader(program, vshader)
   gl.detachShader(program, fshader)
   gl.deleteShader(vshader)
@@ -105,19 +166,19 @@ export function createVAO(gl, attributes, meshData, indices) {
   gl.bindVertexArray(vao)
   if (indices != void 0) {
     const buffer = gl.createBuffer()
-    
+
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
   }
   for (const [name, data] of meshData) {
     const attribute = attributes.get(name)
 
-    if(!attribute){
+    if (!attribute) {
       throw `The attribute "${name}" is not defined in the \`AttributeMap()\``
     }
-    
+
     const buffer = gl.createBuffer()
-    
+
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.value), gl.STATIC_DRAW)
     gl.enableVertexAttribArray(attribute.id)
@@ -144,7 +205,7 @@ export function createProgramFromSrc(gl, vshader, fshader, attributes) {
     return null
   }
   let program = createProgram(gl, v, f, attributes)
-  
+
   return program
 }
 
@@ -175,7 +236,7 @@ export function typeOfUniform(uniform) {
   if (uniform === void 0) return -1
   let name = uniform.constructor.name.toLowerCase()
   let type = typeof uniform
-  
+
   if (type == "boolean")
     return UniformType.BOOL
   if (type == "number")
@@ -215,7 +276,7 @@ function getUBOLayout(gl, program, index) {
     index,
     gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS
   );
-  
+
   const uniformIndices = gl.getActiveUniformBlockParameter(
     program,
     index,
@@ -223,7 +284,7 @@ function getUBOLayout(gl, program, index) {
   )
   const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
   const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
-  
+
   const fields = {}
   uniformIndices.forEach((index, i) => {
     const info = gl.getActiveUniform(program, index);
@@ -262,17 +323,37 @@ function getActiveUniforms(gl, program) {
       location: gl.getUniformLocation(program, info.name)
     }
   }
-  
+
   return array
 }
 
 function getActiveUniformBlocks(gl, program) {
   const results = {}
   const numBlocks = gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS);
-  
+
   for (let i = 0; i < numBlocks; i++) {
     const name = gl.getActiveUniformBlockName(program, i);
     results[name] = getUBOLayout(gl, program, i)
   }
   return results
 }
+
+/**
+ * @typedef SamplerSettings
+ * @property {TextureFilter} minificationFilter
+ * @property {TextureFilter} magnificationFilter
+ * @property {TextureFilter} mipmapFilter'
+ * @property {TextureWrap} wrapS
+ * @property {TextureWrap} wrapT
+ * @property {TextureWrap} wrapR
+ * @property {SamplerLODSettings} lod
+ * @property {number} anisotropy
+ * @property {TextureCompareMode} compareMode
+ * @property {CompareFunction} compare
+ */
+
+/**
+ * @typedef SamplerLODSettings
+ * @property {number} max
+ * @property {number} min
+ */
