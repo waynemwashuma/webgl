@@ -2,6 +2,9 @@ export const basicFragment =
   `
   precision mediump float;
   
+  #include <common>
+
+  
   uniform sampler2D mainTexture;
   uniform vec4 color;
   

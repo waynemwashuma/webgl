@@ -2,6 +2,8 @@ export const basicVertex =
   `
   precision mediump float;
   
+  #include <common>
+  
   uniform Camera {
     mat4 view;
     mat4 projection;

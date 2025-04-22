@@ -1,5 +1,9 @@
 export const skyboxVertex =
   `
+  precision mediump float;
+
+	#include <common>
+
 	in vec3 position;
 
   uniform Camera {

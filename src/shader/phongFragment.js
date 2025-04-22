@@ -1,20 +1,13 @@
 export const phongFragment =
   `
-  #define MAX_DIRECTIONAL_LIGHTS 10
-
   precision mediump float;
-  
+
+  #include <common>
   
   in vec3 v_position;
   in vec2 v_uv;
   in vec3 v_normal;
   in vec3 cam_direction;
-
-  struct DirectionalLight {
-    vec4 color;
-    vec3 direction;
-    float intensity;
-  };
   
   uniform AmbientLight {
     float intensity;
@@ -31,10 +24,6 @@ export const phongFragment =
   uniform float specularStrength;
   
   out vec4 fragment_color;
- 
- float calculate_brightness(vec3 normal, vec3 dir) {
-   return max(dot(normal, dir), 0.0);
- }
  
  void main(){
     vec3 view_direction = normalize(cam_direction);

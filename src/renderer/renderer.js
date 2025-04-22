@@ -3,6 +3,7 @@ import { GlDataType, TextureFilter, TextureFormat, TextureWrap } from "../consta
 import { Attribute, UBO, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Mesh } from "../mesh/index.js"
+import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 
 export class DirectionalLights {
@@ -110,6 +111,8 @@ export class Renderer {
 
     this.attributes = attributes
     this.defaultTexture = createDefaultTexture(this.gl)
+    this.includes.set("common", commonShaderLib)
+    this.defines.set("MAX_DIRECTIONAL_LIGHTS","10")
   }
   
   updateUBO(dataForm) {
