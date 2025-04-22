@@ -64,7 +64,6 @@ export class Mesh {
     
     material.activate(gl, defaultTexture)
     gl.bindVertexArray(this.geometry.VAO)
-    console.log(gl.getError());
     
     gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
 

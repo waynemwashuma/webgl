@@ -1,5 +1,5 @@
 export const basicVertex =
-  `#version 300 es
+  `
   precision mediump float;
   
   uniform Camera {

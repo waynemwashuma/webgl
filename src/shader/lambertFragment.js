@@ -1,5 +1,5 @@
 export const lambertFragment =
-  `#version 300 es
+  `
   precision mediump float;
   
   #define MAX_DIRECTIONAL_LIGHTS 10

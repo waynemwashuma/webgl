@@ -1,5 +1,5 @@
 export const phongFragment =
-  `#version 300 es
+  `
   #define MAX_DIRECTIONAL_LIGHTS 10
 
   precision mediump float;

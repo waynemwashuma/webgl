@@ -42,7 +42,9 @@ export class Shader {
    */
   init(gl, ubos, attributes) {
     if (this.program) return
-    const programInfo = createProgramFromSrc(gl, this.vSrc, this.fSrc, attributes)
+    const vSrc = preprocessShader(this.vSrc)
+    const fSrc = preprocessShader(this.fSrc)
+    const programInfo = createProgramFromSrc(gl, vSrc, fSrc, attributes)
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
@@ -79,4 +81,12 @@ export class Shader {
   deactivate(gl) {
     gl.useProgram(null)
   }
+}
+
+/**
+ * @param {string} shaderSource
+ * @returns {string}
+ */
+function preprocessShader(shaderSource) {
+  return "#version 300 es\n" + shaderSource
 }
