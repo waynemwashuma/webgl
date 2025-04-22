@@ -39,10 +39,12 @@ export class Mesh {
    * 
    * @param {WebGL2RenderingContext} gl 
    * @param {UBOs} ubos
-   * @param {Map<string,Attribute>} attributes 
+   * @param {ReadonlyMap<string,Attribute>} attributes
+   * @param {ReadonlyMap<string,string>} includes
+   * @param {ReadonlyMap<string,string>} globalDefines
    */
-  init(gl, ubos, attributes) {
-    this.material.init(gl, ubos, attributes)
+  init(gl, ubos, attributes,includes, globalDefines) {
+    this.material.init(gl, ubos, attributes,includes,globalDefines)
     this.geometry.init(gl, attributes)
   }
   update() {

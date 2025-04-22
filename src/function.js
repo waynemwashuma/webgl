@@ -114,7 +114,7 @@ export function createTexture(gl, img, flipY) {
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLShader} vshader 
  * @param {WebGLShader} fshader 
- * @param {Map<string, Attribute>} attributes 
+ * @param {ReadonlyMap<string, Attribute>} attributes 
  * 
  */
 export function createProgram(gl, vshader, fshader, attributes) {
@@ -157,8 +157,8 @@ export function createProgram(gl, vshader, fshader, attributes) {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {Map<string, Attribute>} attributes
- * @param {Map<string, AttributeData>} meshData
+ * @param {ReadonlyMap<string, Attribute>} attributes
+ * @param {ReadonlyMap<string, AttributeData>} meshData
  * @param {Uint16Array | Uint32Array} [indices] 
  */
 export function createVAO(gl, attributes, meshData, indices) {
@@ -194,7 +194,7 @@ export function createVAO(gl, attributes, meshData, indices) {
  * @param {WebGL2RenderingContext} gl
  * @param {string} vshader
  * @param {string} fshader
- * @param {Map<string, Attribute>} attributes 
+ * @param {ReadonlyMap<string, Attribute>} attributes 
  */
 export function createProgramFromSrc(gl, vshader, fshader, attributes) {
   let v = createshader(gl, vshader, gl.VERTEX_SHADER)

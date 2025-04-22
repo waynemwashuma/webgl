@@ -38,6 +38,10 @@ export class Renderer {
    * @type {Mesh[]}
    */
   meshes = []
+
+  /**
+   * @type {Camera}
+   */
   camera = new Camera()
 
   /**
@@ -50,6 +54,22 @@ export class Renderer {
    * @type {ReadonlyMap<string,Attribute>}
    */
   attributes
+
+  /**
+   * @readonly
+   * @type {Map<string, string>}
+   */
+  includes = new Map()
+
+  /**
+   * @readonly
+   * @type {Map<string, string>}
+   */
+  defines = new Map()
+
+  /**
+   * @type {HTMLCanvasElement}
+   */
   domElement = null
   /**
    * @type {WebGL2RenderingContext}
@@ -101,8 +121,11 @@ export class Renderer {
     ubo.update(this.gl, data)
   }
 
+  /**
+   * @param {Mesh} mesh 
+   */
   add(mesh) {
-    mesh.init(this.gl, this._UBOs, this.attributes)
+    mesh.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
     this.meshes.push(mesh)
   }
   remove(mesh) {

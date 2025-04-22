@@ -15,7 +15,10 @@ export class Shader {
   cullFace = CullFace.BACK
   distBlendFunc = BlendMode.ONE_MINUS_SRC_ALPHA
   srcBlendFunc = BlendMode.SRC_ALPHA
-
+  /**
+   * @type {Map<string, string>}
+   */
+  defines = new Map()
   /**
    * @type {Map<string,Uniform>}
    */
@@ -37,13 +40,15 @@ export class Shader {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {UBOs} ubos
-   * @param {Map<string, Attribute>} attributes 
+   * @param {ReadonlyMap<string, Attribute>} attributes
+   * @param {ReadonlyMap<string,string>} includes
+   * @param {ReadonlyMap<string,string>} globalDefines
    * 
    */
-  init(gl, ubos, attributes) {
+  init(gl, ubos, attributes, includes, globalDefines) {
     if (this.program) return
-    const vSrc = preprocessShader(this.vSrc)
-    const fSrc = preprocessShader(this.fSrc)
+    const vSrc = preprocessShader(this.vSrc, includes, [globalDefines, this.defines])
+    const fSrc = preprocessShader(this.fSrc, includes, [globalDefines, this.defines])
     const programInfo = createProgramFromSrc(gl, vSrc, fSrc, attributes)
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
@@ -52,7 +57,7 @@ export class Shader {
     for (const [name, uboLayout] of this.uniformBlocks) {
       const ubo = ubos.getorSet(gl, name, uboLayout)
       const index = gl.getUniformBlockIndex(this.program, name)
-      
+
       gl.uniformBlockBinding(this.program, index, ubo.point)
     }
   }
@@ -61,7 +66,7 @@ export class Shader {
    * @param {WebGL2RenderingContext} _gl 
    * @param {WebGLTexture} _defaultTexture 
    */
-  uploadUniforms(_gl,_defaultTexture){
+  uploadUniforms(_gl, _defaultTexture) {
     throw `Implement \`${this.constructor.name}.uploadUniforms\``
   }
 
@@ -71,7 +76,7 @@ export class Shader {
    */
   activate(gl, defaultTexture) {
     gl.useProgram(this.program)
-    this.uploadUniforms(gl,defaultTexture.webglTex)
+    this.uploadUniforms(gl, defaultTexture.webglTex)
     gl.cullFace(this.cullFace);
   }
 
@@ -84,9 +89,22 @@ export class Shader {
 }
 
 /**
- * @param {string} shaderSource
+ * @param {string} source
+ * @param {ReadonlyMap<string,string>} includes 
+ * @param {ReadonlyMap<string,string>[]} defines
  * @returns {string}
  */
-function preprocessShader(shaderSource) {
-  return "#version 300 es\n" + shaderSource
+function preprocessShader(source, includes, defines) {
+  const version = "#version 300 es\n"
+  const mergedDefines = defines.flatMap(map => [...map.entries()])
+    .map(([name, value]) => `#define ${name} ${value}`)
+    .join("\n")
+  const preprocessed = source.replace(/#include <(.*?)>/g, (_, name) => {
+    const include = includes.get(name)
+    if (!include) {
+      console.error(`Could not find the include "${name}"`)
+    }
+    return include || ""
+  })
+  return version + mergedDefines + preprocessed
 }
