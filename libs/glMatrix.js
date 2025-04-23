@@ -1,5 +1,6 @@
-/* 
- * glMatrix.js - High performance matrix and vector operations for WebGL
+
+//@ts-nocheck
+/* glMatrix.js - High performance matrix and vector operations for WebGL
  * version 0.9.5
  */
  

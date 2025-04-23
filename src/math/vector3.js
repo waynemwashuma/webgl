@@ -7,6 +7,10 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
   set(x, y, z = 0) {
     this.x = x
     this.y = y
@@ -15,6 +19,9 @@ export class Vector3 {
     return this
 
   }
+  /**
+   * @param {number} scalar
+   */
   splat(scalar) {
     this.x = scalar;
     this.y = scalar;
@@ -28,6 +35,9 @@ export class Vector3 {
     return new Vector3(this.x, this.y, this.z)
   }
 
+  /**
+   * @param {Vector3} v
+   */
   copy(v) {
     this.x = v.x
     this.y = v.y
@@ -37,6 +47,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {Vector3} v
+   */
   add(v) {
     this.x += v.x
     this.y += v.y
@@ -46,6 +59,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {number} s
+   */
   addScalar(s) {
     this.x += s
     this.y += s
@@ -55,6 +71,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {Vector3} v
+   */
   sub(v) {
     this.x -= v.x;
     this.y -= v.y;
@@ -64,6 +83,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {number} s
+   */
   subScalar(s) {
     this.x -= s;
     this.y -= s;
@@ -72,6 +94,9 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {Vector3} v
+   */
   multiply(v) {
     this.x *= v.x;
     this.y *= v.y;
@@ -80,6 +105,9 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {number} scalar
+   */
   multiplyScalar(scalar) {
     this.x *= scalar;
     this.y *= scalar;
@@ -89,6 +117,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {{ raw: any; }} m
+   */
   applyMatrix3(m) {
     const x = this.x,
       y = this.y,
@@ -102,10 +133,16 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {any} m
+   */
   applyNormalMatrix(m) {
     return this.applyMatrix3(m).normalize();
   }
 
+  /**
+   * @param {{ raw: any; }} m
+   */
   applyMatrix4(m) {
     const x = this.x,
       y = this.y,
@@ -122,6 +159,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {import("./quaternion.js").Quaternion} q
+   */
   applyQuaternion(q) {
     const vx = this.x,
       vy = this.y,
@@ -144,6 +184,9 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v
+   */
   divide(v) {
     this.x /= v.x;
     this.y /= v.y;
@@ -152,10 +195,17 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {number} scalar
+   */
   divideScalar(scalar) {
     return this.multiplyScalar(1 / scalar);
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} min
+   * @param {{ x: number; y: number; z: number; }} max
+   */
   clamp(min, max) {
     // assumes min < max, componentwise
 
@@ -166,6 +216,10 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {number} minVal
+   * @param {number} maxVal
+   */
   clampScalar(minVal, maxVal) {
     this.x = Math.max(minVal, Math.min(maxVal, this.x));
     this.y = Math.max(minVal, Math.min(maxVal, this.y));
@@ -174,6 +228,10 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {number} min
+   * @param {number} max
+   */
   clampmagnitude(min, max) {
 
     const magnitude = this.magnitude();
@@ -202,6 +260,9 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v
+   */
   dot(v) {
     return this.x * v.x + this.y * v.y + this.z * v.z;
 
@@ -227,11 +288,18 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {any} magnitude
+   */
   setmagnitude(magnitude) {
     return this.normalize().multiplyScalar(magnitude);
 
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v
+   * @param {number} alpha
+   */
   lerp(v, alpha) {
     this.x += (v.x - this.x) * alpha;
     this.y += (v.y - this.y) * alpha;
@@ -241,6 +309,11 @@ export class Vector3 {
 
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v1
+   * @param {{ x: number; y: number; z: number; }} v2
+   * @param {number} alpha
+   */
   lerpVectors(v1, v2, alpha) {
     this.x = v1.x + (v2.x - v1.x) * alpha;
     this.y = v1.y + (v2.y - v1.y) * alpha;
@@ -249,13 +322,16 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {{ x: any; y: any; z: any; }} v
+   */
   cross(v) {
     const ax = this.x,
       ay = this.y,
       az = this.z;
-    const bx = b.x,
-      by = b.y,
-      bz = b.z;
+    const bx = v.x,
+      by = v.y,
+      bz = v.z;
 
     this.x = ay * bz - az * by;
     this.y = az * bx - ax * bz;
@@ -264,8 +340,11 @@ export class Vector3 {
     return this;
   }
 
+  /**
+   * @param {Vector3} v
+   */
   projectOnVector(v) {
-    const denominator = v.magnitudeSquared();
+    const denominator = v.magnitudeSq();
 
     if (denominator === 0) return this.set(0, 0, 0);
 
@@ -274,32 +353,32 @@ export class Vector3 {
     return this.copy(v).multiplyScalar(scalar);
   }
 
+  /**
+   * @param {any} planeNormal
+   */
   projectOnPlane(planeNormal) {
     _vector.copy(this).projectOnVector(planeNormal);
 
     return this.sub(_vector);
   }
 
+  /**
+   * @param {any} normal
+   */
   reflect(normal) {
     return this.sub(_vector.copy(normal).multiplyScalar(2 * this.dot(normal)));
   }
 
-  angleTo(v) {
-    const denominator = Math.sqrt(this.magnitudeSquared() * v.magnitudeSquared());
-
-    if (denominator === 0) return Math.PI / 2;
-
-    const theta = this.dot(v) / denominator;
-
-    // clamp, to handle numerical problems
-
-    return Math.acos(MathUtils.clamp(theta, -1, 1));
-  }
-
+  /**
+   * @param {any} v
+   */
   distanceTo(v) {
     return Math.sqrt(this.distanceToSquared(v));
   }
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v
+   */
   distanceToSquared(v) {
     const dx = this.x - v.x,
       dy = this.y - v.y,
@@ -309,6 +388,9 @@ export class Vector3 {
   }
 
 
+  /**
+   * @param {{ x: number; y: number; z: number; }} v
+   */
   equals(v) {
     return ((v.x === this.x) && (v.y === this.y) && (v.z === this.z));
   }
@@ -316,6 +398,9 @@ export class Vector3 {
     return ((0 === this.x) && (0 === this.y) && (0 === this.z))
   }
 
+  /**
+   * @param {number[]} array
+   */
   fromArray(array, offset = 0) {
 
     this.x = array[offset];
@@ -326,6 +411,12 @@ export class Vector3 {
 
   }
 
+  /**
+   * 
+   * @param {number[]} array 
+   * @param {number} offset 
+   * @returns 
+   */
   toArray(array = [], offset = 0) {
 
     array[offset] = this.x;

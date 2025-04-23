@@ -14,6 +14,10 @@ export class SkyBoxMaterial extends Shader {
    * @type {Texture}
    */
   mainTexture
+
+  /**
+   * @param {SkyboxMaterialOptions} param0
+   */
   constructor({
     day = undefined,
     night = undefined,
@@ -56,3 +60,10 @@ export class SkyBoxMaterial extends Shader {
     }
   }
 }
+
+/**
+ * @typedef SkyboxMaterialOptions
+ * @property {Texture} [day]
+ * @property {Texture} [night]
+ * @property {number} [lerp]
+ */

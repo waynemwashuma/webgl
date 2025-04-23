@@ -4,11 +4,14 @@ import {
   QuadGeometry,
   Vector3,
   Quaternion,
-  Color,
   CullFace,
-  Texture
+  Renderer,
+  TextureLoader
 } from "webgllis"
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function cullface({
   renderer,
   textureLoader

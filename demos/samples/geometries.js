@@ -2,16 +2,20 @@ import {
   Mesh,
   BasicMaterial,
   CircleGeometry,
-  PlaneGeometry,
   BoxGeometry,
   UVSphereGeometry,
   IcosphereGeometry,
   CylinderGeometry,
   QuadGeometry,
   Vector3,
-  Quaternion
+  Quaternion,
+  Renderer,
+  TextureLoader
 } from "webgllis"
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function geometries({
   renderer,
   textureLoader

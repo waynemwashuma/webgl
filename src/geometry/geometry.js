@@ -23,6 +23,10 @@ export class Geometry {
     this._VAO = createVAO(gl,attributes, this._attributes, this.indices)
   }
 
+  /**
+   * @param {string} name
+   * @param {AttributeData} attribute
+   */
   setAttribute(name, attribute) {
     this._attributes.set(name, attribute)
     return this

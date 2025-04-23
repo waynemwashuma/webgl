@@ -1,29 +1,54 @@
-import { mat4 } from "./glMatrix.js"
+import { mat4 } from "../../libs/glMatrix.js"
+import { Vector3 } from "./vector3.js"
 
+/**
+ * @type {any[]}
+ */
 let arr = [],
-  arr2 = [],
+/**
+ * @type {any[]}s
+ */
+arr2 = [],
+/**
+ * @type {any[]}
+ */
   arr3 = []
 let toRad = Math.PI / 180
 export class Matrix4 {
   constructor() {
     this.raw = mat4.identity(mat4.create())
   }
+  /**
+   * @param {number} rad
+   */
   rotateX(rad) {
     mat4.rotateX(this.raw, rad)
     return this
   }
+  /**
+   * @param {number} rad
+   */
   rotateY(rad) {
     mat4.rotateY(this.raw, rad)
     return this
   }
+  /**
+   * @param {number} rad
+   */
   rotateZ(rad) {
     mat4.rotateZ(this.raw, rad)
     return this
   }
+  /**
+   * @param {{ toArray: (arg0: any[]) => any; }} v
+   */
   scale(v) {
     mat4.scale(this.raw, v.toArray(arr))
     return this
   }
+  /**
+   * @param {any} x
+   */
   scaleX(x) {
     arr[0] = x
     arr[1] = 1
@@ -31,6 +56,9 @@ export class Matrix4 {
     mat4.scale(this.raw, arr)
     return this
   }
+  /**
+   * @param {any} x
+   */
   scaleY(x) {
     arr[0] = 1
     arr[1] = x
@@ -38,6 +66,9 @@ export class Matrix4 {
     mat4.scale(this.raw, arr)
     return this
   }
+  /**
+   * @param {any} x
+   */
   scaleZ(x) {
     arr[0] = 1
     arr[1] = 1
@@ -45,10 +76,16 @@ export class Matrix4 {
     mat4.scale(this.raw, arr)
     return this
   }
+  /**
+   * @param {import("./vector3.js").Vector3} position
+   */
   translate(position) {
     mat4.translate(this.raw, position.toArray(arr))
     return this
   }
+  /**
+   * @param {any} x
+   */
   translateX(x) {
     arr[0] = x
     arr[1] = 0
@@ -56,6 +93,9 @@ export class Matrix4 {
     mat4.translate(this.raw, arr)
     return this
   }
+  /**
+   * @param {any} x
+   */
   translateY(x) {
     arr[0] = 0
     arr[1] = x
@@ -63,6 +103,9 @@ export class Matrix4 {
     mat4.translate(this.raw, arr)
     return this
   }
+  /**
+   * @param {any} x
+   */
   translateZ(x) {
     arr[0] = 0
     arr[1] = 0
@@ -79,6 +122,11 @@ export class Matrix4 {
     mat4.transpose(this.raw)
     return this
   }
+  /**
+   * @param {import("./vector3.js").Vector3} position
+   * @param {import("./quaternion.js").Quaternion} quaternion
+   * @param {import("./vector3.js").Vector3} scale
+   */
   compose(position, quaternion, scale) {
     const te = this.raw;
     const x = quaternion.x,
@@ -128,10 +176,18 @@ export class Matrix4 {
     mat4.identity(this.raw)
     return this
   }
+  /**
+   * @param {Matrix4} m
+   */
   copy(m) {
     mat4.set(m.raw, this.raw)
     return this
   }
+  /**
+   * @param {{ toArray: (arg0: any[]) => any; }} eye
+   * @param {{ toArray: (arg0: any[]) => any; }} target
+   * @param {{ toArray: (arg0: any[]) => any; }} up
+   */
   lookAt(eye, target, up) {
     mat4.lookAt(
       eye.toArray(arr),
@@ -140,6 +196,9 @@ export class Matrix4 {
     )
     return this
   }
+  /**
+   * @param {any[]} array
+   */
   toArray(array, offset = 0) {
     
     //TOdo - when you remove the raw from glmatrix.
@@ -162,19 +221,39 @@ export class Matrix4 {
     
     return array
   }
+  /**
+   * @param {{ raw: any; }} matrix
+   */
   multiply(matrix) {
     mat4.multiply(this.raw, matrix.raw, this.raw)
     return this
   }
+  /**
+   * @param {number} fovy
+   * @param {number} aspect
+   * @param {number} near
+   * @param {number} far
+   */
   makePerspective(fovy, aspect, near, far) {
     mat4.perspective(fovy, aspect, near, far, this.raw)
     return this
   }
+  /**
+   * @param {number} left
+   * @param {number} right
+   * @param {number} bottom
+   * @param {number} top
+   * @param {number} near
+   * @param {number} far
+   */
   makeOthorgraphic(left, right, bottom, top, near, far) {
     mat4.ortho(left, right, bottom, top, near, far, this.raw)
     return this
   }
   
+  /**
+   * @param {Vector3} vector
+   */
   transform(vector) {
     const result = mat4.multiplyVec3(this.raw, [...vector])
     
@@ -185,6 +264,9 @@ export class Matrix4 {
     
     return this
   }
+  /**
+   * @param {Vector3} vector
+   */
   transformDirection(vector) {
     const result = mat4.multiplyVec3(this.raw, [...vector])
     

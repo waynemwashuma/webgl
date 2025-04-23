@@ -13,6 +13,10 @@ import { Texture } from "../texture/index.js"
  */
 export class Mesh {
   transform = new Transform3D()
+
+  /**
+   * @type {Mesh}
+   */
   parent = null
 
   /**

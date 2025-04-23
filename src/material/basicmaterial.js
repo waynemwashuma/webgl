@@ -14,6 +14,11 @@ export class BasicMaterial extends Shader {
    * @type {Texture}
    */
   mainTexture
+
+  /**
+   * 
+   * @param {BasicMaterialOptions} param0 
+   */
   constructor({
     color = new Color(1, 1, 1),
     mainTexture = undefined
@@ -50,3 +55,9 @@ export class BasicMaterial extends Shader {
     }
   }
 }
+
+/**
+ * @typedef BasicMaterialOptions
+ * @property {Color} [color]
+ * @property {Texture} [mainTexture]
+ */

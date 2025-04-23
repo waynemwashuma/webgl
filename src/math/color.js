@@ -1,9 +1,18 @@
+/**
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
 function clamp(v, min, max) {
   if (min > v) return min
   if (max < v) return max
   return v
 }
 
+/**
+ * @param {number} min
+ * @param {number} max
+ */
 function random(min, max) {
   return Math.random() * (max - min) + min
 }
@@ -49,11 +58,13 @@ export class Color {
 
   /**
    * Copy a color object or CSS color into this one.
-   * @param {Color|string} color
-   * @returns {Color} Reference to this object for method chaining
+   * @param {Color} color
+   * @returns {this} Reference to this object for method chaining
    */
   copy(color) {
     this.setColor(color.r, color.g, color.b, color.a)
+
+    return this
   }
 
   /**
@@ -106,9 +117,9 @@ export class Color {
    */
   lighten(scale) {
     scale = clamp(scale, 0, 1);
-    this.glArray[0] = clamp(this.glArray[0] + (1 - this.glArray[0]) * scale, 0, 1);
-    this.glArray[1] = clamp(this.glArray[1] + (1 - this.glArray[1]) * scale, 0, 1);
-    this.glArray[2] = clamp(this.glArray[2] + (1 - this.glArray[2]) * scale, 0, 1);
+    this.r = clamp(this.r + (1 - this.r) * scale, 0, 1);
+    this.g = clamp(this.g + (1 - this.g) * scale, 0, 1);
+    this.b = clamp(this.b + (1 - this.b) * scale, 0, 1);
 
     return this;
   }
@@ -136,6 +147,9 @@ export class Color {
   }
 
 
+  /**
+   * @param {any[]} array
+   */
   toArray(array, offset = 0) {
     array[offset] = this.r
     array[offset + 1] = this.g

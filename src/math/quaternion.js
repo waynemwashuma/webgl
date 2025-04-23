@@ -1,3 +1,8 @@
+/**
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
 function clamp(v, min, max) {
   if (min > v) return min
   if (max < v) return max
@@ -10,6 +15,12 @@ export class Quaternion {
     this.z = z;
     this.w = w;
   }
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   * @param {number} w
+   */
   set(x, y, z, w) {
     this.x = x;
     this.y = y;
@@ -19,8 +30,11 @@ export class Quaternion {
     return this;
   }
   clone() {
-    return new this.constructor(this.x, this.y, this.z, this.w);
+    return new Quaternion(this.x, this.y, this.z, this.w);
   }
+  /**
+   * @param {Quaternion} quaternion
+   */
   copy(quaternion) {
     this.x = quaternion.x;
     this.y = quaternion.y;
@@ -29,6 +43,9 @@ export class Quaternion {
     
     return this;
   }
+  /**
+   * @param {import("./vector3.js").Vector3} euler
+   */
   setFromEuler(euler, order = "XYZ") {
     const x = euler.x,
       y = euler.y,
@@ -95,6 +112,10 @@ export class Quaternion {
     
     return this
   }
+  /**
+   * @param {{ x: number; y: number; z: number; }} axis
+   * @param {number} angle
+   */
   setFromAxisAngle(axis, angle) {
     const halfAngle = angle / 2,
       s = Math.sin(halfAngle);
@@ -106,6 +127,9 @@ export class Quaternion {
     
     return this;
   }
+  /**
+   * @param {{ raw: any; }} m
+   */
   setFromRotationMatrix(m) {
     const te = m.raw,
       
@@ -161,6 +185,10 @@ export class Quaternion {
     return this;
   }
   
+  /**
+   * @param {{ dot: (arg0: any) => number; x: number; z: number; y: number; }} vFrom
+   * @param {{ z: number; y: number; x: number; }} vTo
+   */
   setFromUnitVectors(vFrom, vTo) {
     let r = vFrom.dot(vTo) + 1;
     
@@ -193,12 +221,19 @@ export class Quaternion {
     return this.normalize();
   }
   
+  /**
+   * @param {any} q
+   */
   angleTo(q) {
     return 2 * Math.acos(Math.abs(
       clamp(this.dot(q), -1, 1)
     ));
   }
   
+  /**
+   * @param {any} q
+   * @param {number} step
+   */
   rotateTowards(q, step) {
     const angle = this.angleTo(q);
     
@@ -228,6 +263,9 @@ export class Quaternion {
     return this;
   }
   
+  /**
+   * @param {{ x: number; y: number; z: number; w: number; }} v
+   */
   dot(v) {
     return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
   }
@@ -260,14 +298,25 @@ export class Quaternion {
     return this;
   }
   
+  /**
+   * @param {Quaternion} q
+   */
   multiply(q) {
     return Quaternion.multiply(this, q, this);
   }
   
+  /**
+   * @param {any} q
+   */
   premultiply(q) {
     return Quaternion.multiply(q, this, this);
   }
   
+  /**
+   * @param {Quaternion} a
+   * @param {Quaternion} b
+   * @param {Quaternion} out
+   */
   static multiply(a, b, out) {
     const qax = a.x,
       qay = a.y,
@@ -287,6 +336,10 @@ export class Quaternion {
     
   }
   
+  /**
+   * @param {Quaternion} qb
+   * @param {number} t
+   */
   slerp(qb, t) {
     
     if (t === 0) return this;
@@ -350,8 +403,15 @@ export class Quaternion {
     return this;
   }
   
+  /**
+   * 
+   * @param {Quaternion} qa 
+   * @param {Quaternion} qb 
+   * @param {number} t 
+   * @returns 
+   */
   static slerp(qa, qb, t) {
-    return this.copy(qa).slerp(qb, t);
+    return qa.copy(qb).slerp(qb, t);
   }
   
   random() {
@@ -372,10 +432,16 @@ export class Quaternion {
     
   }
   
+  /**
+   * @param {{ x: number; y: number; z: number; w: number; }} quaternion
+   */
   equals(quaternion) {
     return (quaternion.x === this.x) && (quaternion.y === this.y) && (quaternion.z === this.z) && (quaternion.w === this.w);
   }
   
+  /**
+   * @param {number[]} array
+   */
   fromArray(array, offset = 0) {
     this.x = array[offset];
     this.y = array[offset + 1];
@@ -387,6 +453,12 @@ export class Quaternion {
     
   }
   
+  /**
+   * 
+   * @param {number[]} array 
+   * @param {number} offset 
+   * @returns 
+   */
   toArray(array = [], offset = 0) {
     array[offset] = this.x;
     array[offset + 1] = this.y;
@@ -401,6 +473,9 @@ export class Quaternion {
     return this.toArray();
   }
   
+  /**
+   * @param {any} obj
+   */
   fromJSON(obj) {
     return this.fromArray(obj);
   }

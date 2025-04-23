@@ -16,6 +16,9 @@ export class Transform3D {
     this.worldOrientation = new Quaternion()
     this.worldScale = new Vector3(1,1,1)
   }
+  /**
+   * @param {Transform3D} parent
+   */
   updateMatrix(parent) {
     this.worldPosition.copy(this.position)
     this.worldOrientation.copy(this.orientation)

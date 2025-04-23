@@ -1,9 +1,14 @@
 import {
   Quaternion,
+  Renderer,
   SkyBox,
+  TextureLoader,
   Vector3
 } from 'webgllis';
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function skyBox({
   renderer,
   textureLoader

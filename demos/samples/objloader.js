@@ -2,9 +2,14 @@ import {
   Vector3,
   Quaternion,
   OBJLoader,
-  BasicMaterial
+  BasicMaterial,
+  Renderer,
+  TextureLoader
 } from 'webgllis';
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function objLoader({
   renderer,
   textureLoader

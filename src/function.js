@@ -8,6 +8,7 @@ import {
 import { Attribute, AttributeData, UBO, UBOLayout, Uniform } from "./core/index.js"
 /**
  * @param {WebGLRenderingContext} gl
+ * @param {number} typedarray
  */
 export function createBuffer(gl, typedarray, isstatic = true) {
   let buffer = gl.createBuffer()
@@ -19,6 +20,8 @@ export function createBuffer(gl, typedarray, isstatic = true) {
 }
 /**
  * @param {WebGLRenderingContext} gl
+ * @param {string} src
+ * @param {number} type
  */
 export function createshader(gl, src, type) {
   let shader = gl.createShader(type)
@@ -95,6 +98,8 @@ function updateSampler(gl, sampler,settings) {
 }
 /**
  * @param {WebGLRenderingContext} gl
+ * @param {TexImageSource} img
+ * @param {any} flipY
  */
 export function createTexture(gl, img, flipY) {
   let tex = gl.createTexture()
@@ -209,6 +214,9 @@ export function createProgramFromSrc(gl, vshader, fshader, attributes) {
   return program
 }
 
+/**
+ * @param {{ type: any; }} uniform
+ */
 export function sizeofUniform(uniform) {
   const type = uniform.type
   switch (type) {
@@ -232,6 +240,9 @@ export function sizeofUniform(uniform) {
       return 0
   }
 }
+/**
+ * @param {{ constructor: { name: string; }; }} uniform
+ */
 export function typeOfUniform(uniform) {
   if (uniform === void 0) return -1
   let name = uniform.constructor.name.toLowerCase()
@@ -280,7 +291,7 @@ function getUBOLayout(gl, program, index) {
   const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
   const fields = new Map()
   
-  uniformIndices.forEach((index, i) => {
+  uniformIndices.forEach((/** @type {number} */ index, /** @type {string | number} */ i) => {
     const info = gl.getActiveUniform(program, index);
     return fields.set(info.name, {
       type: info.type,
