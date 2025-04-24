@@ -115,6 +115,51 @@ export function createTexture(gl, img, flipY) {
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return tex
 }
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {GLenum} target
+ * @param {SamplerSettings} settings
+ */
+export function updateTextureSampler(gl,target,settings) {
+  const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
+
+  gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, settings.magnificationFilter)
+  gl.texParameteri(target, gl.TEXTURE_WRAP_S, settings.wrapS)
+  gl.texParameteri(target, gl.TEXTURE_WRAP_T, settings.wrapT)
+  gl.texParameteri(target, gl.TEXTURE_WRAP_R, settings.wrapR)
+  gl.texParameteri(target, gl.TEXTURE_MIN_LOD, settings.lod.min)
+  gl.texParameteri(target, gl.TEXTURE_MAX_LOD, settings.lod.max)
+
+  if (settings.minificationFilter === TextureFilter.LINEAR) {
+    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    }
+    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    }
+  }
+
+  if (settings.minificationFilter === TextureFilter.NEAREST) {
+    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+    }
+    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+    }
+  }
+  if (anisotropyExtenstion) {
+    gl.texParameterf(target, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, settings.anisotropy)
+  }
+
+  if (settings.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
+    gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+    gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, settings.compare)
+  } else {
+    gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, gl.NONE);
+  }
+}
+
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLShader} vshader 

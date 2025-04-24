@@ -1,15 +1,31 @@
 import { Shader } from "./shader.js"
 import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
-import { Texture } from "../texture/index.js"
+import { Sampler, Texture } from "../texture/index.js"
+import { updateTextureSampler } from "../function.js"
 
 export class PhongMaterial extends Shader {
+  /**
+   * @type {Color}
+   */
+  color
+
+  /**
+   * @type {Texture | undefined}
+   */
+  mainTexture
+
+  /**
+   * @type {Sampler | undefined}
+   */
+  mainSampler
   /**
    * @param {PhongMaterialOptions} param0 
    */
   constructor({
     color = new Color(1, 1, 1),
-    mainTexture = null,
+    mainTexture = undefined,
+    mainSampler = undefined,
     specularStrength = 0.5,
     specularShininess = 32,
   } = {}) {
@@ -17,6 +33,7 @@ export class PhongMaterial extends Shader {
 
     this.color = color
     this.mainTexture = mainTexture
+    this.mainSampler = mainSampler
     this.specularStrength = specularStrength
     this.specularShininess = specularShininess
   }
@@ -27,7 +44,7 @@ export class PhongMaterial extends Shader {
    * @param {WebGLTexture} defaultTexture 
    */
   uploadUniforms(gl, defaultTexture) {
-    const { color, mainTexture,specularShininess,specularStrength } = this
+    const { color, mainTexture, mainSampler, specularShininess, specularStrength } = this
     const colorInfo = this.uniforms.get("color")
     const mainTextureInfo = this.uniforms.get("mainTexture")
     const specularShininessInfo = this.uniforms.get("specularShininess")
@@ -36,10 +53,10 @@ export class PhongMaterial extends Shader {
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
     }
-    if (specularShininessInfo){
+    if (specularShininessInfo) {
       gl.uniform1f(specularShininessInfo.location, specularShininess)
     }
-    if (specularStrengthInfo){
+    if (specularStrengthInfo) {
       gl.uniform1f(specularStrengthInfo.location, specularStrength)
     }
     if (mainTextureInfo) {
@@ -53,6 +70,10 @@ export class PhongMaterial extends Shader {
         gl.uniform1i(mainTextureInfo.location, 0)
       }
     }
+    // must occur after the above block
+    if (mainSampler) {
+      updateTextureSampler(gl, gl.TEXTURE_2D, this.mainSampler)
+    }
   }
 }
 
@@ -60,6 +81,7 @@ export class PhongMaterial extends Shader {
  * @typedef PhongMaterialOptions
  * @property {Color} [color]
  * @property {Texture} [mainTexture]
+ * @property {Sampler} [mainSampler]
  * @property {number} [specularShininess]
  * @property {number} [specularStrength]
  */
