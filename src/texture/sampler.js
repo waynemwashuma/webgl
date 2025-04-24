@@ -21,17 +21,17 @@ export class Sampler {
    * @param {Partial<SamplerSettings>} settings 
    */
   constructor({
-    magnificationFilter = TextureFilter.LINEAR,
-    minificationFilter = TextureFilter.LINEAR,
-    mipmapFilter = TextureFilter.LINEAR,
-    wrapS = TextureWrap.CLAMP,
-    wrapT = TextureWrap.CLAMP,
-    wrapR = TextureWrap.CLAMP,
-    lod = { min: 0, max: 12 },
-    anisotropy = 1,
-    compareMode = TextureCompareMode.NONE,
-    compare = CompareFunction.LEQUAL
-  } = {}) {
+    magnificationFilter = Sampler.defaultSettings.magnificationFilter,
+    minificationFilter = Sampler.defaultSettings.minificationFilter,
+    mipmapFilter = Sampler.defaultSettings.mipmapFilter,
+    wrapS = Sampler.defaultSettings.wrapS,
+    wrapT = Sampler.defaultSettings.wrapT,
+    wrapR = Sampler.defaultSettings.wrapR,
+    lod = Sampler.defaultSettings.lod,
+    anisotropy = Sampler.defaultSettings.anisotropy,
+    compareMode = Sampler.defaultSettings.compareMode,
+    compare = Sampler.defaultSettings.compare
+  } = Sampler.defaultSettings) {
     this.minificationFilter = minificationFilter
     this.magnificationFilter = magnificationFilter
     this.mipmapFilter = mipmapFilter
@@ -53,5 +53,22 @@ export class Sampler {
 
   static default(){
     return new Sampler()
+  }
+
+  /**
+   * @readonly
+   * @type {Readonly<Required<SamplerSettings>>}
+   */
+  static defaultSettings = {
+    magnificationFilter: TextureFilter.LINEAR,
+    minificationFilter: TextureFilter.LINEAR,
+    mipmapFilter: TextureFilter.LINEAR,
+    wrapS: TextureWrap.CLAMP,
+    wrapT: TextureWrap.CLAMP,
+    wrapR: TextureWrap.CLAMP,
+    lod: { min: 0, max: 12 },
+    anisotropy: 1,
+    compareMode: TextureCompareMode.NONE,
+    compare: CompareFunction.LEQUAL
   }
 }

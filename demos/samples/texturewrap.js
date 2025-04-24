@@ -4,7 +4,8 @@ import {
   TextureWrap,
   BasicMaterial,
   Renderer,
-  TextureLoader
+  TextureLoader,
+  Sampler
 } from 'webgllis';
 
 /**
@@ -17,20 +18,29 @@ export function textureWrap({
   const tex1 = textureLoader.load({
     path: "./assets/uv.jpg",
     name: 'wrap1',
-    wrapS: TextureWrap.CLAMP,
-    wrapT: TextureWrap.CLAMP
+    sampler:{
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.CLAMP,
+      wrapT: TextureWrap.CLAMP,
+    }
   })
   const tex2 = textureLoader.load({
     path: "./assets/uv.jpg",
     name: 'wrap2',
-    wrapS: TextureWrap.REPEAT,
-    wrapT: TextureWrap.REPEAT
+    sampler:{
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.REPEAT,
+      wrapT: TextureWrap.REPEAT
+    }
   })
   const tex3 = textureLoader.load({
     path: "./assets/uv.jpg",
     name: 'wrap3',
-    wrapS: TextureWrap.MIRRORREPEAT,
-    wrapT: TextureWrap.MIRRORREPEAT
+    sampler:{
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.MIRRORREPEAT,
+      wrapT: TextureWrap.MIRRORREPEAT
+    }
   })
 
   const geometry = new QuadGeometry(1, 1)
