@@ -9,7 +9,8 @@ import {
   rotatingUvSphere,
   skyBox,
   objLoader,
-  separateSamplers
+  separateSamplers,
+  transformPropagation
 } from "./samples/index.js"
 
 const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
@@ -30,7 +31,8 @@ const demos = {
   "geometries": geometries,
   "cullface": cullface,
   "skybox": skyBox,
-  "obj loader": objLoader
+  "obj loader": objLoader,
+  "transform propagation": transformPropagation,
 }
 
 renderer.setViewport(innerWidth, innerHeight)
