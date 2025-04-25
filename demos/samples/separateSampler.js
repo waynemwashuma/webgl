@@ -4,7 +4,8 @@ import {
   TextureWrap,
   BasicMaterial,
   Renderer,
-  TextureLoader
+  TextureLoader,
+  PerspectiveProjection
 } from 'webgllis';
 import { Sampler } from '../../src/texture/sampler.js';
 
@@ -63,7 +64,10 @@ export function separateSamplers({
   mesh3.transform.position.x = 1.2
 
   renderer.camera.transform.position.z = 2
-  renderer.camera.makePerspective(120)
+  if (renderer.camera.projection instanceof PerspectiveProjection) {
+    renderer.camera.projection.fov = Math.PI / 180 * 120
+    renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+  }
   renderer.add(mesh1)
   renderer.add(mesh2)
   renderer.add(mesh3)

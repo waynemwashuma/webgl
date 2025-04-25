@@ -1,4 +1,5 @@
 import {
+  PerspectiveProjection,
   Quaternion,
   Renderer,
   SkyBox,
@@ -18,13 +19,15 @@ export function skyBox({
     night: textureLoader.get('night'),
   })
   renderer.camera.transform.position.z = 2
-  renderer.camera.makePerspective(120)
+  if(renderer.camera.projection instanceof PerspectiveProjection){
+    renderer.camera.projection.fov = Math.PI / 180 * 120
+    renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+  }
   renderer.add(skyBox)
 
   let number = 0, direction = 1
   const interval = 0.001
-  const euler = new Vector3(0, Math.PI / 1000, 0)
-  const rotation = new Quaternion().setFromEuler(euler)
+  const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
   setInterval(() => {
     skyBox.material.lerp = number
 

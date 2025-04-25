@@ -1,6 +1,6 @@
 import { DirectionalLight } from "../light/index.js"
-import { Camera } from "../camera.js"
-import { GlDataType, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constant.js"
+import { Camera } from "../camera/camera.js"
+import {  TextureType } from "../constant.js"
 import { Attribute, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Mesh } from "../mesh/index.js"
@@ -165,18 +165,18 @@ export class Renderer {
   update() {
     this.clear()
     if (this.camera) {
-      this.camera.updateMatrix()
+      this.camera.update()
       this.updateUBO(this.camera.getData())
     }
 
     this.updateUBO(this.lights.ambientLight.getData())
     this.updateUBO(this.lights.directionalLights.getData())
 
-    for (var i = 0; i < this.lights.directionalLights.lights.length; i++) {
+    for (let i = 0; i < this.lights.directionalLights.lights.length; i++) {
       this.lights.directionalLights.lights[i].update()
     }
 
-    for (var i = 0; i < this.meshes.length; i++) {
+    for (let i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
       this.meshes[i].renderGL(this.gl, this.defaultTexture)
     }

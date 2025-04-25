@@ -6,7 +6,8 @@ import {
   Quaternion,
   DirectionalLight,
   Renderer,
-  TextureLoader
+  TextureLoader,
+  PerspectiveProjection
 } from 'webgllis';
 
 /**
@@ -21,7 +22,7 @@ export function rotatingUvSphere({
   light.direction.set(0, -1, -1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
-  
+
   const origin = new Mesh(
     new UVSphereGeometry(1),
     new LambertMaterial({
@@ -29,12 +30,15 @@ export function rotatingUvSphere({
     })
   )
   renderer.camera.transform.position.z = 2
-  renderer.camera.makePerspective(120)
+  if (renderer.camera.projection instanceof PerspectiveProjection) {
+    renderer.camera.projection.fov = Math.PI / 180 * 120
+    renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+  }
   renderer.add(origin)
-  
-  const euler = new Vector3(Math.PI / 1000, Math.PI / 1000, 0)
-  const quat1 = new Quaternion().setFromEuler(euler)
+
+  const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
+
   setInterval(() => {
-    origin.transform.orientation.multiply(quat1)
+    origin.transform.orientation.multiply(rotation)
   }, 100 / 6)
 }

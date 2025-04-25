@@ -4,7 +4,8 @@ import {
   OBJLoader,
   BasicMaterial,
   Renderer,
-  TextureLoader
+  TextureLoader,
+  PerspectiveProjection
 } from 'webgllis';
 
 /**
@@ -23,17 +24,20 @@ export function objLoader({
     path: "assets/models/obj/pirate_girl/pirate_girl.obj"
   }).then((mesh => {
     renderer.add(mesh)
-    const euler = new Vector3(0, Math.PI / 1000, 0)
-    const quat1 = new Quaternion().setFromEuler(euler)
-    setInterval(() => {
-      mesh.transform.orientation.multiply(quat1)
+    const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
 
-      if(mesh.material instanceof BasicMaterial){
+    setInterval(() => {
+      mesh.transform.orientation.multiply(rotation)
+
+      if (mesh.material instanceof BasicMaterial) {
         mesh.material.mainTexture = texture
       }
     }, 100 / 6)
   }))
   renderer.camera.transform.position.z = 2
   renderer.camera.transform.position.y = 2
-  renderer.camera.makePerspective(120)
+  if (renderer.camera.projection instanceof PerspectiveProjection) {
+    renderer.camera.projection.fov = Math.PI / 180 * 120
+    renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+  }
 }

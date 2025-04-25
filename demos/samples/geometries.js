@@ -7,10 +7,10 @@ import {
   IcosphereGeometry,
   CylinderGeometry,
   QuadGeometry,
-  Vector3,
   Quaternion,
   Renderer,
-  TextureLoader
+  TextureLoader,
+  PerspectiveProjection
 } from "webgllis"
 
 /**
@@ -22,7 +22,7 @@ export function geometries({
 }) {
   const texture = textureLoader.get('uv')
   const material = new BasicMaterial({
-    mainTexture:texture
+    mainTexture: texture
   })
   const geometries = [
     new QuadGeometry(1, 1),
@@ -50,15 +50,18 @@ export function geometries({
 
   //set up the camera
   renderer.camera.transform.position.z = 5
-  renderer.camera.makePerspective(120)
+  if (renderer.camera.projection instanceof PerspectiveProjection) {
+    renderer.camera.projection.fov = Math.PI / 180 * 120
+    renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+  }
 
   //add meshes to the renderer
   meshes.forEach(mesh => renderer.add(mesh))
 
+  const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
+
   //rotate the meshes
   setInterval(() => {
-    const euler = new Vector3(Math.PI / 1000, Math.PI / 1000, 0)
-    const quat = new Quaternion().setFromEuler(euler)
-    meshes.forEach(mesh => mesh.transform.orientation.multiply(quat))
+    meshes.forEach(mesh => mesh.transform.orientation.multiply(rotation))
   }, 1000 / 60)
 }
