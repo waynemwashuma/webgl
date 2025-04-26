@@ -22,13 +22,13 @@ export const lambertFragment =
   out vec4 fragment_color;
 
   void main(){
-    float opacity = color.w;
+    vec3 sample_color = texture(mainTexture,v_uv).rgb;
+    vec3 base_color = tint(sample_color, color.rgb);
     vec3 normal = normalize(v_normal);
+    float opacity = color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
-    vec3 base_color = texture(mainTexture,v_uv).xyz * color.xyz;
-    if(base_color == vec3(0.0,0.0,0.0))
-      base_color = color.xyz;
-    vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
+
+    vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
     
     vec3 accumulative_diffuse = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < directional_light_count; i++) {
@@ -36,7 +36,7 @@ export const lambertFragment =
       
       //Remember you set the dir to negative because direction to light is the opposite direction of dir.
       float brightness = calculate_brightness(normal, -light.direction);
-      vec3 diffuse = base_color * light.color.xyz * brightness * light.intensity;
+      vec3 diffuse = base_color * light.color.rgb * brightness * light.intensity;
       
       accumulative_diffuse += base_color * diffuse;
     }

@@ -26,4 +26,8 @@ export const commonShaderLib = `
   float calculate_brightness(vec3 normal, vec3 dir) {
     return max(dot(normal, dir), 0.0);
   }
+
+  vec3 tint(vec3 tex_color, vec3 tint_color){
+    return tex_color * tint_color;
+  }
 `
