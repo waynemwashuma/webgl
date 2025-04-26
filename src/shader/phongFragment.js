@@ -9,14 +9,12 @@ export const phongFragment =
   in vec3 v_normal;
   in vec3 cam_direction;
   
-  uniform AmbientLight {
-    float intensity;
-    vec4 color;
-  } ambient_light;
-  uniform DirectionalLights {
-    int count;
-    DirectionalLight lights[MAX_DIRECTIONAL_LIGHTS];
-  } directional_lights;
+  uniform AmbientLightBlock {
+    AmbientLight ambient_light;
+  };
+  uniform DirectionalLightBlock {
+    DirectionalLights directional_lights;
+  };
   
   uniform vec4 color;
   uniform sampler2D mainTexture;
@@ -25,7 +23,7 @@ export const phongFragment =
   
   out vec4 fragment_color;
  
- void main(){
+  void main(){
     vec3 view_direction = normalize(cam_direction);
     float opacity = color.w;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
@@ -54,5 +52,5 @@ export const phongFragment =
     vec3 final_color = base_color * ambient + accumulate_light_contribution;
     
     fragment_color = vec4(final_color, opacity);
-}
+  }
 `
