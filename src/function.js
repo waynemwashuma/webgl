@@ -32,7 +32,7 @@ export function createshader(gl, src, type) {
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.log(`Shader could not compile: 
-    ${src}
+    ${formatGlsl(src)}
     ========================================
     ${gl.getShaderInfoLog(shader)}
     `);
@@ -472,6 +472,20 @@ function updateCubeMap(gl, texture) {
       src
     )
   }
+}
+
+/**
+ * @param {string} code
+ */
+function formatGlsl(code) {
+  const normalized = code.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = normalized.split("\n")
+
+  return lines.map((ln, idx) => {
+    const num = (idx + 1).toString()
+    return `${num}: ${ln}`;
+  })
+  .join("\n");
 }
 
 /**
