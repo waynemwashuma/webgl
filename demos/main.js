@@ -6,6 +6,7 @@ import {
   drawModes,
   geometries,
   cullface,
+  rotatingUvSphere
 } from "./samples/index.js"
 
 const canvas = document.getElementById("can")
@@ -17,6 +18,7 @@ const manager = {
 }
 const demos = {
   "drawModes": drawModes,
+  "rotating sphere": rotatingUvSphere,
   "rotating cube": rotatingCube,
   "texture wrap": textureWrap,
   "materials": materials,
