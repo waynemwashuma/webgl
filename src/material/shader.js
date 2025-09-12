@@ -66,8 +66,8 @@ export class Shader {
   /**
    * @param {WebGL2RenderingContext} gl
    */
-  prepareUBO(gl, ubo) {
-    let index = gl.getUniformBlockIndex(this.program, ubo.name)
+  prepareUBO(gl, name, ubo) {
+    let index = gl.getUniformBlockIndex(this.program, name)
     gl.uniformBlockBinding(this.program, index, ubo.point)
   }
   /**
