@@ -1,5 +1,5 @@
 import { Shader } from "./shader.js"
-import { Color,Vector3 } from "../Math/index.js"
+import { Color,Vector3 } from "../math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 
 export class LambertMaterial extends Shader {

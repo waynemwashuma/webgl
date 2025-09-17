@@ -19,7 +19,7 @@ export class Color {
    * @param {number} [b=0] - blue component [0 .. 255]
    * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
    */
-  constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
+  constructor(r = 1, g = 1, b = 1, alpha = 1.0) {
     this.setColor(r, g, b, alpha);
   }
 

@@ -1,21 +1,21 @@
 import { Camera } from "../camera.js"
-import { UBO } from "../core/index.js"
+import { UBO, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 
 export class DirectionalLights {
   lights = []
   maxNumber = 10
-  
-  getLayout(){
+
+  getLayout() {
     return {
-      name:"DirectionalLights",
-      size:20
+      name: "DirectionalLights",
+      size: 20
     }
   }
-  getData(){
+  getData() {
     return {
-      name:"DirectionalLights",
-      data:new ArrayBuffer(10)
+      name: "DirectionalLights",
+      data: new ArrayBuffer(10)
     }
   }
 }
@@ -24,8 +24,7 @@ export class Lights {
   ambientLight = new AmbientLight()
 }
 export class Renderer {
-  _ubocounter = 0
-  _UBOs = {}
+  _UBOs = new UBOs()
   lights = new Lights()
   meshes = []
   camera = new Camera()
@@ -41,10 +40,10 @@ export class Renderer {
   constructor(canvas) {
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
-    
+
     this.gl = canvas.getContext("webgl2")
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    
+
     if (this.culling) {
       this.gl.enable(this.gl.CULL_FACE)
       this.gl.cullFace(this.gl.BACK)
@@ -56,33 +55,21 @@ export class Renderer {
       this.gl.enable(this.gl.BLEND)
       this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
     }
-    
-    const cameraLayout = this.camera.getLayout()
-    const ambientLightLayout = this.lights.ambientLight.getLayout()
-    
-    this.setGlobalUBO(cameraLayout.name, cameraLayout)
-    this.setGlobalUBO(ambientLightLayout.name, ambientLightLayout)
   }
   setGlobalUBO(name, layout) {
-    this._UBOs[name] = new UBO(
-      this.gl,
-      this.getUBOpoint(),
-      layout.size
-    )
-  }
-  getUBOpoint() {
-    return this._ubocounter++;
+    this._UBOs.set(name, layout)
   }
   updateUBO(dataForm) {
     const { data, name } = dataForm
-    if (name in this._UBOs) {
-      const ubo = this._UBOs[name]
-      ubo.update(this.gl, data)
-    }
+    const ubo = this._UBOs.get(name)
+
+    if(!ubo) return
+
+    ubo.update(this.gl, data)
   }
-  
+
   add(mesh) {
-    mesh.init(this.gl)
+    mesh.init(this.gl, this._UBOs)
     this.meshes.push(mesh)
   }
   remove(mesh) {
@@ -107,16 +94,18 @@ export class Renderer {
     }
 
     this.updateUBO(this.lights.ambientLight.getData())
-
+    
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
-      this.meshes[i].renderGL(this.gl, this._UBOs)
+      this.meshes[i].renderGL(this.gl)
     }
   }
   setViewport(w, h) {
     let canvas = this.gl.canvas
-    canvas.style.width = w + "px"
-    canvas.style.height = h + "px"
+    if(canvas instanceof HTMLCanvasElement){
+      canvas.style.width = w + "px"
+      canvas.style.height = h + "px"
+    }
     canvas.width = w * this.dpr
     canvas.height = h * this.dpr
     this.gl.viewport(0, 0,

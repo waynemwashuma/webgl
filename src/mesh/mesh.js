@@ -14,9 +14,9 @@ export class Mesh {
     this.geometry = geometry
     this.material = material
   }
-  init(gl) {
+  init(gl, ubos) {
     this.material.setUniform(UNI_MODEL_MAT, this.transform.matrix)
-    this.material.init(gl)
+    this.material.init(gl, ubos)
     this.geometry.init(gl, this.material.program)
   }
   update() {
@@ -24,20 +24,12 @@ export class Mesh {
   }
   /**
    * @param {WebGL2RenderingContext} gl
-   * @param {Record<string,UBO>} ubos
    */
-  renderGL(gl, ubos) {
+  renderGL(gl) {
     let material = this.material
     let geometry = this.geometry
     let attributes = geometry.attributes
     let drawMode = material.drawMode
-
-    for (const name in ubos) {
-      const ubo = ubos[name]
-      
-      // This should happen during initialization time, not per frame.
-      this.material.prepareUBO(gl,name,ubo)
-    }
 
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program

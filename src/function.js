@@ -55,7 +55,7 @@ export function createTexture(gl, img, flipY) {
   return tex
 }
 /**
- * @param {WebGLRenderingContext} gl
+ * @param {WebGL2RenderingContext} gl
  */
 export function createProgram(gl, vshader, fshader) {
   let program = gl.createProgram()
@@ -77,9 +77,9 @@ export function createProgram(gl, vshader, fshader) {
   if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
     console.log(`Program could not be validated: 
     ========================================
-    ${gl.getProgramInfoLog(shader)}
+    ${gl.getProgramInfoLog(program)}
     `);
-    gl.deleteProgram(shader)
+    gl.deleteProgram(program)
     return null
   }
   
@@ -167,7 +167,6 @@ export function createProgramFromSrc(gl, vshader, fshader) {
     return null
   }
   let program = createProgram(gl, v, f)
-  console.log(program)
   return program
 }
 
@@ -177,7 +176,7 @@ export function sizeofUniform(uniform) {
     case UniformType.INT:
     case UniformType.FLOAT:
     case UniformType.BOOL:
-    case UniformType.TEXTURE:
+    case UniformType.SAMPLER_2D:
       return 1
     case UniformType.MAT4:
       return 16
@@ -190,23 +189,6 @@ export function sizeofUniform(uniform) {
     case UniformType.VEC4:
     case UniformType.MAT2:
       return 4
-    case UniformType.ARR_FLOAT:
-      return uniform.value.length
-    case UniformType.ARR_FLOAT:
-    case UniformType.ARR_BOOL:
-    case UniformType.ARR_INT:
-      return uniform.value.length
-    case UniformType.ARR_VEC2:
-      return uniform.value.length * 2
-    case UniformType.ARR_VEC3:
-      return uniform.value.length * 3
-    case UniformType.ARR_VEC4:
-    case UniformType.ARR_MAT2:
-      return uniform.value.length * 4
-    case UniformType.ARR_MAT3:
-      return uniform.value.length * 9
-    case UniformType.ARR_MAT4:
-      return uniform.value.length * 16
     default:
       return 0
   }
@@ -234,46 +216,15 @@ export function typeOfUniform(uniform) {
     if (name === "matrix4")
       return UniformType.MAT4
     if (name === "texture")
-      return UniformType.TEXTURE
-    if (name === "array") {
-      let eltype = typeOfUniform(uniform[0])
-      return convertToArrUniType(eltype)
-    }
-    return UniformType.ARR
-    if (name === "object")
-      return UniformType.STRUCT
-    //Todo : add UBO for objects here
+      return UniformType.SAMPLER_2D
   }
   throw "Unsupported type of uniform value  \'" + name + "\'";
-}
-
-function convertToArrUniType(type) {
-  switch (type) {
-    case UniformType.INT:
-      return UniformType.ARR_INT
-    case UniformType.FLOAT:
-      return UniformType.ARR_FLOAT
-    case UniformType.BOOL:
-      return UniformType.ARR_BOOL
-    case UniformType.MAT4:
-      return UniformType.ARR_MAT4
-    case UniformType.MAT3:
-      return UniformType.ARR_MAT3
-    case UniformType.VEC2:
-      return UniformType.ARR_VEC2
-    case UniformType.VEC3:
-      return UniformType.ARR_VEC3
-    case UniformType.VEC4:
-      return UniformType.ARR_VEC4
-    default:
-      return 0
-  }
 }
 
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLProgram} program
- * @param {string} name
+ * @param {number} index
  */
 function getUBOLayout(gl, program, index) {
   const size = gl.getActiveUniformBlockParameter(

@@ -1,23 +1,20 @@
 import {
   createProgramFromSrc,
-  typeOfUniform,
-  sizeofUniform
 } from "../function.js"
 import {
-  UNI_CAM_MAT,
-  UNI_PROJ_MAT,
-  UNI_MODEL_MAT,
   UniformType,
   BlendMode,
   DrawMode,
   CullFace
 } from "../constant.js"
+import { UBOs } from "../core/ubo.js"
 
 export class Shader {
   drawMode = DrawMode.TRIANGLES
   cullFace = CullFace.BACK
-  distBlendFunc = BlendMode.ONE_MINUS_SRC
+  distBlendFunc = BlendMode.ONE_MINUS_SRC_ALPHA
   srcBlendFunc = BlendMode.SRC_ALPHA
+  uniformValues = new Map()
   /**
    * @param {string} vshaderSrc
    * @param {string} fshaderSrc
@@ -25,21 +22,28 @@ export class Shader {
   constructor(vshaderSrc, fshaderSrc, uniforms = {}) {
     this.vSrc = vshaderSrc
     this.fSrc = fshaderSrc
-    this.program = null
     this.uniforms = {}
+    this.program = null
     for (let name in uniforms) {
       this.setUniform(name, uniforms[name])
     }
   }
   /**
    * @param {WebGL2RenderingContext} gl
+   * @param {UBOs} ubos
    */
-  init(gl, ubo) {
+  init(gl, ubos) {
     if (this.program) return
     const programInfo = createProgramFromSrc(gl, this.vSrc, this.fSrc)
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
+
+    for (const name in this.uniformBlocks) {
+      const ubo = ubos.getorSet(gl, name, this.uniformBlocks[name])
+
+      this.prepareUBO(gl, name, ubo)
+    }
   }
   /**
    * @param {WebGL2RenderingContext} gl
@@ -47,10 +51,15 @@ export class Shader {
   activate(gl) {
     let texIndex = 0
     gl.useProgram(this.program)
-    for (var name in this.uniforms) {
-      let u = this.uniforms[name]
-      updateUniform(gl, u, texIndex)
-      if (u.type === UniformType.TEXTURE)
+    for (const [name, value] of this.uniformValues) {
+      const uniform = this.uniforms[name]
+      if(!uniform){
+        console.log(`Uniform "${name}" is not avaiable in "${this.constructor.name}"`)
+        continue 
+      }
+      const {location,type} = uniform
+      updateUniform(gl,location, value.value, texIndex, type)
+      if (uniform.type === UniformType.SAMPLER_2D)
         texIndex++
     }
     gl.cullFace(this.cullFace);
@@ -68,19 +77,21 @@ export class Shader {
   deactivate(gl) {
     gl.useProgram(null)
   }
-  setUniform(name, value, type) {
-    if (name in this.uniforms)
-      return this.updateUniform(name, value)
-
-    this.uniforms[name] = {
-      value,
-      type: 0,
-      location: null,
-      size: 0
-    }
+  setUniform(name, value) {
+    return this.updateUniform(name, value)
   }
+
   updateUniform(name, value) {
-    this.uniforms[name].value = value
+    const item = this.uniformValues.get(name)
+    if (item) {
+      item.value = value
+      item.dirty = true
+    } else {
+      this.uniformValues.set(name, {
+        value: value,
+        dirty: true
+      })
+    }
   }
 }
 
@@ -88,78 +99,40 @@ export class Shader {
 /**
  * @param {WebGL2RenderingContext} gl
  */
-function updateUniform(gl, uniform, offset) {
-  const arr = new Float32Array(uniform.size)
-  switch (uniform.type) {
+function updateUniform(gl,location, value, offset, type) {
+  const arr = new Float32Array(16)
+  switch (type) {
     case UniformType.BOOL:
     case UniformType.INT:
-      gl.uniform1i(uniform.location, uniform.value)
+      gl.uniform1i(location, value)
     case UniformType.FLOAT:
-      gl.uniform1f(uniform.location, uniform.value)
+      gl.uniform1f(location, value)
       break
     case UniformType.VEC2:
-      gl.uniform2f(uniform.location, ...uniform.value, 0, 2)
+      gl.uniform2f(location, ...value, 0, 2)
       break
     case UniformType.VEC3:
-      gl.uniform3f(uniform.location, ...uniform.value, 0, 3)
+      gl.uniform3f(location, ...value, 0, 3)
       break
     case UniformType.VEC4:
-      gl.uniform4f(uniform.location,...uniform.value)
+      gl.uniform4f(location, ...value)
       break
     case UniformType.MAT2:
-      gl.uniformMatrix2fv(uniform.location,)
+      gl.uniformMatrix2fv(location, ...value)
       break
     case UniformType.MAT3:
-      uniform.value.toArray(arr)
-      gl.uniformMatrix3fv(uniform.location, arr, false, arr, 0, 9)
+      value.toArray(arr)
+      gl.uniformMatrix3fv(location, false, arr)
       break
     case UniformType.MAT4:
-      uniform.value.toArray(arr)
-      gl.uniformMatrix4fv(uniform.location, false, arr, 0, 16)
+      value.toArray(arr)
+      
+      gl.uniformMatrix4fv(location, false, arr, 0, 16)
       break
-    case UniformType.TEXTURE:
+    case UniformType.SAMPLER_2D:
       gl.activeTexture(gl.TEXTURE0 + offset)
-      gl.bindTexture(gl.TEXTURE_2D, uniform.value.webglTex)
-      gl.uniform1i(uniform.location, offset)
-      break
-    case UniformType.ARR_VEC2:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 2)
-      }
-      gl.uniform2fv(uniform.location, arr)
-      break
-    case UniformType.ARR_VEC3:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 3)
-      }
-      gl.uniform3fv(uniform.location, arr)
-      break
-    case UniformType.ARR_VEC4:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 4)
-      }
-      gl.uniform4fv(uniform.location, arr)
-      break
-    case UniformType.ARR_MAT2:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 4)
-      }
-      gl.uniformMatrix2fv(uniform.location, false, arr)
-      break
-    case UniformType.ARR_MAT2:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 4)
-      }
-      gl.uniformMatrix2fv(uniform.location, false, arr)
-      break
-    case UniformType.ARR_MAT2:
-      for (let i = 0; i < uniform.value.length; i++) {
-        uniform.value[i].toArray(arr, i * 4)
-      }
-      gl.uniformMatrix4fv(uniform.location, false, arr)
-      break
-    case UniformType.ARR_FLOAT:
-    case UniformType.ARR_BOOL:
+      gl.bindTexture(gl.TEXTURE_2D, value.webglTex)
+      gl.uniform1i(location, offset)
       break
   }
 }
