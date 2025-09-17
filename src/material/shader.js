@@ -34,20 +34,12 @@ export class Shader {
   /**
    * @param {WebGL2RenderingContext} gl
    */
-  init(gl) {
+  init(gl, ubo) {
     if (this.program) return
-    this.program = createProgramFromSrc(gl, this.vSrc, this.fSrc)
-
-    for (let name in this.uniforms) {
-      let uniform = this.uniforms[name]
-      uniform.type = typeOfUniform(
-        uniform.value
-      )
-      uniform.size = sizeofUniform(uniform)
-      //if (uniform.type === UniformType.TEXTURE)
-      //TODO - warn if location is null.
-      uniform.location = gl.getUniformLocation(this.program, name)
-    }
+    const programInfo = createProgramFromSrc(gl, this.vSrc, this.fSrc)
+    this.program = programInfo.program
+    this.uniforms = programInfo.uniforms
+    this.uniformBlocks = programInfo.uniformBlocks
   }
   /**
    * @param {WebGL2RenderingContext} gl

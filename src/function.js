@@ -25,7 +25,7 @@ export function createshader(gl, src, type) {
   let shader = gl.createShader(type)
   gl.shaderSource(shader, src)
   gl.compileShader(shader)
-
+  
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.log(`Shader could not compile: 
     ${src}
@@ -42,7 +42,7 @@ export function createshader(gl, src, type) {
  */
 export function createTexture(gl, img, flipY) {
   let tex = gl.createTexture()
-
+  
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
   gl.bindTexture(gl.TEXTURE_2D, tex)
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
@@ -50,7 +50,7 @@ export function createTexture(gl, img, flipY) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
   gl.generateMipmap(gl.TEXTURE_2D)
   gl.bindTexture(gl.TEXTURE_2D, null)
-
+  
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return tex
 }
@@ -82,12 +82,16 @@ export function createProgram(gl, vshader, fshader) {
     gl.deleteProgram(shader)
     return null
   }
-
+  
   gl.detachShader(program, vshader)
   gl.detachShader(program, fshader)
   gl.deleteShader(vshader)
   gl.deleteShader(fshader)
-  return program
+  return {
+    program,
+    uniforms:getActiveUniforms(gl, program),
+    uniformBlocks:getActiveUniformBlocks(gl,program)
+  }
 }
 
 /**
@@ -97,7 +101,7 @@ export function createVAO(gl, indices, vertices, normals, uv) {
   let vao = {
     drawMode: gl.TRIANGLES,
     attributes: {
-
+      
     }
   }
   vao.vao = gl.createVertexArray()
@@ -108,10 +112,9 @@ export function createVAO(gl, indices, vertices, normals, uv) {
     dict.buffer = buffer
     dict.size = 1
     dict.count = indices.length
-
+    
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
-    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null)
   }
   if (vertices != void 0) {
     let dict = vao.attributes.position = {}
@@ -141,7 +144,7 @@ export function createVAO(gl, indices, vertices, normals, uv) {
     dict.buffer = buffer
     dict.size = 2;
     dict.count = vertices.length / dict.size
-
+    
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW)
     gl.enableVertexAttribArray(ATTR_UV_LOC)
@@ -164,6 +167,7 @@ export function createProgramFromSrc(gl, vshader, fshader) {
     return null
   }
   let program = createProgram(gl, v, f)
+  console.log(program)
   return program
 }
 
@@ -211,7 +215,7 @@ export function typeOfUniform(uniform) {
   if (uniform === void 0) return -1
   let name = uniform.constructor.name.toLowerCase()
   let type = typeof uniform
-
+  
   if (type == "boolean")
     return UniformType.BOOL
   if (type == "number")
@@ -264,4 +268,82 @@ function convertToArrUniType(type) {
     default:
       return 0
   }
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLProgram} program
+ * @param {string} name
+ */
+function getUBOLayout(gl, program, index) {
+  const size = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_DATA_SIZE
+  )
+  const numUniforms = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS
+  );
+  
+  const uniformIndices = gl.getActiveUniformBlockParameter(
+    program,
+    index,
+    gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES
+  )
+  const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
+  const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
+  
+  const fields = {}
+  uniformIndices.forEach((index, i) => {
+    const info = gl.getActiveUniform(program, index);
+    return fields[info.name] = {
+      type: info.type,
+      size: info.size,
+      offset: offsets[i],
+      stride: strides[i]
+    }
+  });
+  return {
+    name,
+    size,
+    fields
+  }
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLProgram} program
+ */
+function getActiveUniforms(gl, program) {
+  const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+  const array = {}
+  for (let i = 0; i < numUniforms; i++) {
+    const info = gl.getActiveUniform(program, i);
+    const [blockIndex] = gl.getActiveUniforms(
+      program,
+      [i],
+      gl.UNIFORM_BLOCK_INDEX
+    )
+    if (blockIndex !== -1) continue
+    array[info.name] = {
+      size: info.size,
+      type: info.type,
+      location: gl.getUniformLocation(program, info.name)
+    }
+  }
+  
+  return array
+}
+
+function getActiveUniformBlocks(gl, program) {
+  const results = {}
+  const numBlocks = gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS);
+  
+  for (let i = 0; i < numBlocks; i++) {
+    const name = gl.getActiveUniformBlockName(program, i);
+    results[name] = getUBOLayout(gl, program, i)
+  }
+  return results
 }

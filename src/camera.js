@@ -25,13 +25,13 @@ export class Camera {
   
   getLayout() {
     return {
-      name: "camera",
+      name: "Camera",
       size: 144
     }
   }
   getData() {
     return {
-      name: "camera",
+      name: "Camera",
       data: new Float32Array([
         ...this.view,
         ...this.projection,

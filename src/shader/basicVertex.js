@@ -3,12 +3,11 @@ export const basicVertex =
   `#version 300 es
   precision mediump float;
   
-  uniform camera {
+  uniform Camera {
     mat4 view;
     mat4 projection;
     vec3 camPosition;
-  };
-  
+  } camera;
   uniform mat4 model;
   
   in vec3 position;
@@ -21,10 +20,10 @@ export const basicVertex =
   out vec3 camDirection;
 
   void main(){
-    gl_Position = projection * view * model * vec4(position,1.0);
+    gl_Position = camera.projection * camera.view * model * vec4(position,1.0);
     invNormalMat = mat3(model);
     v_uv = uv;
-    camDirection =  gl_Position.xyz - camPosition;
+    camDirection =  gl_Position.xyz - camera.camPosition;
     v_normal = normal;
   }
 `

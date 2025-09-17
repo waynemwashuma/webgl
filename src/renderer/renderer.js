@@ -2,14 +2,26 @@ import { Camera } from "../camera.js"
 import { UBO } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 
+export class DirectionalLights {
+  lights = []
+  maxNumber = 10
+  
+  getLayout(){
+    return {
+      name:"DirectionalLights",
+      size:20
+    }
+  }
+  getData(){
+    return {
+      name:"DirectionalLights",
+      data:new ArrayBuffer(10)
+    }
+  }
+}
+
 export class Lights {
   ambientLight = new AmbientLight()
-  directionalCount = 10
-  pointCount = 5
-  spotCount = 5
-  directionalLights = []
-  pointLights = []
-  spotLights = []
 }
 export class Renderer {
   _ubocounter = 0
@@ -46,7 +58,7 @@ export class Renderer {
     }
     
     const cameraLayout = this.camera.getLayout()
-    const ambientLightLayout = this.camera.getLayout()
+    const ambientLightLayout = this.lights.ambientLight.getLayout()
     
     this.setGlobalUBO(cameraLayout.name, cameraLayout)
     this.setGlobalUBO(ambientLightLayout.name, ambientLightLayout)
@@ -93,7 +105,9 @@ export class Renderer {
       this.camera.updateMatrix()
       this.updateUBO(this.camera.getData())
     }
+
     this.updateUBO(this.lights.ambientLight.getData())
+
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
       this.meshes[i].renderGL(this.gl, this._UBOs)

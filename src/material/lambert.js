@@ -3,13 +3,10 @@ import { Color,Vector3 } from "../Math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 
 export class LambertMaterial extends Shader {
-  // color = new Color()
   constructor(options) {
     let {
     mainTexture= null,
     color= new Color(1, 1, 1),
-    ambientColor=new Color(1,1,1),
-    ambientIntensity = 0.15,
     opacity= 1.0,
     lightDir= new Vector3(0, 0, -1),
     lightColor=new Color(1,1,1),
@@ -18,8 +15,6 @@ export class LambertMaterial extends Shader {
 
     super(basicVertex, lambertFragment, {
       color,
-      ambientColor,
-      ambientIntensity,
       opacity,
       lightDir,
       lightColor,

@@ -5,8 +5,8 @@ import {
 } from '../math/index.js'
 
 export class AmbientLight {
-  intensity = 1.0
-  color = new Color(1, 1, 0)
+  intensity = 1
+  color = new Color(1, 1, 1)
   
   getLayout() {
     return {

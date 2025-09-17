@@ -31,18 +31,21 @@ export class Mesh {
     let geometry = this.geometry
     let attributes = geometry.attributes
     let drawMode = material.drawMode
+
     for (const name in ubos) {
       const ubo = ubos[name]
       
       // This should happen during initialization time, not per frame.
       this.material.prepareUBO(gl,name,ubo)
     }
+
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
     material.activate(gl)
     gl.bindVertexArray(this.geometry.VAO)
     material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
     //drawing
+
     if (attributes.indices) {
       gl.drawElements(drawMode,
         attributes["indices"].count,
