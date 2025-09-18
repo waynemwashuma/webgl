@@ -23,12 +23,6 @@ export class Camera {
     this.projection.makePerspective(fov, innerWidth / innerHeight, near, far)
   }
   
-  getLayout() {
-    return {
-      name: "Camera",
-      size: 144
-    }
-  }
   getData() {
     return {
       name: "Camera",

@@ -7,13 +7,7 @@ import {
 export class AmbientLight {
   intensity = 1
   color = new Color(1, 1, 1)
-  
-  getLayout() {
-    return {
-      name:"AmbientLight",
-      size:32
-    }
-  }
+
   getData() {
     return {
       name:"AmbientLight",

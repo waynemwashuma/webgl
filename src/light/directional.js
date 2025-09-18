@@ -28,7 +28,4 @@ export class DirectionalLight {
       array[i + offset] = element[i]
     }
   }
-  static size() {
-    return
-  }
 }
