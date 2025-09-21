@@ -49,6 +49,8 @@ export class Shader {
    * @param {WebGL2RenderingContext} gl
    */
   activate(gl) {
+
+    // TODO: Separate to diferent texture types
     let texIndex = 0
     gl.useProgram(this.program)
     for (const [name, value] of this.uniformValues) {
@@ -59,7 +61,9 @@ export class Shader {
       }
       const {location,type} = uniform
       updateUniform(gl,location, value.value, texIndex, type)
-      if (uniform.type === UniformType.SAMPLER_2D)
+      if (
+        uniform.type === UniformType.SAMPLER_2D ||
+        uniform.type === UniformType.SAMPLER_CUBE)
         texIndex++
     }
     gl.cullFace(this.cullFace);
@@ -134,5 +138,10 @@ function updateUniform(gl,location, value, offset, type) {
       gl.bindTexture(gl.TEXTURE_2D, value.webglTex)
       gl.uniform1i(location, offset)
       break
+    case UniformType.SAMPLER_CUBE:
+      gl.activeTexture(gl.TEXTURE0 + offset)
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.webglTex)
+      gl.uniform1i(location, offset)
+      
   }
 }
