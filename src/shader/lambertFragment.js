@@ -14,7 +14,6 @@ export const lambertFragment =
   in float brightness;
   in vec2 v_uv;
   in vec3 v_normal;
-  in mat3 invNormalMat;
   
   uniform sampler2D mainTexture;
   uniform vec3 lightDir;
@@ -47,7 +46,7 @@ export const lambertFragment =
       baseColor = color.xyz;
     vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
     
-    float brightness = calcBrightness(invNormalMat * v_normal,lightDir);
+    float brightness = calcBrightness(v_normal,lightDir);
     
     vec3 diffuse = lightColor.xyz * brightness * diffuseIntensity;
     

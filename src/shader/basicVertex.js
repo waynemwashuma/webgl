@@ -16,14 +16,13 @@ export const basicVertex =
   
   out vec2 v_uv;
   out vec3 v_normal;
-  out mat3 invNormalMat;
   out vec3 camDirection;
 
   void main(){
+    mat3 normalMatrix = mat3(model);
     gl_Position = camera.projection * camera.view * model * vec4(position,1.0);
-    invNormalMat = mat3(model);
     v_uv = uv;
-    camDirection =  gl_Position.xyz - camera.camPosition;
-    v_normal = normal;
+    camDirection = gl_Position.xyz - camera.camPosition;
+    v_normal = normalMatrix * normal;
   }
 `
