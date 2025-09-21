@@ -50,7 +50,10 @@ export const UniformType = {
   MAT4x2: 0x8B69, // WebGL2
   MAT4x3: 0x8B6A, // WebGL2
 
-  // Samplers
+  // Sampler
+  SAMPLER:0x82E6,// WEBGL 2
+
+  // Textures
   SAMPLER_2D: 0x8B5E,
   SAMPLER_CUBE: 0x8B60,
   SAMPLER_2D_SHADOW: 0x8B62, // WebGL2
@@ -58,13 +61,13 @@ export const UniformType = {
   SAMPLER_2D_ARRAY_SHADOW: 0x8DC4, // WebGL2
   SAMPLER_CUBE_SHADOW: 0x8DC5, // WebGL2
 
-  // Int samplers (WebGL2)
+  // Int textures (WebGL2)
   ISAMPLER_2D: 0x8DCA,
   ISAMPLER_3D: 0x8DCB,
   ISAMPLER_CUBE: 0x8DCC,
   ISAMPLER_2D_ARRAY: 0x8DCF,
 
-  // Unsigned int samplers (WebGL2)
+  // Unsigned int textures (WebGL2)
   USAMPLER_2D: 0x8DD2,
   USAMPLER_3D: 0x8DD3,
   USAMPLER_CUBE: 0x8DD4,
