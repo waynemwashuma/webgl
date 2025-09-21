@@ -6,7 +6,8 @@ import {
   drawModes,
   geometries,
   cullface,
-  rotatingUvSphere
+  rotatingUvSphere,
+  skyBox
 } from "./samples/index.js"
 
 const canvas = document.getElementById("can")
@@ -23,14 +24,39 @@ const demos = {
   "texture wrap": textureWrap,
   "materials": materials,
   "geometries": geometries,
-  "cullface": cullface
+  "cullface": cullface,
+  "skybox": skyBox
 }
 
 renderer.setViewport(innerWidth, innerHeight)
 
 textureLoader.load({
   src: "./assets/uv.jpg",
-  name: 'uv'
+  name: "uv"
+})
+
+textureLoader.loadCube({
+  src: [
+    "./assets/skybox/miramar_right.png",
+    "./assets/skybox/miramar_left.png",
+    "./assets/skybox/miramar_top.png",
+    "./assets/skybox/miramar_bottom.png",
+    "./assets/skybox/miramar_front.png",
+    "./assets/skybox/miramar_back.png"
+  ],
+  name: "day"
+})
+
+textureLoader.loadCube({
+  src: [
+    "./assets/skybox/grimmnight_right.png",
+    "./assets/skybox/grimmnight_left.png",
+    "./assets/skybox/grimmnight_top.png",
+    "./assets/skybox/grimmnight_bottom.png",
+    "./assets/skybox/grimmnight_front.png",
+    "./assets/skybox/grimmnight_back.png"
+  ],
+  name: "night"
 })
 
 init(demos)
@@ -55,8 +81,11 @@ function setupOpts(demos) {
     opts.append(opt)
   }
   opts.onchange = e => {
+    // @ts-ignore
     localStorage.setItem("play", e.target.value)
     renderer.clearMeshes()
+
+    // @ts-ignore
     demos[e.target.value](manager)
   }
 }
