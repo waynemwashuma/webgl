@@ -1,5 +1,5 @@
 import { Geometry } from "./geometry.js"
-import { AttributeData } from "../core/index.js"
+import { Attribute, AttributeData } from "../core/index.js"
 
 export class IcosphereGeometry extends Geometry {
   constructor(radius = 1, numSegments = 1) {
@@ -8,14 +8,14 @@ export class IcosphereGeometry extends Geometry {
     const { indices, vertices, normals, uvs } = createIcoSphere(radius, numSegments);
     
     this.indices = new Uint16Array(indices)
-    this.setAttribute("position",
-      new AttributeData(new Float32Array(vertices))
+    this.setAttribute(Attribute.Position.name,
+      new AttributeData(new DataView(new Float32Array(vertices).buffer))
     )
-    this.setAttribute("normal", 
-    new AttributeData(new Float32Array(normals))
+    this.setAttribute(Attribute.Normal.name, 
+    new AttributeData(new DataView(new Float32Array(normals).buffer))
     )
-    this.setAttribute("uv",
-      new AttributeData(new Float32Array(uvs))
+    this.setAttribute(Attribute.UV.name,
+      new AttributeData(new DataView(new Float32Array(uvs).buffer))
     )
   }
 }

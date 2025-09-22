@@ -37,7 +37,12 @@ export function separateSamplers({
   })
 
   const geometry = new QuadGeometry(1, 1)
-  const uvs = geometry._attributes.get('uv').value
+  const buffer = geometry._attributes.get('uv').value
+  const uvs = new Float32Array(
+    buffer.buffer,
+    buffer.byteOffset / Float32Array.BYTES_PER_ELEMENT,
+    buffer.byteLength / Float32Array.BYTES_PER_ELEMENT
+  )
   for (let i in uvs) {
     uvs[i] *= 2
   }

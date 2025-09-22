@@ -1,5 +1,5 @@
 import { Geometry } from "./geometry.js"
-import { AttributeData } from "../core/index.js"
+import { AttributeData, Attribute } from "../core/index.js"
 
 
 export class BoxGeometry extends Geometry {
@@ -7,112 +7,112 @@ export class BoxGeometry extends Geometry {
     super()
 
     const vertices = [
-  // Front face
-  -0.5 * w, -0.5 * h, 0.5 * d,
-  0.5 * w, -0.5 * h, 0.5 * d,
-  0.5 * w, 0.5 * h, 0.5 * d,
-  -0.5 * w, 0.5 * h, 0.5 * d,
+      // Front face
+      -0.5 * w, -0.5 * h, 0.5 * d,
+      0.5 * w, -0.5 * h, 0.5 * d,
+      0.5 * w, 0.5 * h, 0.5 * d,
+      -0.5 * w, 0.5 * h, 0.5 * d,
 
-  // Back face
-  -0.5 * w, -0.5 * h, -0.5 * d,
-  -0.5 * w, 0.5 * h, -0.5 * d,
-  0.5 * w, 0.5 * h, -0.5 * d,
-  0.5 * w, -0.5 * h, -0.5 * d,
+      // Back face
+      -0.5 * w, -0.5 * h, -0.5 * d,
+      -0.5 * w, 0.5 * h, -0.5 * d,
+      0.5 * w, 0.5 * h, -0.5 * d,
+      0.5 * w, -0.5 * h, -0.5 * d,
 
-  // Top face
-  -0.5 * w, 0.5 * h, -0.5 * d,
-  -0.5 * w, 0.5 * h, 0.5 * d,
-  0.5 * w, 0.5 * h, 0.5 * d,
-  0.5 * w, 0.5 * h, -0.5 * d,
+      // Top face
+      -0.5 * w, 0.5 * h, -0.5 * d,
+      -0.5 * w, 0.5 * h, 0.5 * d,
+      0.5 * w, 0.5 * h, 0.5 * d,
+      0.5 * w, 0.5 * h, -0.5 * d,
 
-  // Bottom face
-  -0.5 * w, -0.5 * h, -0.5 * d,
-  0.5 * w, -0.5 * h, -0.5 * d,
-  0.5 * w, -0.5 * h, 0.5 * d,
-  -0.5 * w, -0.5 * h, 0.5 * d,
+      // Bottom face
+      -0.5 * w, -0.5 * h, -0.5 * d,
+      0.5 * w, -0.5 * h, -0.5 * d,
+      0.5 * w, -0.5 * h, 0.5 * d,
+      -0.5 * w, -0.5 * h, 0.5 * d,
 
-  // Right face
-  0.5 * w, -0.5 * h, -0.5 * d,
-  0.5 * w, 0.5 * h, -0.5 * d,
-  0.5 * w, 0.5 * h, 0.5 * d,
-  0.5 * w, -0.5 * h, 0.5 * d,
+      // Right face
+      0.5 * w, -0.5 * h, -0.5 * d,
+      0.5 * w, 0.5 * h, -0.5 * d,
+      0.5 * w, 0.5 * h, 0.5 * d,
+      0.5 * w, -0.5 * h, 0.5 * d,
 
-  // Left face
-  -0.5 * w, -0.5 * h, -0.5 * d,
-  -0.5 * w, -0.5 * h, 0.5 * d,
-  -0.5 * w, 0.5 * h, 0.5 * d,
-  -0.5 * w, 0.5 * h, -0.5 * d,
-  ]
+      // Left face
+      -0.5 * w, -0.5 * h, -0.5 * d,
+      -0.5 * w, -0.5 * h, 0.5 * d,
+      -0.5 * w, 0.5 * h, 0.5 * d,
+      -0.5 * w, 0.5 * h, -0.5 * d,
+    ]
 
     const normals = [
-    // Front
-    0.0, 0.0, 1.0,
-    0.0, 0.0, 1.0,
-    0.0, 0.0, 1.0,
-    0.0, 0.0, 1.0,
+      // Front
+      0.0, 0.0, 1.0,
+      0.0, 0.0, 1.0,
+      0.0, 0.0, 1.0,
+      0.0, 0.0, 1.0,
 
-    // Back
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0,
+      // Back
+      0.0, 0.0, -1.0,
+      0.0, 0.0, -1.0,
+      0.0, 0.0, -1.0,
+      0.0, 0.0, -1.0,
 
-    // Top
-    0.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
+      // Top
+      0.0, 1.0, 0.0,
+      0.0, 1.0, 0.0,
+      0.0, 1.0, 0.0,
+      0.0, 1.0, 0.0,
 
-    // Bottom
-    0.0, -1.0, 0.0,
-    0.0, -1.0, 0.0,
-    0.0, -1.0, 0.0,
-    0.0, -1.0, 0.0,
+      // Bottom
+      0.0, -1.0, 0.0,
+      0.0, -1.0, 0.0,
+      0.0, -1.0, 0.0,
+      0.0, -1.0, 0.0,
 
-    // Right
-    1.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
-    1.0, 0.0, 0.0,
+      // Right
+      1.0, 0.0, 0.0,
+      1.0, 0.0, 0.0,
+      1.0, 0.0, 0.0,
+      1.0, 0.0, 0.0,
 
-    // Left
-    -1.0, 0.0, 0.0,
-    -1.0, 0.0, 0.0,
-    -1.0, 0.0, 0.0,
-    -1.0, 0.0, 0.0,
-  ]
+      // Left
+      -1.0, 0.0, 0.0,
+      -1.0, 0.0, 0.0,
+      -1.0, 0.0, 0.0,
+      -1.0, 0.0, 0.0,
+    ]
     const uv = [
-        // Front
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // Back
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // Top
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // Bottom
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // Right
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // Left
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-      ]
+      // Front
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      // Back
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      // Top
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      // Bottom
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      // Right
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      // Left
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+    ]
 
     const indices = []
     for (let i = 0; i < vertices.length / 3; i += 4) {
@@ -122,14 +122,15 @@ export class BoxGeometry extends Geometry {
       )
     }
     this.indices = new Uint16Array(indices)
-    this.setAttribute("position",
-      new AttributeData(new Float32Array(vertices))
-    )
-    this.setAttribute("normal",
-      new AttributeData(new Float32Array(normals))
-    )
-    this.setAttribute("uv",
-      new AttributeData(new Float32Array(uv))
-    )
+    this
+      .setAttribute(Attribute.Position.name,
+        new AttributeData(new DataView(new Float32Array(vertices).buffer))
+      )
+      .setAttribute(Attribute.Normal.name,
+        new AttributeData(new DataView(new Float32Array(normals).buffer))
+      )
+      .setAttribute(Attribute.UV.name,
+        new AttributeData(new DataView(new Float32Array(uv).buffer))
+      )
   }
 }

@@ -254,7 +254,7 @@ export function createVAO(gl, attributes, meshData, indices) {
     const buffer = gl.createBuffer()
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.value), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, data.value, gl.STATIC_DRAW)
     gl.enableVertexAttribArray(attribute.id)
     gl.vertexAttribPointer(attribute.id, attribute.size, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(attribute.id)
