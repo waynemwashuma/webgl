@@ -33,6 +33,13 @@ export class Mesh extends Object3D {
     this.material = material
   }
 
+  clone(){
+    const newMesh = super.clone()
+
+    newMesh.geometry = this.geometry
+    newMesh.material = this.material
+    return newMesh
+  }
   /**
    * @param {WebGL2RenderingContext} gl 
    * @param {UBOs} ubos

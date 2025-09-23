@@ -69,9 +69,10 @@ export class Object3D {
     }
   }
 
-  clone(){
-    const newObject = new /**@type {new (...args:[])=> this} */(this.constructor())
+  clone() {
+    const newObject = new /**@type {new (...args:[])=> this} */(this.constructor)()
     newObject.transform = this.transform.clone()
+    newObject.add(...this.children.map(chlid=>chlid.clone()))
     return newObject
   }
 }
