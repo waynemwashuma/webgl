@@ -139,13 +139,16 @@ export class Renderer {
   }
 
   /**
-   * @param {Object3D} mesh 
+   * @param {Object3D} object 
    */
-  add(mesh) {
-    if (mesh instanceof Mesh) {
-      mesh.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
-    }
-    this.meshes.push(mesh)
+  add(object) {
+    object.traverseDFS((child)=>{
+      if (child instanceof Mesh) {
+        child.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
+      }
+      return true
+    })
+    this.meshes.push(object)
   }
   /**
    * @param {Object3D} mesh
@@ -181,9 +184,12 @@ export class Renderer {
     for (let i = 0; i < this.meshes.length; i++) {
       const object = this.meshes[i]
       object.update()
-      if (object instanceof Mesh) {
-        object.renderGL(this.gl, this.defaultTexture)
-      }
+      object.traverseDFS((child)=>{
+        if (child instanceof Mesh) {
+          child.renderGL(this.gl, this.defaultTexture)
+        }
+        return true
+      })
     }
   }
   /**
