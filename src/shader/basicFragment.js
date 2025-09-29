@@ -8,7 +8,7 @@ export const basicFragment =
   
   in vec2 v_uv;
   
-  out vec4 finalColor;
+  out vec4 final_color;
   
   vec3 tint(vec3 texColor, vec3 tint){
   
@@ -18,7 +18,7 @@ export const basicFragment =
   }
   void main(){
     vec4 sampleColor = texture(mainTexture,v_uv);
-    finalColor.xyz = tint(sampleColor.xyz,color.xyz);
-    finalColor.a = opacity;
+    final_color.xyz = tint(sampleColor.xyz,color.xyz);
+    final_color.a = opacity;
 }
 `

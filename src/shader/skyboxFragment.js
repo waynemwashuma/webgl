@@ -7,8 +7,8 @@ export const skyboxFragment =
 	uniform samplerCube night;
 	uniform float lerp;
 
-	out vec4 finalColor;
+	out vec4 final_color;
 	void main(void){
 	  vec3 direction = normalize(texCoord);
-		finalColor = mix(texture(day,direction),texture(night,direction),lerp);
+		final_color = mix(texture(day,direction),texture(night,direction),lerp);
 	}`
