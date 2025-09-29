@@ -5,13 +5,13 @@ export const skyboxVertex =
   uniform Camera {
     mat4 view;
     mat4 projection;
-    vec3 camPosition;
+    vec3 position;
   } camera;
   uniform mat4 model;
 	
-	out highp vec3 texCoord;
+	out highp vec3 v_uv;
 		
-	void main(void){
-		texCoord = position;
+	void main(){
+		v_uv = position;
 		gl_Position = camera.projection * camera.view * model * vec4(position.xyz, 1.0); 
 	}`

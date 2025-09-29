@@ -10,15 +10,15 @@ export const basicFragment =
   
   out vec4 final_color;
   
-  vec3 tint(vec3 texColor, vec3 tint){
+  vec3 tint(vec3 tex_color, vec3 tint){
   
-    if (texColor == vec3(0.0, 0.0, 0.0))
+    if (tex_color == vec3(0.0, 0.0, 0.0))
       return tint;
-    return texColor * tint;
+    return tex_color * tint;
   }
   void main(){
-    vec4 sampleColor = texture(mainTexture,v_uv);
-    final_color.xyz = tint(sampleColor.xyz,color.xyz);
+    vec4 sample_color = texture(mainTexture,v_uv);
+    final_color.xyz = tint(sample_color.xyz,color.xyz);
     final_color.a = opacity;
 }
 `
