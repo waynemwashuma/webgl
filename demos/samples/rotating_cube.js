@@ -5,28 +5,31 @@ import {
   BoxGeometry,
   Vector3,
   Quaternion,
-  Color
+  Color,
+  DirectionalLight
 } from 'webgllis';
 
 export function rotatingCube({
   renderer,
   textureLoader
 }) {
+  const light = new DirectionalLight()
+  
+  light.transform.position.y = 10
+  renderer.lights.ambientLight.intensity = 0.15
+  renderer.lights.directionalLights.add(light)
+  
   const tex = textureLoader.get('uv')
   const origin = new Mesh(
     new BoxGeometry(1, 1, 1),
     new LambertMaterial({
-      mainTexture: tex,
-      lightDir: new Vector3(0, -3, -3),
-      specularShininess: 4,
-      specularStrength: 0.06,
-      diffuseIntensity: 0.1
+      mainTexture: tex
     })
   )
   renderer.camera.transform.position.z = 2
   renderer.camera.makePerspective(120)
   renderer.add(origin)
-
+  
   const euler = new Vector3(Math.PI / 1000, Math.PI / 1000, 0)
   const quat1 = new Quaternion().setFromEuler(euler)
   setInterval(() => {

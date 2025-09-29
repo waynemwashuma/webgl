@@ -6,23 +6,14 @@ export class PhongMaterial extends Shader {
   constructor(options) {
     let {
       color = new Color(1, 1, 1),
-        opacity = 1.0,
-        mains,
         mainTexture = null,
-        lightDir = new Vector3(0, 0, -1),
-        diffuseColor = new Color(1, 1, 1),
-        diffuseIntensity = 0.65,
         specularStrength = 0.15,
         specularShininess = 4,
     } = options
-
+    
     super(basicVertex, phongFragment, {
       color,
-      mains,
-      opacity,
-      lightDir,
-      diffuseColor,
-      diffuseIntensity,
+      mainTexture,
       specularShininess,
       specularStrength
     })
