@@ -14,8 +14,7 @@ export function rotatingCube({
   textureLoader
 }) {
   const light = new DirectionalLight()
-  
-  light.transform.position.y = 10
+  light.direction.set(0,-1,-1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
   
