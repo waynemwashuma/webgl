@@ -59,8 +59,5 @@ export const lambertFragment =
     vec3 finalColor =  (ambient * baseColor + accumulativeDiffuse);
     
     FragColor = vec4(finalColor,opacity);
-    
-    // FragColor = vec4(directional_lights.lights[0].color);
-    // FragColor = vec4(directional_lights.lights[0].direction,1.0));
   }
 `
