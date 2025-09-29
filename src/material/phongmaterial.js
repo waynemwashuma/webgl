@@ -7,8 +7,8 @@ export class PhongMaterial extends Shader {
     let {
       color = new Color(1, 1, 1),
         mainTexture = null,
-        specularStrength = 0.15,
-        specularShininess = 4,
+        specularStrength = 0.5,
+        specularShininess = 32,
     } = options
     
     super(basicVertex, phongFragment, {

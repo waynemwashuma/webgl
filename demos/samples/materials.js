@@ -29,8 +29,8 @@ export function materials({
     }),
     new PhongMaterial({
       mainTexture: tex,
-      specularShininess: 0.002,
-      specularStrength: 2
+      specularShininess: 32,
+      specularStrength: 0.5
     })
   ]
   
