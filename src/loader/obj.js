@@ -1,4 +1,4 @@
-import { Attribute } from '../core/attribute.js';
+import { AttributeData } from '../core/index.js';
 import { Geometry } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
 import { Mesh } from '../mesh/index.js';
@@ -18,9 +18,9 @@ export class OBJLoader {
     const mesh = new Mesh(geometry, new BasicMaterial())
     
     
-    geometry.setAttribute("position",new Attribute(attributes.get("position"),3))
-    geometry.setAttribute("normal",new Attribute(attributes.get("normal"),3))
-    geometry.setAttribute("uv",new Attribute(attributes.get("uv"),2))
+    geometry.setAttribute("position",new AttributeData(attributes.get("position"),3))
+    geometry.setAttribute("normal",new AttributeData(attributes.get("normal"),3))
+    geometry.setAttribute("uv",new AttributeData(attributes.get("uv"),2))
     this.meshes.set(settings.name, mesh)
 
     return mesh

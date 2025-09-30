@@ -1,5 +1,5 @@
 import { Geometry } from "./geometry.js"
-import { Attribute } from "../core/index.js"
+import { AttributeData } from "../core/index.js"
 
 export class CylinderGeometry extends Geometry {
   constructor(radius = 1, height = 1, numSegments = 15) {
@@ -7,16 +7,16 @@ export class CylinderGeometry extends Geometry {
     const { indices, vertices, normals, uvs } = createCylinder(radius, height, numSegments);
 
     this.setAttribute("indices",
-      new Attribute(new Uint16Array(indices), 1)
+      new AttributeData(new Uint16Array(indices), 1)
     )
     this.setAttribute("position",
-      new Attribute(new Float32Array(vertices), 3)
+      new AttributeData(new Float32Array(vertices), 3)
     )
     this.setAttribute("normal",
-      new Attribute(new Float32Array(normals), 3)
+      new AttributeData(new Float32Array(normals), 3)
     )
     this.setAttribute("uv",
-      new Attribute(new Float32Array(uvs), 2)
+      new AttributeData(new Float32Array(uvs), 2)
     )
   }
 }

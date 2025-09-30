@@ -1,4 +1,4 @@
-export class Attribute{
+export class AttributeData {
   /**
    * @readonly
   */
