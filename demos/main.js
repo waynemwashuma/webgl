@@ -8,7 +8,8 @@ import {
   cullface,
   rotatingUvSphere,
   skyBox,
-  objLoader
+  objLoader,
+  separateSamplers
 } from "./samples/index.js"
 
 const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
@@ -23,6 +24,7 @@ const demos = {
   "drawModes": drawModes,
   "rotating sphere": rotatingUvSphere,
   "rotating cube": rotatingCube,
+  "separate samplers": separateSamplers,
   "texture wrap": textureWrap,
   "materials": materials,
   "geometries": geometries,
