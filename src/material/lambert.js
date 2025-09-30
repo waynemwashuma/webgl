@@ -10,8 +10,8 @@ export class LambertMaterial extends Shader {
   } = options
 
     super(basicVertex, lambertFragment, {
-      color
+      color,
+      mainTexture
     })
-    if(mainTexture)this.setUniform("mainTexture",mainTexture)
   }
 }

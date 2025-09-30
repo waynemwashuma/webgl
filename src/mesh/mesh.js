@@ -5,6 +5,7 @@ import { Shader } from "../material/index.js"
 import {
   UNI_MODEL_MAT
 } from "../constant.js"
+import { Texture } from "../texture/index.js"
 
 export class Mesh {
   transform = new Transform3D()
@@ -40,8 +41,9 @@ export class Mesh {
   }
   /**
    * @param {WebGL2RenderingContext} gl
+   * @param {Texture} defaultTexture 
    */
-  renderGL(gl) {
+  renderGL(gl, defaultTexture) {
     const material = this.material
     const geometry = this.geometry
     const { attributes, indices } = geometry
@@ -49,7 +51,7 @@ export class Mesh {
 
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
-    material.activate(gl)
+    material.activate(gl, defaultTexture)
     gl.bindVertexArray(this.geometry.VAO)
     material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
     //drawing

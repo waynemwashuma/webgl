@@ -9,6 +9,8 @@ import {
 } from "../constant.js"
 import { UBOs } from "../core/ubo.js"
 import { Attribute } from "../core/index.js"
+import { Texture } from "../texture/index.js"
+import { Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4, Color } from "../math/index.js"
 
 export class Shader {
   drawMode = DrawMode.TRIANGLES
@@ -41,18 +43,19 @@ export class Shader {
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
-    
+
     for (const name in this.uniformBlocks) {
       const ubo = ubos.getorSet(gl, name, this.uniformBlocks[name])
-      
+
       this.prepareUBO(gl, name, ubo)
     }
   }
   /**
    * @param {WebGL2RenderingContext} gl
+   * @param {Texture} defaultTexture 
    */
-  activate(gl) {
-    
+  activate(gl, defaultTexture) {
+
     // TODO: Separate to diferent texture types
     let texIndex = 0
     gl.useProgram(this.program)
@@ -62,8 +65,8 @@ export class Shader {
         console.log(`Uniform "${name}" is not avaiable in "${this.constructor.name}"`)
         continue
       }
-      const {location,type} = uniform
-      updateUniform(gl,location, value.value, texIndex, type)
+      const { location, type } = uniform
+      updateUniform(gl, location, value.value, texIndex, type, defaultTexture)
       if (
         uniform.type === UniformType.SAMPLER_2D ||
         uniform.type === UniformType.SAMPLER_CUBE)
@@ -87,16 +90,14 @@ export class Shader {
   setUniform(name, value) {
     return this.updateUniform(name, value)
   }
-  
+
   updateUniform(name, value) {
     const item = this.uniformValues.get(name)
     if (item) {
       item.value = value
-      item.dirty = true
     } else {
       this.uniformValues.set(name, {
-        value: value,
-        dirty: true
+        value: value
       })
     }
   }
@@ -105,46 +106,71 @@ export class Shader {
 
 /**
  * @param {WebGL2RenderingContext} gl
+ * @param {WebGLUniformLocation} location
+ * @param {number | Vector2 | Vector3 | Matrix2 | Matrix3 | Matrix4 | Color} value
+ * @param {number} offset
+ * @param {any} type
+ * @param {Texture} defaultTexture
  */
-function updateUniform(gl,location, value, offset, type) {
+function updateUniform(gl, location, value, offset, type, defaultTexture) {
   const arr = new Float32Array(16)
   switch (type) {
     case UniformType.BOOL:
     case UniformType.INT:
+      if(typeof value !== "number") return
       gl.uniform1i(location, value)
     case UniformType.FLOAT:
+      if(typeof value !== "number") return
       gl.uniform1f(location, value)
       break
     case UniformType.VEC2:
-      gl.uniform2f(location, ...value, 0, 2)
+      if(!(value instanceof Vector2)) return
+      gl.uniform2f(location, value.x,value.y)
       break
     case UniformType.VEC3:
-      gl.uniform3f(location, ...value, 0, 3)
+      if(!(value instanceof Vector3)) return
+      gl.uniform3f(location, value.x,value.y,value.z)
       break
     case UniformType.VEC4:
-      gl.uniform4f(location, ...value)
+      if(value instanceof Vector4){
+        gl.uniform4f(location, value.x,value.y,value.z,value.w)
+      }
+      if(value instanceof Color){
+        gl.uniform4f(location, value.r,value.g,value.b,value.a)
+      }
       break
     case UniformType.MAT2:
-      gl.uniformMatrix2fv(location, ...value)
+      if(!(value instanceof Matrix2)) return
+      // TODO: Actually update `arr`
+
+      gl.uniformMatrix2fv(location, false, arr)
       break
     case UniformType.MAT3:
-      value.toArray(arr)
+      if(!(value instanceof Matrix3)) return
+      // TODO: Actually update `arr`
       gl.uniformMatrix3fv(location, false, arr)
       break
     case UniformType.MAT4:
+      if(!(value instanceof Matrix4)) return
       value.toArray(arr)
-      
       gl.uniformMatrix4fv(location, false, arr, 0, 16)
       break
     case UniformType.SAMPLER_2D:
-      gl.activeTexture(gl.TEXTURE0 + offset)
-      gl.bindTexture(gl.TEXTURE_2D, value.webglTex)
-      gl.uniform1i(location, offset)
+      if(value instanceof Texture){
+        gl.activeTexture(gl.TEXTURE0 + offset)
+        gl.bindTexture(gl.TEXTURE_2D, value.webglTex)
+        gl.uniform1i(location, offset)
+      } else {
+        gl.activeTexture(gl.TEXTURE0 + offset)
+        gl.bindTexture(gl.TEXTURE_2D, defaultTexture.webglTex)
+        gl.uniform1i(location, offset)
+      }
       break
     case UniformType.SAMPLER_CUBE:
+      if(!(value instanceof Texture)) return
       gl.activeTexture(gl.TEXTURE0 + offset)
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.webglTex)
       gl.uniform1i(location, offset)
-      
+
   }
 }

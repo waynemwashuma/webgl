@@ -34,12 +34,12 @@ const demos = {
 renderer.setViewport(innerWidth, innerHeight)
 
 textureLoader.load({
-  src: "./assets/uv.jpg",
+  path: "./assets/uv.jpg",
   name: "uv"
 })
 
 textureLoader.loadCube({
-  src: [
+  paths: [
     "./assets/skybox/miramar_right.png",
     "./assets/skybox/miramar_left.png",
     "./assets/skybox/miramar_top.png",
@@ -51,7 +51,7 @@ textureLoader.loadCube({
 })
 
 textureLoader.loadCube({
-  src: [
+  paths: [
     "./assets/skybox/grimmnight_right.png",
     "./assets/skybox/grimmnight_left.png",
     "./assets/skybox/grimmnight_top.png",

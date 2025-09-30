@@ -17,6 +17,5 @@ export class PhongMaterial extends Shader {
       specularShininess,
       specularStrength
     })
-    if (mainTexture) this.setUniform("mainTexture", mainTexture)
   }
 }

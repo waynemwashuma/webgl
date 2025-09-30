@@ -1,6 +1,9 @@
 import { Camera } from "../camera.js"
+import { GlDataType, TextureFilter, TextureFormat, TextureWrap } from "../constant.js"
 import { Attribute, UBO, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
+import { Mesh } from "../mesh/index.js"
+import { Texture } from "../texture/index.js"
 
 export class DirectionalLights {
   lights = []
@@ -30,8 +33,17 @@ export class Lights {
 export class Renderer {
   _UBOs = new UBOs()
   lights = new Lights()
+
+  /**
+   * @type {Mesh[]}
+   */
   meshes = []
   camera = new Camera()
+
+  /**
+   * @type {Texture}
+   */
+  defaultTexture
 
   /**
    * @readonly
@@ -77,6 +89,7 @@ export class Renderer {
       .set(Attribute.Color.name, Attribute.Color)
 
     this.attributes = attributes
+    this.defaultTexture = createDefaultTexture(this.gl)
   }
   setGlobalUBO(name, layout) {
     this._UBOs.set(name, layout)
@@ -124,7 +137,7 @@ export class Renderer {
 
     for (var i = 0; i < this.meshes.length; i++) {
       this.meshes[i].update()
-      this.meshes[i].renderGL(this.gl)
+      this.meshes[i].renderGL(this.gl, this.defaultTexture)
     }
   }
   setViewport(w, h) {
@@ -140,4 +153,35 @@ export class Renderer {
       h * this.dpr
     )
   }
+}
+
+/**
+ * @param {WebGLRenderingContext} gl
+ */
+function createDefaultTexture(gl) {
+  const texture = gl.createTexture()
+  const level = 0
+  const width = 1
+  const height = 1
+  const border = 0
+  const pixel = new Uint8Array([255, 255, 255, 255])
+
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    level,
+    TextureFormat.RGBA,
+    width,
+    height,
+    border,
+    TextureFormat.RGBA,
+    GlDataType.UNSIGNED_BYTE,
+    pixel,
+  )
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, TextureWrap.CLAMP)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, TextureWrap.CLAMP)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, TextureFilter.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, TextureFilter.LINEAR)
+
+  return new Texture(texture)
 }

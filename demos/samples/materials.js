@@ -23,7 +23,9 @@ export function materials({
   const geometry1 = new BoxGeometry(1, 1)
   const geometry2 = new UVSphereGeometry(0.7)
   const materials = [
-    new BasicMaterial(),
+    new BasicMaterial({
+      mainTexture: tex
+    }),
     new LambertMaterial({
       mainTexture: tex
     }),

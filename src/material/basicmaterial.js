@@ -6,14 +6,12 @@ export class BasicMaterial extends Shader {
   constructor(options = {}) {
     let {
       color = new Color(1, 1, 1),
-        opacity = 1.0,
-        texture = null,
+      mainTexture = null
     } = options
 
-    super(basicVertex, basicFragment)
-
-    if (texture)this.setUniform("mainTexture", texture)
-    this.setUniform("color", color)
-    this.setUniform("opacity", opacity)
+    super(basicVertex, basicFragment, {
+      color,
+      mainTexture
+    })
   }
 }
