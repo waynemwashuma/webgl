@@ -7,7 +7,8 @@ import {
   geometries,
   cullface,
   rotatingUvSphere,
-  skyBox
+  skyBox,
+  objLoader
 } from "./samples/index.js"
 
 const canvas = document.getElementById("can")
@@ -15,7 +16,8 @@ const renderer = new Renderer(canvas)
 const textureLoader = new TextureLoader(renderer)
 const manager = {
   renderer,
-  textureLoader
+  textureLoader,
+  objLoader
 }
 const demos = {
   "drawModes": drawModes,
@@ -25,7 +27,8 @@ const demos = {
   "materials": materials,
   "geometries": geometries,
   "cullface": cullface,
-  "skybox": skyBox
+  "skybox": skyBox,
+  "obj loader": objLoader
 }
 
 renderer.setViewport(innerWidth, innerHeight)
