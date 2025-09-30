@@ -1,9 +1,3 @@
-export const ATTR_POSITION_NAME = "position"
-export const ATTR_NORMAL_NAME = "normal"
-export const ATTR_UV_NAME = "uv"
-export const ATTR_POSITION_LOC = 0
-export const ATTR_NORMAL_LOC = 1
-export const ATTR_UV_LOC = 2
 export const UNI_PROJ_MAT = "projection"
 export const UNI_CAM_MAT = "view"
 export const UNI_MODEL_MAT = "model"

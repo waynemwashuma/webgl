@@ -1,12 +1,7 @@
 import {
-  ATTR_POSITION_LOC,
-  ATTR_NORMAL_LOC,
-  ATTR_UV_LOC,
-  ATTR_POSITION_NAME,
-  ATTR_NORMAL_NAME,
-  ATTR_UV_NAME,
   UniformType
 } from "./constant.js"
+import { Attribute, AttributeData } from "./core/index.js"
 /**
  * @param {WebGLRenderingContext} gl
  */
@@ -56,14 +51,19 @@ export function createTexture(gl, img, flipY) {
 }
 /**
  * @param {WebGL2RenderingContext} gl
+ * @param {WebGLShader} vshader 
+ * @param {WebGLShader} fshader 
+ * @param {Map<string, Attribute>} attributes 
+ * 
  */
-export function createProgram(gl, vshader, fshader) {
+export function createProgram(gl, vshader, fshader, attributes) {
   let program = gl.createProgram()
   gl.attachShader(program, vshader)
   gl.attachShader(program, fshader)
-  gl.bindAttribLocation(program, ATTR_POSITION_LOC, ATTR_POSITION_NAME)
-  gl.bindAttribLocation(program, ATTR_NORMAL_LOC, ATTR_NORMAL_NAME)
-  gl.bindAttribLocation(program, ATTR_UV_LOC, ATTR_UV_NAME)
+
+  for (const [name, attribute] of attributes) {
+    gl.bindAttribLocation(program, attribute.id, attribute.name)    
+  }
   gl.linkProgram(program)
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.log(`Program could not be linked: 
@@ -96,69 +96,46 @@ export function createProgram(gl, vshader, fshader) {
 
 /**
  * @param {WebGL2RenderingContext} gl
+ * @param {Map<string, Attribute>} attributes
+ * @param {Map<string, AttributeData>} meshData
+ * @param {Uint16Array | Uint32Array} [indices] 
  */
-export function createVAO(gl, indices, vertices, normals, uv) {
-  let vao = {
-    drawMode: gl.TRIANGLES,
-    attributes: {
-      
-    }
-  }
-  vao.vao = gl.createVertexArray()
-  gl.bindVertexArray(vao.vao)
+export function createVAO(gl, attributes, meshData, indices) {
+  const vao = gl.createVertexArray()
+  gl.bindVertexArray(vao)
   if (indices != void 0) {
-    let dict = vao.attributes.indices = {}
-    let buffer = gl.createBuffer()
-    dict.buffer = buffer
-    dict.size = 1
-    dict.count = indices.length
+    const buffer = gl.createBuffer()
     
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
   }
-  if (vertices != void 0) {
-    let dict = vao.attributes.position = {}
-    let buffer = gl.createBuffer()
-    dict.buffer = buffer
-    dict.size = 3;
-    dict.count = vertices.length / dict.size
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
-    gl.enableVertexAttribArray(ATTR_POSITION_LOC)
-    gl.vertexAttribPointer(ATTR_POSITION_LOC, dict.size, gl.FLOAT, false, 0, 0)
-  }
-  if (normals != void 0) {
-    let dict = vao.attributes.normals = {}
-    let buffer = gl.createBuffer()
-    dict.buffer = buffer
-    dict.size = 3;
-    dict.count = normals.length / dict.size
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW)
-    gl.enableVertexAttribArray(ATTR_NORMAL_LOC)
-    gl.vertexAttribPointer(ATTR_NORMAL_LOC, dict.size, gl.FLOAT, false, 0, 0)
-  }
-  if (uv != void 0) {
-    let dict = vao.attributes.uv = {}
-    let buffer = gl.createBuffer()
-    dict.buffer = buffer
-    dict.size = 2;
-    dict.count = vertices.length / dict.size
+  for (const [name, data] of meshData) {
+    const attribute = attributes.get(name)
+
+    if(!attribute){
+      throw `The attribute "${name}" is not defined in the \`AttributeMap()\``
+    }
+    
+    const buffer = gl.createBuffer()
     
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW)
-    gl.enableVertexAttribArray(ATTR_UV_LOC)
-    gl.vertexAttribPointer(ATTR_UV_LOC, dict.size, gl.FLOAT, false, 0, 0)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.value), gl.STATIC_DRAW)
+    gl.enableVertexAttribArray(attribute.id)
+    gl.vertexAttribPointer(attribute.id, attribute.size, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(attribute.id)
+    gl.vertexAttribPointer(attribute.id, attribute.size, attribute.type, false, 0, 0)
   }
-  gl.bindVertexArray(null)
-  gl.bindBuffer(gl.ARRAY_BUFFER, null)
+
   return vao
 }
 
 /**
  * @param {WebGL2RenderingContext} gl
+ * @param {string} vshader
+ * @param {string} fshader
+ * @param {Map<string, Attribute>} attributes 
  */
-export function createProgramFromSrc(gl, vshader, fshader) {
+export function createProgramFromSrc(gl, vshader, fshader, attributes) {
   let v = createshader(gl, vshader, gl.VERTEX_SHADER)
   let f = createshader(gl, fshader, gl.FRAGMENT_SHADER)
   if (f == null || v == null) {
@@ -166,7 +143,7 @@ export function createProgramFromSrc(gl, vshader, fshader) {
     gl.deleteShader(f)
     return null
   }
-  let program = createProgram(gl, v, f)
+  let program = createProgram(gl, v, f, attributes)
   
   return program
 }

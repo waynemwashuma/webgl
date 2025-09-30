@@ -33,9 +33,7 @@ export class CircleGeometry extends Geometry {
       indices.push(i - 1, i, 0)
     }
 
-    this.setAttribute("indices",
-      new AttributeData(new Uint16Array(indices), 1)
-    )
+    this.indices = new Uint16Array(indices)
     this.setAttribute("position",
       new AttributeData(new Float32Array(vertices), 3)
     )
