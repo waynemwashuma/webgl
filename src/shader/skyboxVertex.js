@@ -1,5 +1,5 @@
 export const skyboxVertex =
-  `#version 300 es
+  `
 	in vec3 position;
 
   uniform Camera {

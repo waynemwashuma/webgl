@@ -1,5 +1,5 @@
 export const skyboxFragment =
-  `#version 300 es
+  `
   precision mediump float;
 	in highp vec3 v_uv;
 
