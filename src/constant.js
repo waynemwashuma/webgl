@@ -171,11 +171,7 @@ export const TextureFormat = {
  */
 export const TextureFilter = {
   NEAREST: 0x2600,
-  LINEAR: 0x2601,
-  NEAREST_MIPMAP_NEAREST: 0x2700,
-  LINEAR_MIPMAP_NEAREST: 0x2701,
-  NEAREST_MIPMAP_LINEAR: 0x2702,
-  LINEAR_MIPMAP_LINEAR: 0x2703,
+  LINEAR: 0x2601
 }
 /**
  * @readonly
@@ -185,4 +181,28 @@ export const TextureWrap = {
   REPEAT: 0x2901,
   CLAMP: 0x812F,
   MIRRORREPEAT: 0x8370
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ */
+export const CompareFunction = {
+  LEQUAL: 0x203,
+  GEQUAL: 0x206,
+  LESS: 0x201,
+  GREATER: 0x204,
+  EQUAL: 0x202,
+  NOTEQUAL: 0x205,
+  ALWAYS: 0x207,
+  NEVER: 0x200
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ */
+export const TextureCompareMode = {
+  NONE: 0x0,
+  COMPARE_REF_TO_TEXTURE: 0x884E
 }

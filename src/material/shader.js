@@ -11,7 +11,13 @@ import { UBOs } from "../core/ubo.js"
 import { Attribute } from "../core/index.js"
 import { Texture } from "../texture/index.js"
 import { Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4, Color } from "../math/index.js"
+import { Sampler } from "../texture/sampler.js"
 
+// TODO: Find a way to remove these
+// Global state, not something to enjoy but it has to be done
+// These map to webgl global state slots per object rendeed
+let samplerSlot = 0
+let texSlot = 0
 export class Shader {
   drawMode = DrawMode.TRIANGLES
   cullFace = CullFace.BACK
@@ -50,15 +56,13 @@ export class Shader {
       this.prepareUBO(gl, name, ubo)
     }
   }
-  /**
-   * @param {WebGL2RenderingContext} gl
-   * @param {Texture} defaultTexture 
-   */
-  activate(gl, defaultTexture) {
+
+  uploadUniforms(gl,defaultTexture){
 
     // TODO: Separate to diferent texture types
-    let texIndex = 0
-    gl.useProgram(this.program)
+    texSlot = 0
+    samplerSlot = 0
+
     for (const [name, value] of this.uniformValues) {
       const uniform = this.uniforms[name]
       if (!uniform) {
@@ -66,12 +70,20 @@ export class Shader {
         continue
       }
       const { location, type } = uniform
-      updateUniform(gl, location, value.value, texIndex, type, defaultTexture)
+      updateUniform(gl, location, value.value, type, defaultTexture)
       if (
         uniform.type === UniformType.SAMPLER_2D ||
         uniform.type === UniformType.SAMPLER_CUBE)
-        texIndex++
+        texSlot++
     }
+  }
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {Texture} defaultTexture 
+   */
+  activate(gl, defaultTexture) {
+    gl.useProgram(this.program)
+    this.updateUniform(gl,defaultTexture)
     gl.cullFace(this.cullFace);
   }
   /**
@@ -108,11 +120,10 @@ export class Shader {
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLUniformLocation} location
  * @param {number | Vector2 | Vector3 | Matrix2 | Matrix3 | Matrix4 | Color} value
- * @param {number} offset
- * @param {any} type
+ * @param {UniformType} type
  * @param {Texture} defaultTexture
  */
-function updateUniform(gl, location, value, offset, type, defaultTexture) {
+function updateUniform(gl, location, value, type, defaultTexture) {
   const arr = new Float32Array(16)
   switch (type) {
     case UniformType.BOOL:
@@ -157,20 +168,19 @@ function updateUniform(gl, location, value, offset, type, defaultTexture) {
       break
     case UniformType.SAMPLER_2D:
       if(value instanceof Texture){
-        gl.activeTexture(gl.TEXTURE0 + offset)
+        gl.activeTexture(gl.TEXTURE0 + texSlot)
         gl.bindTexture(gl.TEXTURE_2D, value.webglTex)
-        gl.uniform1i(location, offset)
+        gl.uniform1i(location, texSlot)
       } else {
-        gl.activeTexture(gl.TEXTURE0 + offset)
+        gl.activeTexture(gl.TEXTURE0 + texSlot)
         gl.bindTexture(gl.TEXTURE_2D, defaultTexture.webglTex)
-        gl.uniform1i(location, offset)
+        gl.uniform1i(location, texSlot)
       }
       break
     case UniformType.SAMPLER_CUBE:
       if(!(value instanceof Texture)) return
-      gl.activeTexture(gl.TEXTURE0 + offset)
+      gl.activeTexture(gl.TEXTURE0 + texSlot)
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.webglTex)
-      gl.uniform1i(location, offset)
-
+      gl.uniform1i(location, texSlot)
   }
 }
