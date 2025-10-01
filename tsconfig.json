@@ -4,17 +4,17 @@
     "./demos"
   ],
   "compilerOptions": {
-    // "allowUnreachableCode": false,
-    // "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "alwaysStrict": true,
     "checkJs": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "noEmit": true,
-    // "noImplicitAny": true,
-    // "noImplicitThis": true,
-    // "noPropertyAccessFromIndexSignature": true,
-    // "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
     "target": "ES2020",
     "skipLibCheck":true,
     "paths":{

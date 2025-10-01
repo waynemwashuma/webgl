@@ -11,7 +11,7 @@ import {
   objLoader
 } from "./samples/index.js"
 
-const canvas = document.getElementById("can")
+const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
 const renderer = new Renderer(canvas)
 const textureLoader = new TextureLoader(renderer)
 const manager = {
@@ -65,13 +65,19 @@ textureLoader.loadCube({
 
 init(demos)
 setupOpts(demos)
-render()
+render(0)
 
-function render(dt) {
+/**
+ * @param {number} _dt
+ */
+function render(_dt) {
   renderer.update()
   requestAnimationFrame(render)
 }
 
+/**
+ * @param {{ [x: string]: (arg0: { renderer: Renderer; textureLoader: TextureLoader; objLoader: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }) => void; drawModes?: ({ renderer }: { renderer: any; }) => void; "rotating sphere"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "rotating cube"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "texture wrap"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; materials?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; geometries?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; cullface?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; skybox?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "obj loader"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }} demos
+ */
 function setupOpts(demos) {
   const container = document.body.appendChild(document.createElement("div"))
   const opts = container.appendChild(document.createElement("select"))
@@ -94,6 +100,9 @@ function setupOpts(demos) {
   }
 }
 
+/**
+ * @param {{ [x: string]: (arg0: { renderer: Renderer; textureLoader: TextureLoader; objLoader: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }) => void; drawModes?: ({ renderer }: { renderer: any; }) => void; "rotating sphere"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "rotating cube"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "texture wrap"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; materials?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; geometries?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; cullface?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; skybox?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "obj loader"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }} demos
+ */
 function init(demos) {
   let name = localStorage.getItem("play")
   if (!name)

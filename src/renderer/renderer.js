@@ -1,15 +1,22 @@
+import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera.js"
 import { GlDataType, TextureFilter, TextureFormat, TextureWrap } from "../constant.js"
-import { Attribute, UBO, UBOs } from "../core/index.js"
+import { Attribute, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Mesh } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 
 export class DirectionalLights {
+  /**
+   * @type {DirectionalLight[]}
+   */
   lights = []
   maxNumber = 10
 
+  /**
+   * @param {DirectionalLight} light
+   */
   add(light) {
     this.lights.push(light)
   }
@@ -80,6 +87,9 @@ export class Renderer {
   culling = true
   depthTest = true
   alphaBlending = true
+  /**
+   * @param {HTMLCanvasElement} canvas
+   */
   constructor(canvas) {
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
@@ -115,6 +125,9 @@ export class Renderer {
     this.defines.set("MAX_DIRECTIONAL_LIGHTS","10")
   }
   
+  /**
+   * @param {{ name: any; data: any; }} dataForm
+   */
   updateUBO(dataForm) {
     const { data, name } = dataForm
     const ubo = this._UBOs.get(name)
@@ -131,6 +144,9 @@ export class Renderer {
     mesh.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
     this.meshes.push(mesh)
   }
+  /**
+   * @param {Mesh<import("../index.js").Geometry, import("../index.js").Shader>} mesh
+   */
   remove(mesh) {
     let id = this.meshes.indexOf(mesh)
     this.meshes.splice(id, 1)
@@ -164,6 +180,10 @@ export class Renderer {
       this.meshes[i].renderGL(this.gl, this.defaultTexture)
     }
   }
+  /**
+   * @param {number} w
+   * @param {number} h
+   */
   setViewport(w, h) {
     let canvas = this.gl.canvas
     if (canvas instanceof HTMLCanvasElement) {

@@ -1,16 +1,15 @@
 import {
   Mesh,
   BasicMaterial,
-  LambertMaterial,
-  PhongMaterial,
   QuadGeometry,
-  UVSphereGeometry,
-  Vector3,
-  Quaternion,
-  Color,
-  DrawMode
+  DrawMode,
+  Renderer,
+  TextureLoader
 } from "webgllis"
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function drawModes({renderer}) {
   const geometry1 = new QuadGeometry(1, 1)
   const materials = [

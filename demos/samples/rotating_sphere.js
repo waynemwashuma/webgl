@@ -1,15 +1,17 @@
 import {
   Mesh,
-  Texture,
   LambertMaterial,
   UVSphereGeometry,
   Vector3,
   Quaternion,
-  Color,
-  DrawMode,
-  DirectionalLight
+  DirectionalLight,
+  Renderer,
+  TextureLoader
 } from 'webgllis';
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function rotatingUvSphere({
   renderer,
   textureLoader

@@ -1,4 +1,5 @@
 import { TextureWrap, TextureFormat, TextureFilter, GlDataType } from '../constant.js';
+import { Renderer } from '../renderer/index.js';
 import { Texture } from '../texture/index.js';
 export class TextureLoader {
   /**
@@ -10,6 +11,9 @@ export class TextureLoader {
    * @type {Map<string,Texture>}
   */
   textures = new Map()
+  /**
+   * @param {Renderer} renderer
+   */
   constructor(renderer) {
     this.gl = renderer.gl
   }

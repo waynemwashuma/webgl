@@ -3,6 +3,9 @@ import {createSampler} from '../function.js'
 
 /**@import {SamplerSettings} from '../function.js'*/
 export class Sampler {
+  /**
+   * @type {WebGLSampler}
+   */
   _sampler
   magnificationFilter
   minificationFilter
@@ -41,6 +44,9 @@ export class Sampler {
     this.compareMode = compareMode
   }
 
+  /**
+   * @param {WebGL2RenderingContext} gl
+   */
   init(gl){
     this._sampler = createSampler(gl,this)
   }

@@ -18,9 +18,9 @@ export class OBJLoader {
     const mesh = new Mesh(geometry, new BasicMaterial())
     
     
-    geometry.setAttribute("position",new AttributeData(attributes.get("position"),3))
-    geometry.setAttribute("normal",new AttributeData(attributes.get("normal"),3))
-    geometry.setAttribute("uv",new AttributeData(attributes.get("uv"),2))
+    geometry.setAttribute("position",new AttributeData(attributes.get("position")))
+    geometry.setAttribute("normal",new AttributeData(attributes.get("normal")))
+    geometry.setAttribute("uv",new AttributeData(attributes.get("uv")))
     this.meshes.set(settings.name, mesh)
 
     return mesh
@@ -90,6 +90,9 @@ async function loadOBJ(data) {
   })
 }
 
+/**
+ * @param {{ positions: any; uvs: any; normals: any; triangles: any; }} data
+ */
 function buildBuffers(data) {
   const positions = [];
   const uvs = [];

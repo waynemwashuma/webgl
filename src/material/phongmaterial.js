@@ -1,8 +1,12 @@
 import { Shader } from "./shader.js"
 import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
+import { Texture } from "../texture/index.js"
 
 export class PhongMaterial extends Shader {
+  /**
+   * @param {PhongMaterialOptions} param0 
+   */
   constructor({
     color = new Color(1, 1, 1),
     mainTexture = null,
@@ -51,3 +55,11 @@ export class PhongMaterial extends Shader {
     }
   }
 }
+
+/**
+ * @typedef PhongMaterialOptions
+ * @property {Color} [color]
+ * @property {Texture} [mainTexture]
+ * @property {number} [specularShininess]
+ * @property {number} [specularStrength]
+ */

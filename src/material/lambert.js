@@ -14,6 +14,10 @@ export class LambertMaterial extends Shader {
    * @type {Texture}
    */
   mainTexture
+
+  /**
+   * @param {LambertMaterialOptions} param0 
+   */
   constructor({
     mainTexture = undefined,
     color = new Color(1, 1, 1)
@@ -50,3 +54,9 @@ export class LambertMaterial extends Shader {
     }
   }
 }
+
+/**
+ * @typedef LambertMaterialOptions
+ * @property {Color} [color]
+ * @property {Texture} [mainTexture]
+ */

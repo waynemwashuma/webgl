@@ -10,8 +10,11 @@ export class DirectionalLight {
   color = new Color()
   direction = new Vector3(0,0,1)
   
-  update() {
-    this.transform.updateMatrix(this.parent?.transform)
+  /**
+   * @param {{ transform: Transform3D; }} [parent]
+   */
+  update(parent) {
+    this.transform.updateMatrix(parent?.transform)
   }
   
   /**

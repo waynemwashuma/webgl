@@ -2,9 +2,14 @@ import {
   Mesh,
   QuadGeometry,
   TextureWrap,
-  BasicMaterial
+  BasicMaterial,
+  Renderer,
+  TextureLoader
 } from 'webgllis';
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function textureWrap({
   renderer,
   textureLoader

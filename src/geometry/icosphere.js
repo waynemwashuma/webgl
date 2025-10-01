@@ -9,30 +9,49 @@ export class IcosphereGeometry extends Geometry {
     
     this.indices = new Uint16Array(indices)
     this.setAttribute("position",
-      new AttributeData(new Float32Array(vertices), 3)
+      new AttributeData(new Float32Array(vertices))
     )
     this.setAttribute("normal", 
-    new AttributeData(new Float32Array(normals), 3)
+    new AttributeData(new Float32Array(normals))
     )
     this.setAttribute("uv",
-      new AttributeData(new Float32Array(uvs), 2)
+      new AttributeData(new Float32Array(uvs))
     )
   }
 }
 
+/**
+ * @param {number} radius
+ * @param {number} subdivisions
+ */
 function createIcoSphere(radius, subdivisions) {
   const goldenRatio = (1 + Math.sqrt(5)) / 2;
 
+  /**
+   * @type {any[]}
+   */
   const vertices = [];
+  /**
+   * @type {number[]}
+   */
   const normals = [];
+  /**
+   * @type {number[]}
+   */
   const uvs = [];
   const indices = [];
 
+  /**
+   * @param {number[]} vec
+   */
   function normalize(vec) {
     const length = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
     return [vec[0] / length, vec[1] / length, vec[2] / length];
   }
 
+  /**
+   * @param {number[]} vec
+   */
   function addVertex(vec) {
     vertices.push(vec[0], vec[1], vec[2]);
     const length = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
@@ -44,6 +63,10 @@ function createIcoSphere(radius, subdivisions) {
     uvs.push(1 - (phi + Math.PI) / (2 * Math.PI), (theta + Math.PI / 2) / Math.PI);
   }
 
+  /**
+   * @param {any[]} point1
+   * @param {any[]} point2
+   */
   function getMiddlePoint(point1, point2) {
     const middle = [(point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2, (point1[2] + point2[2]) / 2];
     return normalize(middle);
@@ -91,6 +114,7 @@ function createIcoSphere(radius, subdivisions) {
     ];
 
   // Subdivide the triangles to create a more spherical shape
+  /**@type {Record<string,any>} */
   const middlePointIndexCache = {};
   for (let i = 0; i < faces.length; i++) {
     const face = faces[i];

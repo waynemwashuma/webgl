@@ -30,8 +30,8 @@ export class QuadGeometry extends Geometry {
      ]
 
     this.indices = new Uint16Array(indices)
-    this.setAttribute("position", new AttributeData(new Float32Array(vertices), 3))
-    this.setAttribute("normal", new AttributeData(new Float32Array(normals), 3))
-    this.setAttribute("uv", new AttributeData(new Float32Array(uv), 2))
+    this.setAttribute("position", new AttributeData(new Float32Array(vertices)))
+    this.setAttribute("normal", new AttributeData(new Float32Array(normals)))
+    this.setAttribute("uv", new AttributeData(new Float32Array(uv)))
   }
 }

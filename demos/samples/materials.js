@@ -7,10 +7,14 @@ import {
   UVSphereGeometry,
   Vector3,
   Quaternion,
-  Color,
-  DirectionalLight
+  DirectionalLight,
+  Renderer,
+  TextureLoader
 } from "webgllis"
 
+/**
+ * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ */
 export function materials({
   renderer,
   textureLoader

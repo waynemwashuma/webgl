@@ -10,17 +10,22 @@ export class UVSphereGeometry extends Geometry {
 
     this.indices = new Uint16Array(indices)
     this.setAttribute("position",
-      new AttributeData(new Float32Array(vertices), 3)
+      new AttributeData(new Float32Array(vertices))
     )
     this.setAttribute("normal",
-      new AttributeData(new Float32Array(normals), 3)
+      new AttributeData(new Float32Array(normals))
     )
     this.setAttribute("uv",
-      new AttributeData(new Float32Array(uvs), 2)
+      new AttributeData(new Float32Array(uvs))
     )
   }
 }
 
+/**
+ * @param {number} radius
+ * @param {number} numSegments
+ * @param {number} numRings
+ */
 function createUVSphere(radius, numSegments, numRings) {
   const vertices = [];
   const normals = [];
