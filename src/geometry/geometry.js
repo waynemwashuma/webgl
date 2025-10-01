@@ -17,7 +17,7 @@ export class Geometry {
   }
   /**
    * @param {WebGL2RenderingContext} gl
-   * @param {Map<string,Attribute>} attributes 
+   * @param {ReadonlyMap<string,Attribute>} attributes 
    */
   init(gl, attributes) {
     this._VAO = createVAO(gl,attributes, this._attributes, this.indices)
