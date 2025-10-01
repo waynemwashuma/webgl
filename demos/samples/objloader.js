@@ -1,7 +1,8 @@
 import {
   Vector3,
   Quaternion,
-  OBJLoader
+  OBJLoader,
+  BasicMaterial
 } from 'webgllis';
 
 export function objLoader({
@@ -21,7 +22,10 @@ export function objLoader({
     const quat1 = new Quaternion().setFromEuler(euler)
     setInterval(() => {
       mesh.transform.orientation.multiply(quat1)
-      mesh.material.setUniform("mainTexture", texture)
+
+      if(mesh.material instanceof BasicMaterial){
+        mesh.material.mainTexture = texture
+      }
     }, 100 / 6)
   }))
   renderer.camera.transform.position.z = 2

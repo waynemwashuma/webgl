@@ -21,7 +21,7 @@ export function skyBox({
   const euler = new Vector3(0, Math.PI / 1000, 0)
   const rotation = new Quaternion().setFromEuler(euler)
   setInterval(() => {
-    skyBox.material.setUniform("lerp", number)
+    skyBox.material.lerp = number
 
     const next = number + interval * direction
     if (number > 1 || number < 0) {

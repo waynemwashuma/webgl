@@ -5,7 +5,7 @@ import {
   TextureWrap,
   UniformType
 } from "./constant.js"
-import { Attribute, AttributeData } from "./core/index.js"
+import { Attribute, AttributeData, UBO, UBOLayout, Uniform } from "./core/index.js"
 /**
  * @param {WebGLRenderingContext} gl
  */
@@ -271,12 +271,6 @@ function getUBOLayout(gl, program, index) {
     index,
     gl.UNIFORM_BLOCK_DATA_SIZE
   )
-  const numUniforms = gl.getActiveUniformBlockParameter(
-    program,
-    index,
-    gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS
-  );
-
   const uniformIndices = gl.getActiveUniformBlockParameter(
     program,
     index,
@@ -284,31 +278,28 @@ function getUBOLayout(gl, program, index) {
   )
   const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
   const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
-
-  const fields = {}
+  const fields = new Map()
+  
   uniformIndices.forEach((index, i) => {
     const info = gl.getActiveUniform(program, index);
-    return fields[info.name] = {
+    return fields.set(info.name, {
       type: info.type,
       size: info.size,
       offset: offsets[i],
       stride: strides[i]
-    }
+  })
   });
-  return {
-    name,
-    size,
-    fields
-  }
+  return new UBOLayout("",size,fields)
 }
 
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLProgram} program
+ * @returns {Map<string,Uniform>}
  */
 function getActiveUniforms(gl, program) {
   const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-  const array = {}
+  const map = new Map()
   for (let i = 0; i < numUniforms; i++) {
     const info = gl.getActiveUniform(program, i);
     const [blockIndex] = gl.getActiveUniforms(
@@ -317,23 +308,29 @@ function getActiveUniforms(gl, program) {
       gl.UNIFORM_BLOCK_INDEX
     )
     if (blockIndex !== -1) continue
-    array[info.name] = {
-      size: info.size,
-      type: info.type,
-      location: gl.getUniformLocation(program, info.name)
-    }
+    map.set(info.name, new Uniform(
+      gl.getUniformLocation(program, info.name),
+      info.type,
+      info.size
+    ))
   }
 
-  return array
+  return map
 }
 
+/**
+ * 
+ * @param {WebGL2RenderingContext} gl 
+ * @param {WebGLProgram} program 
+ * @returns {Map<string,UBOLayout>}
+ */
 function getActiveUniformBlocks(gl, program) {
-  const results = {}
+  const results = new Map()
   const numBlocks = gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS);
 
   for (let i = 0; i < numBlocks; i++) {
     const name = gl.getActiveUniformBlockName(program, i);
-    results[name] = getUBOLayout(gl, program, i)
+    results.set(name, getUBOLayout(gl, program, i))
   }
   return results
 }

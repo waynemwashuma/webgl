@@ -91,9 +91,7 @@ export class Renderer {
     this.attributes = attributes
     this.defaultTexture = createDefaultTexture(this.gl)
   }
-  setGlobalUBO(name, layout) {
-    this._UBOs.set(name, layout)
-  }
+  
   updateUBO(dataForm) {
     const { data, name } = dataForm
     const ubo = this._UBOs.get(name)

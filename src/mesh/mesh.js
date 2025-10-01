@@ -7,19 +7,29 @@ import {
 } from "../constant.js"
 import { Texture } from "../texture/index.js"
 
+/**
+ * @template {Geometry} [T = Geometry]
+ * @template {Shader} [U = Shader]
+ */
 export class Mesh {
   transform = new Transform3D()
   parent = null
 
   /**
-   * @type {Geometry}
+   * @type {T}
    */
   geometry
 
   /**
-   * @type {Shader}
+   * @type {U}
    */
   material
+
+  /**
+   * 
+   * @param {T} geometry 
+   * @param {U} material 
+   */
   constructor(geometry, material) {
     this.geometry = geometry
     this.material = material
@@ -32,7 +42,6 @@ export class Mesh {
    * @param {Map<string,Attribute>} attributes 
    */
   init(gl, ubos, attributes) {
-    this.material.setUniform(UNI_MODEL_MAT, this.transform.matrix)
     this.material.init(gl, ubos, attributes)
     this.geometry.init(gl, attributes)
   }
@@ -48,19 +57,24 @@ export class Mesh {
     const geometry = this.geometry
     const { attributes, indices } = geometry
     const drawMode = material.drawMode
-
+    const modelInfo = material.uniforms.get(UNI_MODEL_MAT)
+    const modeldata = new Float32Array([...this.transform.matrix])
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
+    
     material.activate(gl, defaultTexture)
     gl.bindVertexArray(this.geometry.VAO)
-    material.updateUniform(UNI_MODEL_MAT, this.transform.matrix)
-    //drawing
+    console.log(gl.getError());
+    
+    gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
 
+    //drawing
     if (indices) {
       gl.drawElements(drawMode,
         indices.length,
         gl.UNSIGNED_SHORT, 0
       );
+
     } else {
       const position = attributes.get("position")
       gl.drawArrays(drawMode, 0, position.value.length / 3)
