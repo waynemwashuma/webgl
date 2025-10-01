@@ -1,6 +1,9 @@
 export const skyboxFragment =
   `
   precision mediump float;
+
+	#include <common>
+	
 	in highp vec3 v_uv;
 
 	uniform samplerCube day;

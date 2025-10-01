@@ -1,14 +1,8 @@
 export const lambertFragment =
   `
   precision mediump float;
-  
-  #define MAX_DIRECTIONAL_LIGHTS 10
 
-  struct DirectionalLight {
-    vec4 color;
-    vec3 direction;
-    float intensity;
-  };
+  #include <common>
   
   in vec3 v_position;
   in vec2 v_uv;
@@ -29,13 +23,6 @@ export const lambertFragment =
   
   out vec4 fragment_color;
 
- float calculate_brightness(vec3 normal, vec3 dir) {
-   return max(
-     dot(normalize(normal), dir),
-     0.0
-   );
- }
- 
   void main(){
     float opacity = color.w;
     vec3 normal = normalize(v_normal);
