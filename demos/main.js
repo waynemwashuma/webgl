@@ -1,4 +1,4 @@
-import { Renderer, TextureLoader } from "webgllis"
+import { PerspectiveProjection, Renderer, TextureLoader } from "webgllis"
 import {
   rotatingCube,
   textureWrap,
@@ -111,4 +111,10 @@ function init(demos) {
     name = Object.keys(demos)[0]
   if (!name) return
   demos[name](manager)
+
+  renderer.domElement.addEventListener("resize",()=>{
+    if(renderer.camera.projection instanceof PerspectiveProjection){
+      renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+    }
+  })
 }
