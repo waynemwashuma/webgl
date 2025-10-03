@@ -1,9 +1,9 @@
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/camera.js"
-import {  TextureType } from "../constant.js"
+import { TextureType } from "../constant.js"
 import { Attribute, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
-import { Mesh } from "../mesh/index.js"
+import { Mesh, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { createTexture } from "../function.js"
@@ -44,7 +44,7 @@ export class Renderer {
   lights = new Lights()
 
   /**
-   * @type {Mesh[]}
+   * @type {Object3D[]}
    */
   meshes = []
 
@@ -123,9 +123,9 @@ export class Renderer {
     this.attributes = attributes
     this.defaultTexture = createDefaultTexture(this.gl)
     this.includes.set("common", commonShaderLib)
-    this.defines.set("MAX_DIRECTIONAL_LIGHTS","10")
+    this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
-  
+
   /**
    * @param {{ name: any; data: any; }} dataForm
    */
@@ -139,14 +139,16 @@ export class Renderer {
   }
 
   /**
-   * @param {Mesh} mesh 
+   * @param {Object3D} mesh 
    */
   add(mesh) {
-    mesh.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
+    if (mesh instanceof Mesh) {
+      mesh.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
+    }
     this.meshes.push(mesh)
   }
   /**
-   * @param {Mesh<import("../index.js").Geometry, import("../index.js").Shader>} mesh
+   * @param {Object3D} mesh
    */
   remove(mesh) {
     let id = this.meshes.indexOf(mesh)
@@ -177,8 +179,11 @@ export class Renderer {
     }
 
     for (let i = 0; i < this.meshes.length; i++) {
-      this.meshes[i].update()
-      this.meshes[i].renderGL(this.gl, this.defaultTexture)
+      const object = this.meshes[i]
+      object.update()
+      if (object instanceof Mesh) {
+        object.renderGL(this.gl, this.defaultTexture)
+      }
     }
   }
   /**
@@ -210,10 +215,10 @@ function createDefaultTexture(gl) {
   const texture = new Texture({
     width,
     height,
-    data:[pixel],
+    data: [pixel],
     type: TextureType.TEXTURE_2D
   })
-  
-  texture.webglTex = createTexture(gl,texture)
+
+  texture.webglTex = createTexture(gl, texture)
   return texture
 }
