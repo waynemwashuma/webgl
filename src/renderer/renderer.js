@@ -1,11 +1,12 @@
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera.js"
-import { GlDataType, TextureFilter, TextureFormat, TextureWrap } from "../constant.js"
+import { GlDataType, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constant.js"
 import { Attribute, UBOs } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Mesh } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
+import { createTexture } from "../function.js"
 
 export class DirectionalLights {
   /**
@@ -200,32 +201,19 @@ export class Renderer {
 }
 
 /**
- * @param {WebGLRenderingContext} gl
+ * @param {WebGL2RenderingContext} gl
  */
 function createDefaultTexture(gl) {
-  const texture = gl.createTexture()
-  const level = 0
   const width = 1
   const height = 1
-  const border = 0
   const pixel = new Uint8Array([255, 255, 255, 255])
-
-  gl.bindTexture(gl.TEXTURE_2D, texture)
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    level,
-    TextureFormat.RGBA,
+  const texture = new Texture({
     width,
     height,
-    border,
-    TextureFormat.RGBA,
-    GlDataType.UNSIGNED_BYTE,
-    pixel,
-  )
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, TextureWrap.CLAMP)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, TextureWrap.CLAMP)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, TextureFilter.LINEAR)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, TextureFilter.LINEAR)
-
-  return new Texture(texture)
+    data:[pixel],
+    type: TextureType.TEXTURE_2D
+  })
+  
+  texture.webglTex = createTexture(gl,texture)
+  return texture
 }

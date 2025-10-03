@@ -39,12 +39,17 @@ export class PhongMaterial extends Shader {
   }
 
   /**
-   * 
    * @param {WebGL2RenderingContext} gl 
-   * @param {WebGLTexture} defaultTexture 
+   * @param {Texture} defaultTexture 
    */
   uploadUniforms(gl, defaultTexture) {
-    const { color, mainTexture, mainSampler, specularShininess, specularStrength } = this
+    const {
+      color,
+      mainTexture = defaultTexture,
+      mainSampler,
+      specularShininess,
+      specularStrength
+    } = this
     const colorInfo = this.uniforms.get("color")
     const mainTextureInfo = this.uniforms.get("mainTexture")
     const specularShininessInfo = this.uniforms.get("specularShininess")
@@ -60,19 +65,13 @@ export class PhongMaterial extends Shader {
       gl.uniform1f(specularStrengthInfo.location, specularStrength)
     }
     if (mainTextureInfo) {
-      if (mainTexture) {
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, mainTexture.webglTex)
-        gl.uniform1i(mainTextureInfo.location, 0)
-      } else {
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, defaultTexture)
-        gl.uniform1i(mainTextureInfo.location, 0)
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, mainTexture.webglTex)
+      gl.uniform1i(mainTextureInfo.location, 0)
+
+      if (mainSampler) {
+        updateTextureSampler(gl, mainTexture, mainSampler)
       }
-    }
-    // must occur after the above block
-    if (mainSampler) {
-      updateTextureSampler(gl, gl.TEXTURE_2D, this.mainSampler)
     }
   }
 }

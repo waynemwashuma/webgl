@@ -2,10 +2,12 @@ import {
   CompareFunction,
   TextureCompareMode,
   TextureFilter,
+  TextureType,
   TextureWrap,
   UniformType
 } from "./constant.js"
-import { Attribute, AttributeData, UBO, UBOLayout, Uniform } from "./core/index.js"
+import { Attribute, AttributeData, UBOLayout, Uniform } from "./core/index.js"
+import { Sampler, Texture } from "./texture/index.js"
 /**
  * @param {WebGLRenderingContext} gl
  * @param {number} typedarray
@@ -48,7 +50,7 @@ export function createshader(gl, src, type) {
 export function createSampler(gl, settings) {
   const sampler = gl.createSampler()
 
-  updateSampler(gl,sampler,settings)
+  updateSampler(gl, sampler, settings)
 
   return sampler
 }
@@ -58,7 +60,7 @@ export function createSampler(gl, settings) {
  * @param {WebGLSampler} sampler
  * @param {SamplerSettings} settings
  */
-function updateSampler(gl, sampler,settings) {
+function updateSampler(gl, sampler, settings) {
   const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
 
   gl.samplerParameteri(sampler, gl.TEXTURE_MAG_FILTER, settings.magnificationFilter)
@@ -97,69 +99,91 @@ function updateSampler(gl, sampler,settings) {
   }
 }
 /**
- * @param {WebGLRenderingContext} gl
- * @param {TexImageSource} img
- * @param {any} flipY
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
  */
-export function createTexture(gl, img, flipY) {
-  let tex = gl.createTexture()
+export function createTexture(gl, texture) {
+  const webglTexture = gl.createTexture()
 
-  if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
-  gl.bindTexture(gl.TEXTURE_2D, tex)
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
-  gl.generateMipmap(gl.TEXTURE_2D)
-  gl.bindTexture(gl.TEXTURE_2D, null)
-
-  if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-  return tex
+  gl.bindTexture(texture.type, webglTexture)
+  updateTextureData(gl,texture)
+  updateTextureSampler(gl, texture, texture.defaultSampler)
+  
+  gl.bindTexture(texture.type, null)
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+  return webglTexture
 }
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {GLenum} target
- * @param {SamplerSettings} settings
+ * @param {Texture} texture
+ * @param {Sampler} sampler
  */
-export function updateTextureSampler(gl,target,settings) {
+export function updateTextureSampler(gl, texture, sampler) {
+  const lod = sampler.lod
   const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
 
-  gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, settings.magnificationFilter)
-  gl.texParameteri(target, gl.TEXTURE_WRAP_S, settings.wrapS)
-  gl.texParameteri(target, gl.TEXTURE_WRAP_T, settings.wrapT)
-  gl.texParameteri(target, gl.TEXTURE_WRAP_R, settings.wrapR)
-  gl.texParameteri(target, gl.TEXTURE_MIN_LOD, settings.lod.min)
-  gl.texParameteri(target, gl.TEXTURE_MAX_LOD, settings.lod.max)
+  gl.texParameteri(texture.type, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter)
+  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_S, sampler.wrapS)
+  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_T, sampler.wrapT)
+  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_R, sampler.wrapR)
 
-  if (settings.minificationFilter === TextureFilter.LINEAR) {
-    if (settings.mipmapFilter === TextureFilter.LINEAR) {
-      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  if (lod) {
+    gl.texParameteri(texture.type, gl.TEXTURE_MIN_LOD, lod.min)
+    gl.texParameteri(texture.type, gl.TEXTURE_MAX_LOD, lod.max)
+  }
+
+  if (sampler.minificationFilter === TextureFilter.LINEAR) {
+    if (sampler.mipmapFilter === TextureFilter.LINEAR) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
-    if (settings.mipmapFilter === TextureFilter.NEAREST) {
-      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    if (sampler.mipmapFilter === TextureFilter.NEAREST) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     }
   }
 
-  if (settings.minificationFilter === TextureFilter.NEAREST) {
-    if (settings.mipmapFilter === TextureFilter.LINEAR) {
-      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+  if (sampler.minificationFilter === TextureFilter.NEAREST) {
+    if (sampler.mipmapFilter === TextureFilter.LINEAR) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
     }
-    if (settings.mipmapFilter === TextureFilter.NEAREST) {
-      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+    if (sampler.mipmapFilter === TextureFilter.NEAREST) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
     }
   }
   if (anisotropyExtenstion) {
-    gl.texParameterf(target, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, settings.anisotropy)
+    gl.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
   }
 
-  if (settings.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
-    gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-    gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, settings.compare)
+  if (sampler.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
+    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_FUNC, sampler.compare)
   } else {
-    gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, gl.NONE);
+    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.NONE);
   }
 }
 
+/**
+ * 
+ * @param {WebGL2RenderingContext} gl 
+ * @param {Texture} texture 
+ */
+export function updateTextureData(gl, texture) {
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
+
+  switch (texture.type) {
+    case TextureType.TEXTURE_2D:
+      updateTexture2D(gl, texture)
+      break;
+    case TextureType.TEXTURE_CUBE_MAP:
+      updateCubeMap(gl,texture)
+    default:
+      break;
+  }
+  if(texture.generateMipmaps){
+    gl.generateMipmap(texture.type)
+  }
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+}
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLShader} vshader 
@@ -335,7 +359,7 @@ function getUBOLayout(gl, program, index) {
   const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
   const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
   const fields = new Map()
-  
+
   uniformIndices.forEach((/** @type {number} */ index, /** @type {string | number} */ i) => {
     const info = gl.getActiveUniform(program, index);
     return fields.set(info.name, {
@@ -343,9 +367,9 @@ function getUBOLayout(gl, program, index) {
       size: info.size,
       offset: offsets[i],
       stride: strides[i]
-  })
+    })
   });
-  return new UBOLayout("",size,fields)
+  return new UBOLayout("", size, fields)
 }
 
 /**
@@ -375,7 +399,6 @@ function getActiveUniforms(gl, program) {
 }
 
 /**
- * 
  * @param {WebGL2RenderingContext} gl 
  * @param {WebGLProgram} program 
  * @returns {Map<string,UBOLayout>}
@@ -392,17 +415,77 @@ function getActiveUniformBlocks(gl, program) {
 }
 
 /**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
+ */
+function updateTexture2D(gl, texture) {
+  const level = 0, border = 0
+  const {
+    internalFormat,
+    format,
+    dataFormat,
+    data,
+    width,
+    height
+  } = texture
+  if (!data[0]) return
+  gl.texImage2D(
+    texture.type,
+    level,
+    internalFormat,
+    width,
+    height,
+    border,
+    format,
+    dataFormat,
+    data[0]
+  )
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
+ */
+function updateCubeMap(gl, texture) {
+  const level = 0, border = 0
+  const {
+    internalFormat,
+    format,
+    dataFormat,
+    data,
+    width,
+    height
+  } = texture
+  if (data.length < 6) return
+  for (let i = 0; i < 6; i++) {
+    const src = data[i];
+
+    gl.texImage2D(
+      gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+      level,
+      internalFormat,
+      width,
+      height,
+      border,
+      format,
+      dataFormat,
+      src
+    )
+  }
+}
+
+/**
  * @typedef SamplerSettings
- * @property {TextureFilter} minificationFilter
- * @property {TextureFilter} magnificationFilter
- * @property {TextureFilter} mipmapFilter'
- * @property {TextureWrap} wrapS
- * @property {TextureWrap} wrapT
- * @property {TextureWrap} wrapR
- * @property {SamplerLODSettings} lod
- * @property {number} anisotropy
- * @property {TextureCompareMode} compareMode
- * @property {CompareFunction} compare
+ * @property {TextureFilter} [minificationFilter]
+ * @property {TextureFilter} [magnificationFilter]
+ * @property {TextureFilter} [mipmapFilter]
+ * @property {TextureWrap} [wrapS]
+ * @property {TextureWrap} [wrapT]
+ * @property {TextureWrap} [wrapR]
+ * @property {SamplerLODSettings} [lod]
+ * @property {number} [anisotropy]
+ * @property {TextureCompareMode} [compareMode]
+ * @property {CompareFunction} [compare]
  */
 
 /**

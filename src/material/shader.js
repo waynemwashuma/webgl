@@ -76,7 +76,7 @@ export class Shader {
    */
   activate(gl, defaultTexture) {
     gl.useProgram(this.program)
-    this.uploadUniforms(gl, defaultTexture.webglTex)
+    this.uploadUniforms(gl, defaultTexture)
     gl.cullFace(this.cullFace);
   }
 
