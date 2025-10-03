@@ -68,6 +68,12 @@ export class Object3D {
       this.children[i].traverseDFS(func);
     }
   }
+
+  clone(){
+    const newObject = new /**@type {new (...args:[])=> this} */(this.constructor())
+    newObject.transform = this.transform.clone()
+    return newObject
+  }
 }
 
 /**

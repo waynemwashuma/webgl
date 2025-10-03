@@ -20,4 +20,13 @@ export class Transform3D {
       Affine3.multiply(parent.world,this.world,this.world)
     }
   }
+
+  clone(){
+    const newTransform = new /**@type {new (...args:[])=> this} */(this.constructor())
+    newTransform.position = this.position.clone()
+    newTransform.orientation = this.orientation.clone()
+    newTransform.scale = this.scale.clone()
+    newTransform.world = this.world.clone()
+    return newTransform
+  }
 }
