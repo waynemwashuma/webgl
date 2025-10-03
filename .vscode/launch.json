@@ -5,9 +5,17 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "name": "Launch iFirefox",
+      "url": "http://127.0.0.1:5500/demos/index.html",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
       "type": "chrome",
       "request": "launch",
-      "name": "Launch Chrome against localhost",
+      "name": "Launch Chrome=",
       "url": "http://127.0.0.1:5500/demos/index.html",
       "webRoot": "${workspaceFolder}"
     }
