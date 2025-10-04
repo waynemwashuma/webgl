@@ -24,16 +24,14 @@ export const phongFragment =
   out vec4 fragment_color;
  
   void main(){
-    vec3 view_direction = normalize(cam_direction);
-    float opacity = color.w;
-    int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
+    vec3 sample_color = texture(mainTexture,v_uv).rgb;
+    vec3 base_color = tint(sample_color, color.rgb);
     vec3 normal = normalize(v_normal);
-    vec3 base_color = texture(mainTexture,v_uv).xyz * color.xyz;
+    vec3 view_direction = normalize(cam_direction);
+    float opacity = color.a;
+    int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     
-    if(base_color == vec3(0.0,0.0,0.0))
-      base_color = color.xyz;
-    
-    vec3 ambient = ambient_light.color.xyz * ambient_light.intensity;
+    vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
     
     vec3 accumulate_light_contribution = vec3(0.0,0.0,0.0);
     for (int i = 0; i < directional_light_count; i++) {
@@ -42,10 +40,10 @@ export const phongFragment =
       
       //Remember you set the dir to negative because light direction is the opposite direction of dir.
       float diffuse_brightness = calculate_brightness(normal,-light.direction);
-      vec3 diffuse = base_color * light.color.xyz * diffuse_brightness * light.intensity;
+      vec3 diffuse = base_color * light.color.rgb * diffuse_brightness * light.intensity;
     
       float specular_brightness = calculate_brightness(reflection_direction,view_direction);
-      vec3 specular = pow(specular_brightness,specularShininess) * light.color.xyz * specularStrength;
+      vec3 specular = pow(specular_brightness,specularShininess) * light.color.rgb * specularStrength;
       accumulate_light_contribution += specular + diffuse;
     }
   

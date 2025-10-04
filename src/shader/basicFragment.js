@@ -9,17 +9,12 @@ export const basicFragment =
   
   in vec2 v_uv;
   
-  out vec4 final_color;
+  out vec4 fragment_color;
   
-  vec3 tint(vec3 tex_color, vec3 tint){
-    if (tex_color == vec3(0.0, 0.0, 0.0))
-      return tint;
-    return tex_color * tint;
-  }
   void main(){
+    vec3 sample_color = texture(mainTexture,v_uv).rgb;
     float opacity = color.a;
-    vec4 sample_color = texture(mainTexture,v_uv);
-    final_color.xyz = tint(sample_color.xyz,color.xyz);
-    final_color.a = opacity;
-}
+
+    fragment_color = vec4(tint(sample_color,color.rgb), opacity);
+  }
 `
