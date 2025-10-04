@@ -3,7 +3,7 @@ import { createVAO } from "../function.js"
 
 export class Geometry {
   /**
-   * @type {Uint16Array | Uint32Array | undefined}
+   * @type {Uint8Array | Uint16Array | Uint32Array | undefined}
    */
   indices
 

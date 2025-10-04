@@ -233,7 +233,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
  * @param {WebGL2RenderingContext} gl
  * @param {ReadonlyMap<string, Attribute>} attributes
  * @param {ReadonlyMap<string, AttributeData>} meshData
- * @param {Uint16Array | Uint32Array} [indices] 
+ * @param {Uint8Array | Uint16Array | Uint32Array} [indices] 
  */
 export function createVAO(gl, attributes, meshData, indices) {
   const vao = gl.createVertexArray()
