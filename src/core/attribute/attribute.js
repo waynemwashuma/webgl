@@ -80,4 +80,16 @@ export class Attribute {
     GlDataType.FLOAT,
     4
   )
+  static JointWeight = new Attribute(
+    'joint_weight',
+    6,
+    GlDataType.FLOAT,
+    1
+  )
+  static JointIndex = new Attribute(
+    'joint_index',
+    7,
+    GlDataType.UNSIGNED_INT,
+    1
+  )
 }
