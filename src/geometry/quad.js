@@ -1,5 +1,5 @@
 import { Geometry } from "./geometry.js"
-import { AttributeData } from "../core/index.js"
+import { Attribute, AttributeData } from "../core/index.js"
 
 
 
@@ -30,8 +30,8 @@ export class QuadGeometry extends Geometry {
      ]
 
     this.indices = new Uint16Array(indices)
-    this.setAttribute("position", new AttributeData(new Float32Array(vertices)))
-    this.setAttribute("normal", new AttributeData(new Float32Array(normals)))
-    this.setAttribute("uv", new AttributeData(new Float32Array(uv)))
+    this.setAttribute(Attribute.Position.name, new AttributeData(new DataView(new Float32Array(vertices).buffer)))
+    this.setAttribute(Attribute.Normal.name, new AttributeData(new DataView(new Float32Array(normals).buffer)))
+    this.setAttribute(Attribute.UV.name, new AttributeData(new DataView(new Float32Array(uv).buffer)))
   }
 }

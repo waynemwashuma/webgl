@@ -1,11 +1,11 @@
 export class AttributeData {
   /**
    * @readonly
-   * @type {Float32Array}
+   * @type {DataView}
   */
   value = null
   /**
-   * @param {Float32Array} value
+   * @param {DataView} value
    */
   constructor(value){
     this.value = value

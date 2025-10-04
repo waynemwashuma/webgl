@@ -1,4 +1,4 @@
-import { AttributeData } from '../core/index.js';
+import { Attribute, AttributeData } from '../core/index.js';
 import { Geometry } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
 import { Mesh } from '../mesh/index.js';
@@ -18,9 +18,9 @@ export class OBJLoader {
     const mesh = new Mesh(geometry, new BasicMaterial())
     
     
-    geometry.setAttribute("position",new AttributeData(attributes.get("position")))
-    geometry.setAttribute("normal",new AttributeData(attributes.get("normal")))
-    geometry.setAttribute("uv",new AttributeData(attributes.get("uv")))
+    geometry.setAttribute(Attribute.Position.name,new AttributeData(attributes.get(Attribute.Position.name)))
+    geometry.setAttribute(Attribute.Normal.name,new AttributeData(attributes.get(Attribute.Normal.name)))
+    geometry.setAttribute(Attribute.UV.name,new AttributeData(attributes.get(Attribute.UV.name)))
     this.meshes.set(settings.name, mesh)
 
     return mesh
@@ -123,9 +123,9 @@ function buildBuffers(data) {
   // Also, position should be required.
   return {
     attributes: new Map([
-      ["position",new Float32Array(positions)],
-      ["uv", new Float32Array(uvs)],
-      ["normal", new Float32Array(normals)]
+      [Attribute.Position.name,new DataView(new Float32Array(positions).buffer)],
+      [Attribute.UV.name, new DataView(new Float32Array(uvs).buffer)],
+      [Attribute.Normal.name, new DataView(new Float32Array(normals).buffer)]
     ]),
     count: positions.length / 3
   };

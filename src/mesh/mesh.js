@@ -82,7 +82,7 @@ export class Mesh extends Object3D {
         );
 
       } else {
-        const position = attributes.get("position")
+        const position = attributes.get(Attribute.Position.name)
         gl.drawArrays(drawMode, 0, position.value.length / 3)
       }
       gl.bindVertexArray(null)
