@@ -10,8 +10,8 @@ export class AmbientLight {
 
   getData() {
     return {
-      name:"AmbientLight",
-      data:new Float32Array([
+      name: "AmbientLightBlock",
+      data: new Float32Array([
       this.intensity,
       0,
       0,

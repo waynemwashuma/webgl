@@ -4,7 +4,6 @@ export const basicFragment =
   
   #include <common>
 
-  
   uniform sampler2D mainTexture;
   uniform vec4 color;
   
@@ -13,7 +12,6 @@ export const basicFragment =
   out vec4 final_color;
   
   vec3 tint(vec3 tex_color, vec3 tint){
-  
     if (tex_color == vec3(0.0, 0.0, 0.0))
       return tint;
     return tex_color * tint;

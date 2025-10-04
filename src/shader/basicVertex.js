@@ -4,11 +4,10 @@ export const basicVertex =
   
   #include <common>
   
-  uniform Camera {
-    mat4 view;
-    mat4 projection;
-    vec3 cam_position;
-  } camera;
+  uniform CameraBlock {
+    Camera camera;
+  };
+  
   uniform mat4 model;
   
   in vec3 position;

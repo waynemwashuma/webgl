@@ -6,11 +6,9 @@ export const skyboxVertex =
 
 	in vec3 position;
 
-  uniform Camera {
-    mat4 view;
-    mat4 projection;
-    vec3 position;
-  } camera;
+  uniform CameraBlock {
+    Camera camera;
+  };
   uniform mat4 model;
 	
 	out highp vec3 v_uv;

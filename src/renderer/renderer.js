@@ -29,7 +29,7 @@ export class DirectionalLights {
     ]
 
     return {
-      name: this.constructor.name,
+      name: "DirectionalLightBlock",
       data: new Float32Array(buffer)
     }
   }

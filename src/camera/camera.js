@@ -25,7 +25,7 @@ export class Camera extends Object3D {
   getData() {
     const { near, far } = this
     return {
-      name: "Camera",
+      name: "CameraBlock",
       data: new Float32Array([
         ...this.view,
         ...this.projection.asProjectionMatrix(near, far),

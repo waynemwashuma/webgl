@@ -12,14 +12,12 @@ export const lambertFragment =
   uniform vec4 color;
   
   // Lights
-  uniform AmbientLight {
-    float intensity;
-    vec4 color;
-  } ambient_light;
-  uniform DirectionalLights {
-    int count;
-    DirectionalLight lights[MAX_DIRECTIONAL_LIGHTS];
-  } directional_lights;
+  uniform AmbientLightBlock {
+    AmbientLight ambient_light;
+  };
+  uniform DirectionalLightBlock {
+    DirectionalLights directional_lights;
+  };
   
   out vec4 fragment_color;
 
