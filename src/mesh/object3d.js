@@ -17,34 +17,38 @@ export class Object3D {
    */
   update(parent) {
     this.transform.updateMatrix(parent)
-    
+
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].update(this.transform)
     }
   }
 
   /**
-   * @param {Object3D} child
+   * @param {Object3D[]} children
    */
-  add(child){
-    child.parent = this
-    this.children.push(child)
+  add(...children) {
+    this.children.push(...children)
+    children.forEach(child => child.parent = this)
   }
 
   /**
-   * @param {Object3D} child
+   * @param {Object3D[]} children
    */
-  remove(child){
-    const index = this.children.indexOf(child)
-    if(index === -1) return
-
-    child.parent = undefined
-    this.children.splice(index,1)
+  remove(...children) {
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      
+      const index = this.children.indexOf(child)
+      if (index === -1) return
+  
+      child.parent = undefined
+      this.children.splice(index, 1)
+    }
   }
   /**
    * @param {Traverser} func
    */
-  traverseBFS(func){
+  traverseBFS(func) {
     /**@type {Object3D[]} */
     const queue = [this]
 
@@ -52,7 +56,7 @@ export class Object3D {
       const object = queue.shift()
       const visible = func(object)
 
-      if(!visible) continue
+      if (!visible) continue
       queue.push(...object.children)
     }
   }
@@ -60,10 +64,10 @@ export class Object3D {
   /**
    * @param {Traverser} func
    */
-  traverseDFS(func){
+  traverseDFS(func) {
     const visible = func(this)
 
-    if(!visible) return
+    if (!visible) return
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].traverseDFS(func);
     }
