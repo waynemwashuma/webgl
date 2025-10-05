@@ -65,36 +65,31 @@ export class Mesh extends Object3D {
    * @param {Texture} defaultTexture 
    */
   renderGL(gl, defaultTexture) {
-    this.traverseDFS((object) => {
-      if (!(object instanceof Mesh)) return
-      
-      const { material, geometry, transform } = object
-      const { attributes, indices } = geometry
-      const drawMode = material.drawMode
-      const modelInfo = material.uniforms.get(UNI_MODEL_MAT)
-      const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
-      gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
-      //preping uniforms and activating program
+    const { material, geometry, transform } = this
+    const { attributes, indices } = geometry
+    const drawMode = material.drawMode
+    const modelInfo = material.uniforms.get(UNI_MODEL_MAT)
+    const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
+    gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
+    //preping uniforms and activating program
 
-      material.activate(gl, defaultTexture)
-      gl.bindVertexArray(geometry.VAO)
+    material.activate(gl, defaultTexture)
+    gl.bindVertexArray(geometry.VAO)
 
-      gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
+    gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
 
-      //drawing
-      if (indices) {
-        gl.drawElements(drawMode,
-          indices.length,
-          gl.UNSIGNED_SHORT, 0
-        );
+    //drawing
+    if (indices) {
+      gl.drawElements(drawMode,
+        indices.length,
+        gl.UNSIGNED_SHORT, 0
+      );
 
-      } else {
-        const position = attributes.get(Attribute.Position.name)
-        gl.drawArrays(drawMode, 0, position.value.length / 3)
-      }
-      gl.bindVertexArray(null)
-      material.deactivate(gl)
-      return true
-    })
+    } else {
+      const position = attributes.get(Attribute.Position.name)
+      gl.drawArrays(drawMode, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
+    }
+    gl.bindVertexArray(null)
+    material.deactivate(gl)
   }
 }
