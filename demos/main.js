@@ -10,7 +10,8 @@ import {
   skyBox,
   objLoader,
   separateSamplers,
-  transformPropagation
+  transformPropagation,
+  gltfLoader
 } from "./samples/index.js"
 
 const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
@@ -32,6 +33,7 @@ const demos = {
   "cullface": cullface,
   "skybox": skyBox,
   "obj loader": objLoader,
+  "gltf loader": gltfLoader,
   "transform propagation": transformPropagation,
 }
 
