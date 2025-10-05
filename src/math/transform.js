@@ -22,7 +22,7 @@ export class Transform3D {
   }
 
   clone(){
-    const newTransform = new /**@type {new (...args:[])=> this} */(this.constructor())
+    const newTransform = new /**@type {new (...args:[])=> this} */(this.constructor)()
     newTransform.position = this.position.clone()
     newTransform.orientation = this.orientation.clone()
     newTransform.scale = this.scale.clone()
