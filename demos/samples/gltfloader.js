@@ -13,10 +13,12 @@ export function gltfLoader({
 }) {
   const loader = new GLTFLoader()
   loader.asyncLoad({
-    path: "./assets/models/gltf/object.gltf",
+    path: "assets/models/gltf/pirate_girl/index.gltf",
     name: "object"
   }).then((group)=>{
-    renderer.add(group.clone())
+    const renderable = group.clone()
+    
+    renderer.add(renderable)
   })
 
   renderer.camera.transform.position.z = 2
