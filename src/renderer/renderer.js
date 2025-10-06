@@ -119,6 +119,8 @@ export class Renderer {
       .set(Attribute.Normal.name, Attribute.Normal)
       .set(Attribute.Tangent.name, Attribute.Tangent)
       .set(Attribute.Color.name, Attribute.Color)
+      .set(Attribute.JointIndex.name, Attribute.JointIndex)
+      .set(Attribute.JointWeight.name, Attribute.JointWeight)
 
     this.attributes = attributes
     this.defaultTexture = createDefaultTexture(this.gl)
@@ -186,6 +188,7 @@ export class Renderer {
       object.update()
       object.traverseDFS((child)=>{
         if (child instanceof Mesh) {
+          
           child.renderGL(this.gl, this.defaultTexture)
         }
         return true
