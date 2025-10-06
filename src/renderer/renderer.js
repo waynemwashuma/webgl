@@ -6,7 +6,6 @@ import { AmbientLight } from "../light/index.js"
 import { Mesh, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
-import { createTexture } from "../function.js"
 import { Geometry } from "../geometry/index.js"
 
 export class DirectionalLights {
@@ -45,6 +44,10 @@ export class Caches {
    * @type {Map<Geometry, WebGLVertexArrayObject>}
    */
   meshes = new Map()
+  /**
+   * @type {Map<Texture, WebGLTexture>}
+   */
+  textures = new Map()
 }
 export class Renderer {
   caches = new Caches()
@@ -62,6 +65,7 @@ export class Renderer {
   camera = new Camera()
 
   /**
+   * @readonly
    * @type {Texture}
    */
   defaultTexture
@@ -235,7 +239,5 @@ function createDefaultTexture(gl) {
     data: [pixel],
     type: TextureType.TEXTURE_2D
   })
-
-  texture.webglTex = createTexture(gl, texture)
   return texture
 }

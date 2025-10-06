@@ -1,5 +1,7 @@
 import {
   createProgramFromSrc,
+  createTexture,
+  updateTextureData,
 } from "../function.js"
 import {
   BlendMode,
@@ -64,19 +66,18 @@ export class Shader {
 
   /**
    * @param {WebGL2RenderingContext} _gl 
+   * @param {Map<Texture,WebGLTexture>} _cache
    * @param {WebGLTexture} _defaultTexture 
    */
-  uploadUniforms(_gl, _defaultTexture) {
+  uploadUniforms(_gl, _cache, _defaultTexture) {
     throw `Implement \`${this.constructor.name}.uploadUniforms\``
   }
 
   /**
-   * @param {WebGL2RenderingContext} gl
-   * @param {Texture} defaultTexture 
+   * @param {WebGL2RenderingContext} gl 
    */
-  activate(gl, defaultTexture) {
+  activate(gl) {
     gl.useProgram(this.program)
-    this.uploadUniforms(gl, defaultTexture)
     gl.cullFace(this.cullFace);
   }
 
@@ -107,4 +108,25 @@ function preprocessShader(source, includes, defines) {
     return include || ""
   })
   return version + mergedDefines + preprocessed
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
+ * @param {Map<Texture,WebGLTexture>} cache
+ * @returns {WebGLTexture}
+ */
+export function getWebglTexture(gl,texture,cache){
+  const tex = cache.get(texture)
+
+  if(tex){
+    if(texture.changed){
+      gl.bindTexture(texture.type, tex)
+      updateTextureData(gl,texture)
+    }
+    return tex
+  }
+  const newTex = createTexture(gl,texture)
+  cache.set(texture,newTex)
+  return newTex
 }

@@ -3,23 +3,12 @@
 import { GlDataType, TextureFormat, TextureFormatUsage, TextureType } from '../constant.js';
 import { Renderer } from '../renderer/index.js';
 import { Texture } from '../texture/index.js';
-import { createTexture, updateTextureData } from '../function.js';
 export class TextureLoader {
-  /**
-   * @private
-   * @type {WebGL2RenderingContext}
-   */
-  gl
+
   /**
    * @type {Map<string,Texture>}
   */
   textures = new Map()
-  /**
-   * @param {Renderer} renderer
-   */
-  constructor(renderer) {
-    this.gl = renderer.gl
-  }
 
   /**
    * 
@@ -64,9 +53,7 @@ export class TextureLoader {
     texture.dataFormat = GlDataType.UNSIGNED_BYTE
     texture.width = data.width
     texture.height = data.height
-
-    this.gl.bindTexture(texture.type, texture.webglTex)
-    updateTextureData(this.gl, texture)
+    texture.update()
   }
   /**
    * @param {TextureLoadSettings} settings
@@ -80,7 +67,6 @@ export class TextureLoader {
       height: 1
     })
 
-    texture.webglTex = createTexture(this.gl, texture)
     this.textures.set(settings.name, texture)
     this.internalLoad([settings.path], texture)
     return texture
@@ -98,8 +84,6 @@ export class TextureLoader {
       width: 1,
       height: 1
     })
-
-    texture.webglTex = createTexture(this.gl, texture)
     this.textures.set(settings.name, texture)
     this.internalLoad(settings.paths, texture)
     return texture
