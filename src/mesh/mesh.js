@@ -8,6 +8,7 @@ import {
 import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
+import { createVAO } from "../function.js"
 
 /**
  * @template {Geometry} [T = Geometry]
@@ -34,7 +35,7 @@ export class Mesh extends Object3D {
     this.material = material
   }
 
-  clone(){
+  clone() {
     const newMesh = super.clone()
 
     newMesh.geometry = this.geometry
@@ -55,7 +56,6 @@ export class Mesh extends Object3D {
       const { material, geometry } = object
 
       material.init(gl, ubos, attributes, includes, globalDefines)
-      geometry.init(gl, attributes)
 
       return true
     })
@@ -63,19 +63,35 @@ export class Mesh extends Object3D {
 
   /**
    * @param {WebGL2RenderingContext} gl
-   * @param {Texture} defaultTexture 
+   * @param {import("../renderer/index.js").Caches} caches
+   * @param {ReadonlyMap<string,Attribute>} attributes 
+   * @param {Texture} defaultTexture
    */
-  renderGL(gl, defaultTexture) {
+  renderGL(gl, caches, attributes, defaultTexture) {
+    const { meshes } = caches
     const { material, geometry, transform } = this
-    const { attributes, indices } = geometry
+    const { indices } = geometry
     const drawMode = material.drawMode
     const modelInfo = material.uniforms.get(UNI_MODEL_MAT)
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
+
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
 
     material.activate(gl, defaultTexture)
-    gl.bindVertexArray(geometry.VAO)
+
+    const mesh = meshes.get(geometry)
+
+    if (mesh) {
+      gl.bindVertexArray(mesh)
+
+      // TODO: Implement autoupdate when mesh changes and
+      // delete the old VAO and its buffers.
+    } else {
+      const newMesh = createVAO(gl, attributes, geometry)
+      meshes.set(geometry,newMesh)
+      gl.bindVertexArray(newMesh)
+    }
 
     gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
 
@@ -87,7 +103,7 @@ export class Mesh extends Object3D {
       );
 
     } else {
-      const position = attributes.get(Attribute.Position.name)
+      const position = geometry.attributes.get(Attribute.Position.name)
       gl.drawArrays(drawMode, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
     }
     gl.bindVertexArray(null)
@@ -99,13 +115,13 @@ export class Mesh extends Object3D {
  * @param {Uint8Array | Uint16Array | Uint32Array} indices
  */
 function mapToIndicesType(indices) {
-  if(indices instanceof Uint8Array){
+  if (indices instanceof Uint8Array) {
     return GlDataType.UNSIGNED_BYTE
   }
-  if(indices instanceof Uint16Array){
+  if (indices instanceof Uint16Array) {
     return GlDataType.UNSIGNED_SHORT
   }
-  if(indices instanceof Uint32Array){
+  if (indices instanceof Uint32Array) {
     return GlDataType.UNSIGNED_INT
   }
   throw "This is unreachable!"
