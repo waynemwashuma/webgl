@@ -2,6 +2,7 @@ import { Attribute, UBOs } from "../core/index.js"
 import { Geometry } from "../geometry/index.js"
 import { Shader } from "../material/index.js"
 import {
+  GlDataType,
   UNI_MODEL_MAT
 } from "../constant.js"
 import { Texture } from "../texture/index.js"
@@ -82,7 +83,7 @@ export class Mesh extends Object3D {
     if (indices) {
       gl.drawElements(drawMode,
         indices.length,
-        gl.UNSIGNED_SHORT, 0
+        mapToIndicesType(indices), 0
       );
 
     } else {
@@ -92,4 +93,20 @@ export class Mesh extends Object3D {
     gl.bindVertexArray(null)
     material.deactivate(gl)
   }
+}
+
+/**
+ * @param {Uint8Array | Uint16Array | Uint32Array} indices
+ */
+function mapToIndicesType(indices) {
+  if(indices instanceof Uint8Array){
+    return GlDataType.UNSIGNED_BYTE
+  }
+  if(indices instanceof Uint16Array){
+    return GlDataType.UNSIGNED_SHORT
+  }
+  if(indices instanceof Uint32Array){
+    return GlDataType.UNSIGNED_INT
+  }
+  throw "This is unreachable!"
 }
