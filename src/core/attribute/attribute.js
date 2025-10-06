@@ -89,7 +89,7 @@ export class Attribute {
   static JointIndex = new Attribute(
     'joint_index',
     7,
-    GlDataType.UNSIGNED_INT,
+    GlDataType.UNSIGNED_SHORT,
     1
   )
 }
