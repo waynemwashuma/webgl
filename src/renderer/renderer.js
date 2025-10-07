@@ -7,6 +7,7 @@ import { Mesh, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { createTexture } from "../function.js"
+import { Geometry } from "../geometry/index.js"
 
 export class DirectionalLights {
   /**
@@ -39,7 +40,14 @@ export class Lights {
   directionalLights = new DirectionalLights()
 }
 
+export class Caches {
+  /**
+   * @type {Map<Geometry, WebGLVertexArrayObject>}
+   */
+  meshes = new Map()
+}
 export class Renderer {
+  caches = new Caches()
   _UBOs = new UBOs()
   lights = new Lights()
 
@@ -144,7 +152,7 @@ export class Renderer {
    * @param {Object3D} object 
    */
   add(object) {
-    object.traverseDFS((child)=>{
+    object.traverseDFS((child) => {
       if (child instanceof Mesh) {
         child.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
       }
@@ -170,6 +178,7 @@ export class Renderer {
     this.gl.clear(bit)
   }
   update() {
+    const { caches, attributes, defaultTexture, gl } = this
     this.clear()
     if (this.camera) {
       this.camera.update()
@@ -186,10 +195,9 @@ export class Renderer {
     for (let i = 0; i < this.meshes.length; i++) {
       const object = this.meshes[i]
       object.update()
-      object.traverseDFS((child)=>{
+      object.traverseDFS((child) => {
         if (child instanceof Mesh) {
-          
-          child.renderGL(this.gl, this.defaultTexture)
+          child.renderGL(gl, caches, attributes, defaultTexture)
         }
         return true
       })

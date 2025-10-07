@@ -1,3 +1,4 @@
+import { Geometry } from "./geometry/index.js"
 import {
   CompareFunction,
   TextureCompareMode,
@@ -6,7 +7,7 @@ import {
   TextureWrap,
   UniformType
 } from "./constant.js"
-import { Attribute, AttributeData, UBOLayout, Uniform } from "./core/index.js"
+import { Attribute, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
 /**
  * @param {WebGLRenderingContext} gl
@@ -231,11 +232,11 @@ export function createProgram(gl, vshader, fshader, attributes) {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {ReadonlyMap<string, Attribute>} attributes
- * @param {ReadonlyMap<string, AttributeData>} meshData
- * @param {Uint8Array | Uint16Array | Uint32Array} [indices] 
+ * @param {ReadonlyMap<string, Attribute>} attributeMap
+ * @param {Geometry} geometry
  */
-export function createVAO(gl, attributes, meshData, indices) {
+export function createVAO(gl, attributeMap, geometry) {
+  const {indices, attributes } = geometry
   const vao = gl.createVertexArray()
   gl.bindVertexArray(vao)
   if (indices != void 0) {
@@ -244,8 +245,8 @@ export function createVAO(gl, attributes, meshData, indices) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
   }
-  for (const [name, data] of meshData) {
-    const attribute = attributes.get(name)
+  for (const [name, data] of attributes) {
+    const attribute = attributeMap.get(name)
 
     if (!attribute) {
       throw `The attribute "${name}" is not defined in the \`AttributeMap()\``
