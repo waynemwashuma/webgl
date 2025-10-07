@@ -33,10 +33,10 @@ export function cullface({
     })
   ]
 
-  materials[0].cullFace = CullFace.NONE
-  materials[1].cullFace = CullFace.FRONT
-  materials[2].cullFace = CullFace.BACK
-  materials[3].cullFace = CullFace.BOTH
+  materials[0].cullFace = CullFace.None
+  materials[1].cullFace = CullFace.Front
+  materials[2].cullFace = CullFace.Back
+  materials[3].cullFace = CullFace.FrontAndBack
   
   //create meshes
   const meshes = materials.map(material => new Mesh(geometry, material))

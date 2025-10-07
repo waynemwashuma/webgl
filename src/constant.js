@@ -5,68 +5,67 @@ export const UNI_MODEL_MAT = "model"
 /**
  * @readonly
  * @enum {number}
+ * Uniform types (scalars, vectors, matrices, and samplers).
  */
 export const UniformType = {
   // Scalars
-  FLOAT: 0x1406,
-  INT: 0x1404,
-  UINT: 0x1405, // WebGL2
-  BOOL: 0x8B56,
+  Float: 0x1406,
+  Int: 0x1404,
+  Uint: 0x1405,
+  Bool: 0x8B56,
 
   // Float vectors
-  VEC2: 0x8B50,
-  VEC3: 0x8B51,
-  VEC4: 0x8B52,
+  Vec2: 0x8B50,
+  Vec3: 0x8B51,
+  Vec4: 0x8B52,
 
   // Int vectors
-  IVEC2: 0x8B53,
-  IVEC3: 0x8B54,
-  IVEC4: 0x8B55,
+  IVec2: 0x8B53,
+  IVec3: 0x8B54,
+  IVec4: 0x8B55,
 
-  // Unsigned int vectors (WebGL2)
-  UVEC2: 0x8DC6,
-  UVEC3: 0x8DC7,
-  UVEC4: 0x8DC8,
+  // Unsigned int vectors
+  UVec2: 0x8DC6,
+  UVec3: 0x8DC7,
+  UVec4: 0x8DC8,
 
   // Bool vectors
-  BVEC2: 0x8B57,
-  BVEC3: 0x8B58,
-  BVEC4: 0x8B59,
+  BVec2: 0x8B57,
+  BVec3: 0x8B58,
+  BVec4: 0x8B59,
 
   // Matrices
-  MAT2: 0x8B5A,
-  MAT3: 0x8B5B,
-  MAT4: 0x8B5C,
-  MAT2x3: 0x8B65, // WebGL2
-  MAT2x4: 0x8B66, // WebGL2
-  MAT3x2: 0x8B67, // WebGL2
-  MAT3x4: 0x8B68, // WebGL2
-  MAT4x2: 0x8B69, // WebGL2
-  MAT4x3: 0x8B6A, // WebGL2
+  Mat2: 0x8B5A,
+  Mat3: 0x8B5B,
+  Mat4: 0x8B5C,
+  Mat2x3: 0x8B65,
+  Mat2x4: 0x8B66,
+  Mat3x2: 0x8B67,
+  Mat3x4: 0x8B68,
+  Mat4x2: 0x8B69,
+  Mat4x3: 0x8B6A,
 
-  // Sampler
-  SAMPLER:0x82E6,// WEBGL 2
+  // Samplers
+  Sampler2D: 0x8B5E,
+  Sampler3D: 0x8B5F,
+  SamplerCube: 0x8B60,
+  Sampler2DShadow: 0x8B62,
+  Sampler2DArray: 0x8DC1,
+  Sampler2DArrayShadow: 0x8DC4,
+  SamplerCubeShadow: 0x8DC5,
 
-  // Textures
-  SAMPLER_2D: 0x8B5E,
-  SAMPLER_CUBE: 0x8B60,
-  SAMPLER_2D_SHADOW: 0x8B62, // WebGL2
-  SAMPLER_2D_ARRAY: 0x8DC1, // WebGL2
-  SAMPLER_2D_ARRAY_SHADOW: 0x8DC4, // WebGL2
-  SAMPLER_CUBE_SHADOW: 0x8DC5, // WebGL2
+  // Integer samplers
+  ISampler2D: 0x8DCA,
+  ISampler3D: 0x8DCB,
+  ISamplerCube: 0x8DCC,
+  ISampler2DArray: 0x8DCF,
 
-  // Int textures (WebGL2)
-  ISAMPLER_2D: 0x8DCA,
-  ISAMPLER_3D: 0x8DCB,
-  ISAMPLER_CUBE: 0x8DCC,
-  ISAMPLER_2D_ARRAY: 0x8DCF,
-
-  // Unsigned int textures (WebGL2)
-  USAMPLER_2D: 0x8DD2,
-  USAMPLER_3D: 0x8DD3,
-  USAMPLER_CUBE: 0x8DD4,
-  USAMPLER_2D_ARRAY: 0x8DD7,
-};
+  // Unsigned integer samplers
+  USampler2D: 0x8DD2,
+  USampler3D: 0x8DD3,
+  USamplerCube: 0x8DD4,
+  USampler2DArray: 0x8DD7
+}
 
 /**
  * @readonly
@@ -109,7 +108,7 @@ export const BufferUsage = {
 /**
  * @readonly
  * @enum {number}
- * Buffer binding targets available in WebGL2.
+ * Buffer binding targets
  */
 export const BufferTarget = {
   ArrayBuffer: 0x8892,              // gl.ARRAY_BUFFER
@@ -125,105 +124,127 @@ export const BufferTarget = {
 /**
  * @readonly
  * @enum {number}
+ * Face culling modes
  */
 export const CullFace = {
-  FRONT: 0x0404,
-  BACK: 0x0405,
-  BOTH: 0x0408,
-  NONE: 0
+  None: 0x0000,          // Represents no culling
+  Front: 0x0404,         // gl.FRONT
+  Back: 0x0405,          // gl.BACK
+  FrontAndBack: 0x0408   // gl.FRONT_AND_BACK
 }
+
+
 /**
  * @readonly
  * @enum {number}
+ * Blend function factors
  */
 export const BlendMode = {
-  ZERO: 0x0000,
-  ONE: 0x00001,
-  SRC_COLOR: 0x0300,
-  ONE_MINUS_SRC_COLOR: 0x0301,
-  SRC_ALPHA: 0x0302,
-  ONE_MINUS_SRC_ALPHA: 0x0303,
-  DST_ALPHA: 0x0304,
-  ONE_MINUS_DIST_ALPHA: 0x0305,
-  DST_COLOR: 0x0306,
-  ONE_MINUS_DST_COLOR: 0x0307,
-  SRC_ALPHA_SATURATE: 0x0308,
-  CONSTANT_COLOR: 0x8001,
-  ONE_MINUS_CONSTANT_COLOR: 0x8002,
-  CONSTANT_ALPHA: 0x8003,
-  ONE_MINUS_CONSTANT_ALPHA: 0x8004
+  Zero: 0x0000,                    // gl.ZERO
+  One: 0x0001,                     // gl.ONE
+  SrcColor: 0x0300,                // gl.SRC_COLOR
+  OneMinusSrcColor: 0x0301,        // gl.ONE_MINUS_SRC_COLOR
+  SrcAlpha: 0x0302,                // gl.SRC_ALPHA
+  OneMinusSrcAlpha: 0x0303,        // gl.ONE_MINUS_SRC_ALPHA
+  DstAlpha: 0x0304,                // gl.DST_ALPHA
+  OneMinusDstAlpha: 0x0305,        // gl.ONE_MINUS_DST_ALPHA
+  DstColor: 0x0306,                // gl.DST_COLOR
+  OneMinusDstColor: 0x0307,        // gl.ONE_MINUS_DST_COLOR
+  SrcAlphaSaturate: 0x0308,        // gl.SRC_ALPHA_SATURATE
+  ConstantColor: 0x8001,           // gl.CONSTANT_COLOR
+  OneMinusConstantColor: 0x8002,   // gl.ONE_MINUS_CONSTANT_COLOR
+  ConstantAlpha: 0x8003,           // gl.CONSTANT_ALPHA
+  OneMinusConstantAlpha: 0x8004    // gl.ONE_MINUS_CONSTANT_ALPHA
 }
 
-export const BlendEquations = {
-  ADD: 0x8006,
-  SUBTRACT: 0x800A,
-  REVERSE_SUBTRACT: 0x800B
-}
 /**
  * @readonly
  * @enum {number}
+ * Blend equation modes
+ */
+export const BlendEquation = {
+  Add: 0x8006,             // gl.FUNC_ADD
+  Subtract: 0x800A,        // gl.FUNC_SUBTRACT
+  ReverseSubtract: 0x800B, // gl.FUNC_REVERSE_SUBTRACT
+  Min: 0x8007,             // gl.MIN
+  Max: 0x8008              // gl.MAX
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Internal texture formats
  */
 export const TextureFormat = {
+  // 8-bit normalized formats
   R8: 0x8229,
-  R8_SNORM: 0x8F94,
-  RG8: 0x822B,
-  RG8_SNORM: 0x8F95,
-  RGB8: 0x8051,
-  RGB8_SNORM: 0x8F96,
-  RGB565: 0x8D62,
-  RGBA4: 0x8056,
-  RGB5_A1: 0x8057,
-  RGBA8: 0x8058,
-  RGBA8_SNORM: 0x8F97,
-  RGB10_A2: 0x8059,
-  RGB10_A2UI: 0x906F,
-  SRGB8: 0x8C41,
-  SRGB8_ALPHA8: 0x8C43,
-  R16F: 0x822D,
-  RG16F: 0x822F,
-  RGB16F: 0x881B,
-  RGBA16F: 0x881A,
-  R32F: 0x822E,
-  RG32F: 0x8230,
-  RGB32F: 0x8815,
-  RGBA32F: 0x8814,
-  R11F_G11F_B10F: 0x8C3A,
-  RGB9_E5: 0x8C3D,
+  R8Snorm: 0x8F94,
+  Rg8: 0x822B,
+  Rg8Snorm: 0x8F95,
+  Rgb8: 0x8051,
+  Rgb8Snorm: 0x8F96,
+  Rgba8: 0x8058,
+  Rgba8Snorm: 0x8F97,
 
-  // Integer formats
-  R8I: 0x8231,
-  R8UI: 0x8232,
-  R16I: 0x8233,
-  R16UI: 0x8234,
-  R32I: 0x8235,
-  R32UI: 0x8236,
-  RG8I: 0x8237,
-  RG8UI: 0x8238,
-  RG16I: 0x8239,
-  RG16UI: 0x823A,
-  RG32I: 0x823B,
-  RG32UI: 0x823C,
-  RGB8I: 0x8D8F,
-  RGB8UI: 0x8D7D,
-  RGB16I: 0x8D89,
-  RGB16UI: 0x8D77,
-  RGB32I: 0x8D83,
-  RGB32UI: 0x8D71,
-  RGBA8I: 0x8D8E,
-  RGBA8UI: 0x8D7C,
-  RGBA16I: 0x8D88,
-  RGBA16UI: 0x8D76,
-  RGBA32I: 0x8D82,
-  RGBA32UI: 0x8D70,
+  // Packed formats
+  Rgb565: 0x8D62,
+  Rgba4: 0x8056,
+  Rgb5A1: 0x8057,
+  Rgb10A2: 0x8059,
+  Rgb10A2ui: 0x906F,
+  R11fG11fB10f: 0x8C3A,
+  Rgb9E5: 0x8C3D,
+
+  // sRGB formats
+  Srgb8: 0x8C41,
+  Srgb8Alpha8: 0x8C43,
+
+  // Float formats
+  R16f: 0x822D,
+  Rg16f: 0x822F,
+  Rgb16f: 0x881B,
+  Rgba16f: 0x881A,
+  R32f: 0x822E,
+  Rg32f: 0x8230,
+  Rgb32f: 0x8815,
+  Rgba32f: 0x8814,
+
+  // Signed nteger formats
+  R8i: 0x8231,
+  R16i: 0x8233,
+  R32i: 0x8235,
+  Rg8i: 0x8237,
+  Rg16i: 0x8239,
+  Rg32i: 0x823B,
+  Rgb8i: 0x8D8F,
+  Rgb16i: 0x8D89,
+  Rgb32i: 0x8D83,
+  Rgba8i: 0x8D8E,
+  Rgba16i: 0x8D88,
+  Rgba32i: 0x8D82,
+
+  // Unsigned integer formats
+  R8ui: 0x8232,
+  R16ui: 0x8234,
+  R32ui: 0x8236,
+  Rg8ui: 0x8238,
+  Rg16ui: 0x823A,
+  Rg32ui: 0x823C,
+  Rgb8ui: 0x8D7D,
+  Rgb16ui: 0x8D77,
+  Rgb32ui: 0x8D71,
+  Rgba8ui: 0x8D7C,
+  Rgba16ui: 0x8D76,
+  Rgba32ui: 0x8D70,
 
   // Depth / stencil formats
-  DEPTH16: 0x81A5,
-  DEPTH24: 0x81A6,
-  DEPTH32F: 0x8CAC,
-  DEPTH24_STENCIL8: 0x88F0,
-  DEPTH32F_STENCIL8: 0x8CAD,
-  STENCIL_INDEX8: 0x8D48,
-};
+  Depth16: 0x81A5,
+  Depth24: 0x81A6,
+  Depth32f: 0x8CAC,
+  Depth24Stencil8: 0x88F0,
+  Depth32fStencil8: 0x8CAD,
+  StencilIndex8: 0x8D48,
+}
 
 /**
  * @readonly
@@ -231,73 +252,140 @@ export const TextureFormat = {
  */
 export const TextureFormatUsage = {
   // Base color formats
-  RED: 0x1903,
-  RG: 0x8227,
-  RGB: 0x1907,
-  RGBA: 0x1908,
+  Red: 0x1903,
+  Rg: 0x8227,
+  Rgb: 0x1907,
+  Rgba: 0x1908,
 
   // Integer formats
-  RED_INTEGER: 0x8D94,
-  RG_INTEGER: 0x8228,
-  RGB_INTEGER: 0x8D98,
-  RGBA_INTEGER: 0x8D99,
+  RedInteger: 0x8D94,
+  RgInteger: 0x8228,
+  RgbInteger: 0x8D98,
+  RgbaInteger: 0x8D99,
 
   // Depth / stencil formats
-  DEPTH_COMPONENT: 0x1902,
-  DEPTH_STENCIL: 0x84F9,
-};
-
+  DepthComponent: 0x1902,
+  DepthStencil: 0x84F9,
+}
 
 /**
  * @readonly
  * @enum {number}
  */
 export const TextureFilter = {
-  NEAREST: 0x2600,
-  LINEAR: 0x2601
+  Nearest: 0x2600,
+  Linear: 0x2601
 }
+
 /**
  * @readonly
  * @enum {number}
  */
 export const TextureWrap = {
-  REPEAT: 0x2901,
-  CLAMP: 0x812F,
-  MIRRORREPEAT: 0x8370
+  Repeat: 0x2901,
+  Clamp: 0x812F,
+  MirrorRepeat: 0x8370
 }
 
 /**
  * @readonly
  * @enum {number}
+ * Texture binding targets
  */
 export const TextureType = {
-  TEXTURE_2D: 0x0DE1,
-  TEXTURE_2D_ARRAY: 0x8C1A,
-  TEXTURE_3D: 0x806F,
-  TEXTURE_CUBE_MAP: 0x8513,
-};
-
-
-/**
- * @readonly
- * @enum {number}
- */
-export const CompareFunction = {
-  LEQUAL: 0x203,
-  GEQUAL: 0x206,
-  LESS: 0x201,
-  GREATER: 0x204,
-  EQUAL: 0x202,
-  NOTEQUAL: 0x205,
-  ALWAYS: 0x207,
-  NEVER: 0x200
+  Texture2D: 0x0DE1,         // gl.TEXTURE_2D
+  Texture2DArray: 0x8C1A,    // gl.TEXTURE_2D_ARRAY
+  Texture3D: 0x806F,         // gl.TEXTURE_3D
+  TextureCubeMap: 0x8513     // gl.TEXTURE_CUBE_MAP
 }
 
 /**
  * @readonly
  * @enum {number}
+ * Comparison functions for depth, stencil, and sampler tests
+ */
+export const CompareFunction = {
+  Never: 0x0200,      // gl.NEVER
+  Less: 0x0201,       // gl.LESS
+  Equal: 0x0202,      // gl.EQUAL
+  Lequal: 0x0203,     // gl.LEQUAL
+  Greater: 0x0204,    // gl.GREATER
+  NotEqual: 0x0205,   // gl.NOTEQUAL
+  Gequal: 0x0206,     // gl.GEQUAL
+  Always: 0x0207      // gl.ALWAYS
+}
+
+
+/**
+ * @readonly
+ * @enum {number}
+ * Texture comparison modes for depth samplers
  */
 export const TextureCompareMode = {
-  NONE: 0x0,
-  COMPARE_REF_TO_TEXTURE: 0x884E
+  None: 0x0000,                  // gl.NONE — comparison disabled
+  CompareRefToTexture: 0x884E    // gl.COMPARE_REF_TO_TEXTURE — depth comparison enabled
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Stencil and depth buffer operations.
+ */
+export const StencilOp = {
+  Keep: 0x1E00,        // gl.KEEP
+  Zero: 0x0000,        // gl.ZERO
+  Replace: 0x1E01,     // gl.REPLACE
+  Incr: 0x1E02,        // gl.INCR
+  IncrWrap: 0x8507,    // gl.INCR_WRAP
+  Decr: 0x1E03,        // gl.DECR
+  DecrWrap: 0x8508,    // gl.DECR_WRAP
+  Invert: 0x150A       // gl.INVERT
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Polygon winding directions for front-face determination.
+ */
+export const FrontFaceDirection = {
+  CW: 0x0900,   // gl.CW
+  CCW: 0x0901   // gl.CCW
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Primitive output modes for transform feedback
+ */
+export const TransformFeedbackPrimitiveTopology = {
+  Points: 0x0000,      // gl.POINTS
+  Lines: 0x0001,       // gl.LINES
+  Triangles: 0x0004    // gl.TRIANGLES
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Buffer storage modes for transform feedback varyings
+ */
+export const TransformFeedbackBufferMode = {
+  Interleaved: 0x8C8C,  // gl.INTERLEAVED_ATTRIBS
+  Separate: 0x8C8D      // gl.SEPARATE_ATTRIBS
+}
+
+/**
+ * @readonly
+ * @enum {number}
+ * Internal formats for renderbuffers
+ */
+export const RenderbufferFormat = {
+  Rgba4: 0x8056,            // gl.RGBA4
+  Rgb565: 0x8D62,           // gl.RGB565
+  Rgb5A1: 0x8057,           // gl.RGB5_A1
+  Depth16: 0x81A5,          // gl.DEPTH_COMPONENT16
+  Stencil8: 0x8D48,         // gl.STENCIL_INDEX8
+  Depth24: 0x81A6,          // gl.DEPTH_COMPONENT24
+  Depth32f: 0x8CAC,         // gl.DEPTH_COMPONENT32F
+  Depth24Stencil8: 0x88F0,  // gl.DEPTH24_STENCIL8
+  Depth32fStencil8: 0x8CAD  // gl.DEPTH32F_STENCIL8
 }

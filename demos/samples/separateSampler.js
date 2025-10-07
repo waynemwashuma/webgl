@@ -22,18 +22,18 @@ export function separateSamplers({
   })
 
   const sampler1 = new Sampler({
-    wrapS: TextureWrap.CLAMP,
-    wrapT: TextureWrap.CLAMP
+    wrapS: TextureWrap.Clamp,
+    wrapT: TextureWrap.Clamp
   })
 
   const sampler2 = new Sampler({
-    wrapS: TextureWrap.REPEAT,
-    wrapT: TextureWrap.REPEAT
+    wrapS: TextureWrap.Repeat,
+    wrapT: TextureWrap.Repeat
   })
 
   const sampler3 = new Sampler({
-    wrapS: TextureWrap.MIRRORREPEAT,
-    wrapT: TextureWrap.MIRRORREPEAT
+    wrapS: TextureWrap.MirrorRepeat,
+    wrapT: TextureWrap.MirrorRepeat
   })
 
   const geometry = new QuadGeometry(1, 1)

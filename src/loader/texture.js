@@ -48,9 +48,9 @@ export class TextureLoader {
     const data = await this.fetch(paths)
 
     texture.data = data.images.map((image)=>new Uint8Array(image))
-    texture.internalFormat = TextureFormat.RGBA8
-    texture.format = TextureFormatUsage.RGBA
-    texture.dataFormat = GlDataType.UNSIGNED_BYTE
+    texture.internalFormat = TextureFormat.Rgba8
+    texture.format = TextureFormatUsage.Rgba
+    texture.dataFormat = GlDataType.UnsignedByte
     texture.width = data.width
     texture.height = data.height
     texture.update()
@@ -62,7 +62,7 @@ export class TextureLoader {
     const texture = new Texture({
       ...settings,
       data: [new Uint8Array([255, 0, 255, 255])],
-      type: TextureType.TEXTURE_2D,
+      type: TextureType.Texture2D,
       width: 1,
       height: 1
     })
@@ -80,7 +80,7 @@ export class TextureLoader {
     const texture = new Texture({
       ...settings,
       data: [pixel, pixel, pixel, pixel, pixel, pixel],
-      type: TextureType.TEXTURE_CUBE_MAP,
+      type: TextureType.Texture2D,
       width: 1,
       height: 1
     })

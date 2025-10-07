@@ -117,13 +117,13 @@ export class Mesh extends Object3D {
  */
 function mapToIndicesType(indices) {
   if (indices instanceof Uint8Array) {
-    return GlDataType.UNSIGNED_BYTE
+    return GlDataType.UnsignedByte
   }
   if (indices instanceof Uint16Array) {
-    return GlDataType.UNSIGNED_SHORT
+    return GlDataType.UnsignedShort
   }
   if (indices instanceof Uint32Array) {
-    return GlDataType.UNSIGNED_INT
+    return GlDataType.UnsignedInt
   }
   throw "This is unreachable!"
 }

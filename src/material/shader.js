@@ -5,7 +5,7 @@ import {
 } from "../function.js"
 import {
   BlendMode,
-  DrawMode,
+  PrimitiveTopology,
   CullFace
 } from "../constant.js"
 import { UBOs } from "../core/ubo.js"
@@ -13,10 +13,10 @@ import { Attribute, UBOLayout, Uniform } from "../core/index.js"
 import { Texture } from "../texture/index.js"
 
 export class Shader {
-  drawMode = DrawMode.TRIANGLES
-  cullFace = CullFace.BACK
-  distBlendFunc = BlendMode.ONE_MINUS_SRC_ALPHA
-  srcBlendFunc = BlendMode.SRC_ALPHA
+  drawMode = PrimitiveTopology.Triangles
+  cullFace = CullFace.Back
+  distBlendFunc = BlendMode.OneMinusSrcAlpha
+  srcBlendFunc = BlendMode.SrcAlpha
   /**
    * @type {Map<string, string>}
    */

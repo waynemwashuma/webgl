@@ -12,7 +12,7 @@ import { Texture } from "../texture/index.js"
 export class SkyBox extends Mesh {
   constructor(options = {}) {
     super(new BoxGeometry(10,10,10), new SkyBoxMaterial(options))
-    this.material.cullFace = CullFace.FRONT
+    this.material.cullFace = CullFace.Front
   }
 
   /**
