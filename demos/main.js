@@ -16,7 +16,7 @@ import {
 
 const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
 const renderer = new Renderer(canvas)
-const textureLoader = new TextureLoader(renderer)
+const textureLoader = new TextureLoader()
 const manager = {
   renderer,
   textureLoader,

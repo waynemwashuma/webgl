@@ -1,4 +1,4 @@
-import { Shader } from "./shader.js"
+import { getWebglTexture, Shader } from "./shader.js"
 import { Color } from "../math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 import { Texture, Sampler } from "../texture/index.js"
@@ -37,9 +37,10 @@ export class LambertMaterial extends Shader {
   /**
    * 
    * @param {WebGL2RenderingContext} gl 
+   * @param {Map<Texture,WebGLTexture>} cache
    * @param {Texture} defaultTexture 
    */
-  uploadUniforms(gl, defaultTexture) {
+  uploadUniforms(gl, cache, defaultTexture) {
     const {
       color,
       mainTexture = defaultTexture,
@@ -47,22 +48,23 @@ export class LambertMaterial extends Shader {
     } = this
     const colorInfo = this.uniforms.get("color")
     const mainTextureInfo = this.uniforms.get("mainTexture")
+    const maintex = getWebglTexture(gl,mainTexture,cache)
+    
 
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
     }
     if (mainTextureInfo) {
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, mainTexture.webglTex)
-        gl.uniform1i(mainTextureInfo.location, 0)
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, maintex)
+      gl.uniform1i(mainTextureInfo.location, 0)
 
-        if (mainSampler) {
-          updateTextureSampler(gl, mainTexture, mainSampler)
-        }
+      if (mainSampler) {
+        updateTextureSampler(gl, mainTexture, mainSampler)
       }
-
     }
   }
+}
 
 /**
  * @typedef LambertMaterialOptions

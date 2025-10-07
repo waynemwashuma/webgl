@@ -78,7 +78,8 @@ export class Mesh extends Object3D {
     gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
     //preping uniforms and activating program
 
-    material.activate(gl, defaultTexture)
+    material.activate(gl)
+    material.uploadUniforms(gl,caches.textures,defaultTexture)
 
     const mesh = meshes.get(geometry)
 

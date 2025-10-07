@@ -4,11 +4,11 @@ import { GlDataType, TextureFilter, TextureFormat, TextureFormatUsage, TextureTy
 import { Sampler } from "./sampler.js"
 
 export class Texture {
-  /**
-   * @type {WebGLTexture}
-   */
-  webglTex
 
+  /**
+   * @type {boolean}
+   */
+  #changed
   /**
    * @type {Uint8Array[]}
    */
@@ -72,6 +72,22 @@ export class Texture {
     this.type = settings.type
     this.apply(settings)
   }
+
+  /**
+   * @package
+   * @returns {boolean}
+   * This is an internal property, do not use!
+   */
+  get changed(){
+    const previous = this.#changed
+    this.#changed = false
+    return previous
+  }
+
+  update(){
+    // TODO: Actually implement this on properties when they change
+    this.#changed = true
+  }
   /**
    * @param {TextureSettings} settings
    */
@@ -85,7 +101,7 @@ export class Texture {
     width = Texture.defaultSettings.width,
     height = Texture.defaultSettings.height,
     depth = Texture.defaultSettings.depth,
-  }){
+  }) {
     this.width = width
     this.height = height
     this.depth = depth
