@@ -1,12 +1,13 @@
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/camera.js"
 import { TextureType } from "../constant.js"
-import { Attribute, UBOs } from "../core/index.js"
+import { Attribute, UBOs, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Mesh, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Geometry } from "../geometry/index.js"
+import { Shader } from "../material/shader.js"
 
 export class DirectionalLights {
   /**
@@ -48,6 +49,14 @@ export class Caches {
    * @type {Map<Texture, WebGLTexture>}
    */
   textures = new Map()
+  /**
+   * @type {WebGLRenderPipeline[]}
+   */
+  renderpipelines = []
+  /**
+   * @type {Map<string,Map<Shader, number>>}
+   */
+  material = new Map()
 }
 export class Renderer {
   caches = new Caches()
@@ -156,12 +165,6 @@ export class Renderer {
    * @param {Object3D} object 
    */
   add(object) {
-    object.traverseDFS((child) => {
-      if (child instanceof Mesh) {
-        child.init(this.gl, this._UBOs, this.attributes, this.includes, this.defines)
-      }
-      return true
-    })
     this.meshes.push(object)
   }
   /**
@@ -182,7 +185,7 @@ export class Renderer {
     this.gl.clear(bit)
   }
   update() {
-    const { caches, attributes, defaultTexture, gl } = this
+    const { caches, attributes, defaultTexture, gl,_UBOs, defines, includes } = this
     this.clear()
     if (this.camera) {
       this.camera.update()
@@ -201,7 +204,7 @@ export class Renderer {
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof Mesh) {
-          child.renderGL(gl, caches, attributes, defaultTexture)
+          child.renderGL(gl, caches, _UBOs, attributes, defaultTexture, includes, defines)
         }
         return true
       })

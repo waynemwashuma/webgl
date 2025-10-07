@@ -4,6 +4,7 @@ import { basicVertex, basicFragment } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Sampler } from "../texture/sampler.js"
 import { updateTextureSampler } from "../function.js"
+import { Uniform } from "../core/index.js"
 
 export class BasicMaterial extends Shader {
 
@@ -42,17 +43,18 @@ export class BasicMaterial extends Shader {
    * 
    * @param {WebGL2RenderingContext} gl
    * @param {Map<Texture,WebGLTexture>} cache
-   * @param {Texture} defaultTexture 
+   * @param {Map<string,Uniform>} uniforms
+   * @param {Texture} defaultTexture
    */
-  uploadUniforms(gl, cache, defaultTexture) {
+  uploadUniforms(gl, cache,uniforms, defaultTexture) {
     const {
       color,
       mainTexture = defaultTexture,
       mainSampler
     } = this
 
-    const colorInfo = this.uniforms.get("color")
-    const mainTextureInfo = this.uniforms.get("mainTexture")
+    const colorInfo = uniforms.get("color")
+    const mainTextureInfo = uniforms.get("mainTexture")
     const maintex = getWebglTexture(gl,mainTexture,cache)
 
     if (colorInfo) {

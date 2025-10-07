@@ -2,6 +2,7 @@ import { getWebglTexture, Shader } from "./shader.js"
 import { Color } from "../math/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
+import { Uniform } from "../core/index.js"
 
 export class SkyBoxMaterial extends Shader {
 
@@ -34,13 +35,14 @@ export class SkyBoxMaterial extends Shader {
    * 
    * @param {WebGL2RenderingContext} gl 
    * @param {Map<Texture,WebGLTexture>} cache
-   * @param {WebGLTexture} _defaultTexture 
+   * @param {Map<string,Uniform>} uniforms
+   * @param {WebGLTexture} _defaultTexture
    */
-  uploadUniforms(gl, cache, _defaultTexture) {
+  uploadUniforms(gl, cache, uniforms, _defaultTexture) {
     const { day, night, lerp } = this
-    const dayInfo = this.uniforms.get("day")
-    const nightInfo = this.uniforms.get("night")
-    const lerpInfo = this.uniforms.get("lerp")
+    const dayInfo = uniforms.get("day")
+    const nightInfo = uniforms.get("night")
+    const lerpInfo = uniforms.get("lerp")
     const dayTex = getWebglTexture(gl,day,cache)
     const nightTex = getWebglTexture(gl,night,cache)
     
