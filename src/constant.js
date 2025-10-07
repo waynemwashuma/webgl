@@ -103,6 +103,23 @@ export const DrawUsage = {
   DYNAMIC: 0x88E8,
   STREAM: 0x88E0
 }
+
+/**
+ * @readonly
+ * @enum {number}
+ * Buffer binding targets available in WebGL2.
+ */
+export const BufferTarget = {
+  ArrayBuffer: 0x8892,              // gl.ARRAY_BUFFER
+  ElementArrayBuffer: 0x8893,       // gl.ELEMENT_ARRAY_BUFFER
+  CopyReadBuffer: 0x8F36,           // gl.COPY_READ_BUFFER
+  CopyWriteBuffer: 0x8F37,          // gl.COPY_WRITE_BUFFER
+  PixelPackBuffer: 0x88EB,          // gl.PIXEL_PACK_BUFFER
+  PixelUnpackBuffer: 0x88EC,        // gl.PIXEL_UNPACK_BUFFER
+  UniformBuffer: 0x8A11,            // gl.UNIFORM_BUFFER
+  TransformFeedbackBuffer: 0x8C8E   // gl.TRANSFORM_FEEDBACK_BUFFER
+}
+
 /**
  * @readonly
  * @enum {number}
