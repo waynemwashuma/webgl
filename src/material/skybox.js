@@ -1,8 +1,10 @@
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { getWebglTexture, Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Uniform } from "../core/index.js"
+import { CullFace } from "../constant.js"
 
 export class SkyBoxMaterial extends Material {
 
@@ -63,6 +65,13 @@ export class SkyBoxMaterial extends Material {
         gl.uniform1i(nightInfo.location, 1)
       }
     }
+  }
+
+  /**
+   * @param {WebGLRenderPipelineDescriptor} descriptor
+   */
+  specialize(descriptor){
+    descriptor.cullFace = CullFace.Front
   }
 }
 
