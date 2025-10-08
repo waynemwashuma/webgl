@@ -4,10 +4,10 @@ import { Camera } from "../camera/camera.js"
 import { TextureType } from "../constant.js"
 import { Attribute, UBOs, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
-import { MeshMaterial3D, Object3D } from "../mesh/index.js"
+import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
-import { Mesh } from "../geometry/index.js"
+import { Mesh } from "../mesh/index.js"
 import { Material } from "../material/index.js"
 
 export class DirectionalLights {

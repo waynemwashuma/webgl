@@ -1,7 +1,7 @@
 import {
   CullFace
 } from "../constant.js"
-import { BoxGeometry } from "../geometry/index.js"
+import { BoxGeometry } from "../mesh/index.js"
 import { MeshMaterial3D } from "./mesh.js"
 import { SkyBoxMaterial } from "../material/skybox.js"
 import { Texture } from "../texture/index.js"

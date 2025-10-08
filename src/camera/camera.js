@@ -1,5 +1,5 @@
 import { Affine3, Matrix4, Transform3D } from "../math/index.js"
-import { Object3D } from "../mesh/object3d.js"
+import { Object3D } from "../objects/object3d.js"
 import { PerspectiveProjection, Projection } from "./projection.js"
 
 export class Camera extends Object3D {

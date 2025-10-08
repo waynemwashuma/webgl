@@ -1,4 +1,4 @@
-import { Mesh } from "./geometry/index.js"
+import { Mesh } from "./mesh/index.js"
 import {
   CompareFunction,
   TextureCompareMode,

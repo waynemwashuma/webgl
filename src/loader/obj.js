@@ -1,7 +1,7 @@
 import { Attribute, AttributeData } from '../core/index.js';
-import { Mesh } from '../geometry/index.js';
+import { Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
-import { MeshMaterial3D } from '../mesh/index.js';
+import { MeshMaterial3D } from '../objects/index.js';
 
 export class OBJLoader {
   /**
