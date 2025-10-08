@@ -73,14 +73,15 @@ export const UniformType = {
  * @enum {number}
  */
 export const GlDataType = {
-  FLOAT: 0x1406,
-  UNSIGNED_INT: 0x1405,
-  INT: 0x1404,
-  UNSIGNED_SHORT: 0x1403,
-  SHORT: 0x1402,
-  UNSIGNED_BYTE: 0x1401,
-  BYTE: 0x1400
+  Float: 0x1406,
+  UnsignedInt: 0x1405,
+  Int: 0x1404,
+  UnsignedShort: 0x1403,
+  Short: 0x1402,
+  UnsignedByte: 0x1401,
+  Byte: 0x1400
 }
+
 /**
  * @readonly
  * @enum {number}
