@@ -1,3 +1,4 @@
+/**@import {PipelineKey} from '../material/index.js' */
 import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline } from "../core/index.js"
 import { Geometry } from "../geometry/index.js"
 import { Shader } from "../material/index.js"
@@ -53,11 +54,13 @@ export class Mesh extends Object3D {
    * @param {ReadonlyMap<string,string>} includes
    * @param {ReadonlyMap<string,string>} globalDefines
    */
-  renderGL(gl, caches,ubos, attributes, defaultTexture, includes, globalDefines) {
+  renderGL(gl, caches, ubos, attributes, defaultTexture, includes, globalDefines) {
     const { meshes } = caches
     const { material, geometry, transform } = this
     const { indices } = geometry
-    const pipeline = getRenderPipeline(gl, material, caches,ubos, attributes, includes, globalDefines)
+    const meshBits = createPipelineBitsFromMesh(geometry)
+    const pipelineKey = material.getPipelineKey(meshBits)
+    const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, ubos, attributes, includes, globalDefines)
     const drawMode = material.drawMode
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
@@ -114,13 +117,14 @@ function mapToIndicesType(indices) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {Shader} material
+ * @param {PipelineKey} key
  * @param {import("../renderer/renderer.js").Caches} caches
  * @param {UBOs} ubos
  * @param {ReadonlyMap<string, Attribute>} attributes
  * @param {ReadonlyMap<string, string>} includes
  * @param {ReadonlyMap<string, string>} globalDefines
  */
-function getRenderPipeline(gl, material, caches, ubos, attributes, includes, globalDefines) {
+function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes, globalDefines) {
   //  TODO: Instead of just using the material as the key, use both mesh and material
   // properties to get the pipeline id.
   let materialCache = caches.material.get(material.constructor.name)
@@ -132,7 +136,7 @@ function getRenderPipeline(gl, material, caches, ubos, attributes, includes, glo
     caches.material.set(material.constructor.name, newCache)
   }
 
-  const id = materialCache.get(material)
+  const id = materialCache.get(key)
 
   let newId
   if (id) {
@@ -147,16 +151,17 @@ function getRenderPipeline(gl, material, caches, ubos, attributes, includes, glo
       }
     } else {
       newId = caches.renderpipelines.length
-      materialCache.set(material, caches.renderpipelines.length)
+      materialCache.set(key, caches.renderpipelines.length)
     }
   }
   const preprocessedVertex = preprocessShader(material.vSrc, includes, [globalDefines, material.defines])
   const preprocessedFragment = preprocessShader(material.fSrc, includes, [globalDefines, material.defines])
+  
   const newRenderPipeline = new WebGLRenderPipeline({
     context: gl,
     attributes,
     ubos,
-    topology: PrimitiveTopology.Triangles,
+    topology: topologyFromPipelineKey(key),
     // TODO: Actually implement this to use the mesh
     vertexLayout: new VertexLayout(),
     vertex: preprocessedVertex,
@@ -166,7 +171,7 @@ function getRenderPipeline(gl, material, caches, ubos, attributes, includes, glo
       destination: material.distBlendFunc
     }
   })
-
+  
   caches.renderpipelines[newId] = newRenderPipeline
   return newRenderPipeline
 }
@@ -190,4 +195,61 @@ function preprocessShader(source, includes, defines) {
     return include || ""
   })
   return version + mergedDefines + preprocessed
+}
+
+// Reserved for the first 32 bits
+// Note: Should we reserve it for this many bits?
+/**
+ * @enum {bigint}
+ */
+export const MeshKey = {
+  TopologyBits: 0b1111111n,
+  None: 0n,
+  Points: 1n << 0n,
+  Lines: 1n << 1n,
+  LineLoop: 1n << 2n,
+  LineStrip: 1n << 3n,
+  Triangles: 1n << 4n,
+  TriangleStrip: 1n << 5n,
+  TriangleFan: 1n << 6n
+}
+
+/**
+ * @param {PipelineKey} key 
+ */
+export function topologyFromPipelineKey(key) {
+  if (key & MeshKey.Points) {
+    return PrimitiveTopology.Points
+  }
+  if (key & MeshKey.Lines) {
+    return PrimitiveTopology.Lines
+  }
+  if (key & MeshKey.LineLoop) {
+    return PrimitiveTopology.LineLoop
+  }
+  if (key & MeshKey.LineStrip) {
+    return PrimitiveTopology.LineStrip
+  }
+  if (key & MeshKey.Triangles) {
+    return PrimitiveTopology.Triangles
+  }
+  if (key & MeshKey.TriangleStrip) {
+    return PrimitiveTopology.TriangleStrip
+  }
+  if (key & MeshKey.TriangleFan) {
+    return PrimitiveTopology.TriangleFan
+  }
+
+  return PrimitiveTopology.Triangles
+}
+
+/**
+ * @param {Geometry} mesh
+ * @returns {bigint}
+ */
+export function createPipelineBitsFromMesh(mesh) {
+  let key = MeshKey.None
+  key |= MeshKey.Triangles
+
+  return key
 }

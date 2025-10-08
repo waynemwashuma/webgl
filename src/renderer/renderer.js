@@ -1,3 +1,4 @@
+/**@import {PipelineKey} from '../material/index.js' */
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/camera.js"
 import { TextureType } from "../constant.js"
@@ -54,7 +55,7 @@ export class Caches {
    */
   renderpipelines = []
   /**
-   * @type {Map<string,Map<Shader, number>>}
+   * @type {Map<string,Map<PipelineKey, number>>}
    */
   material = new Map()
 }

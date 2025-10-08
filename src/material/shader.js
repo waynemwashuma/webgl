@@ -1,5 +1,4 @@
 import {
-  createProgramFromSrc,
   createTexture,
   updateTextureData,
 } from "../function.js"
@@ -8,8 +7,7 @@ import {
   PrimitiveTopology,
   CullFace
 } from "../constant.js"
-import { UBOs } from "../core/ubo.js"
-import { Attribute, UBOLayout, Uniform } from "../core/index.js"
+import { Uniform } from "../core/index.js"
 import { Texture } from "../texture/index.js"
 
 export class Shader {
@@ -57,6 +55,13 @@ export class Shader {
     this.#changed = true
   }
 
+  /**
+   * @param {bigint} key
+   * @returns {PipelineKey}
+   */
+  getPipelineKey(key){
+    return /**@type {PipelineKey}*/(key)
+  }
 }
 
 /**
@@ -79,3 +84,13 @@ export function getWebglTexture(gl, texture, cache) {
   cache.set(texture, newTex)
   return newTex
 }
+
+/**
+ * @typedef {Brand<bigint,"PipelineKey">} PipelineKey
+ */
+
+/**
+ * @template T
+ * @template {string} U
+ * @typedef {T & {__brand:U}} Brand
+ */
