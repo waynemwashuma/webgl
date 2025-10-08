@@ -94,14 +94,15 @@ export const PrimitiveTopology = {
   TriangleStrip: 0x0005,
   TriangleFan: 0x0006
 }
+
 /**
  * @readonly
  * @enum {number}
  */
-export const DrawUsage = {
-  STATIC: 0x88E4,
-  DYNAMIC: 0x88E8,
-  STREAM: 0x88E0
+export const BufferUsage = {
+  Static: 0x88E4,
+  Dynamic: 0x88E8,
+  Stream: 0x88E0
 }
 
 /**
