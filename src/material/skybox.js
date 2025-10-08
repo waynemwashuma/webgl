@@ -1,12 +1,13 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { getWebglTexture, Material } from "./material.js"
+import { getWebglTexture } from "./material.js"
 import { Color } from "../math/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Uniform } from "../core/index.js"
 import { CullFace } from "../constant.js"
+import { RawMaterial } from "./raw.js"
 
-export class SkyBoxMaterial extends Material {
+export class SkyBoxMaterial extends RawMaterial {
 
   /**
    * @type {Color}
