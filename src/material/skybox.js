@@ -26,11 +26,18 @@ export class SkyBoxMaterial extends Material {
     night = undefined,
     lerp = 0
   } = {}) {
-    super(skyboxVertex, skyboxFragment)
-
+    super()
     this.day = day
     this.night = night
     this.lerp = lerp
+  }
+
+  vertex(){
+    return skyboxVertex
+  }
+
+  fragment(){
+    return skyboxFragment
   }
 
   /**

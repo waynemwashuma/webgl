@@ -30,13 +30,20 @@ export class PhongMaterial extends Material {
     specularStrength = 0.5,
     specularShininess = 32,
   } = {}) {
-    super(basicVertex, phongFragment)
-
+    super()
     this.color = color
     this.mainTexture = mainTexture
     this.mainSampler = mainSampler
     this.specularStrength = specularStrength
     this.specularShininess = specularShininess
+  }
+
+  vertex(){
+    return basicVertex
+  }
+
+  fragment(){
+    return phongFragment
   }
 
   /**
