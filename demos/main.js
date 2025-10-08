@@ -3,7 +3,7 @@ import {
   rotatingCube,
   textureWrap,
   materials,
-  drawModes,
+  meshTopology,
   geometries,
   cullface,
   rotatingUvSphere,
@@ -23,7 +23,7 @@ const manager = {
   objLoader
 }
 const demos = {
-  "drawModes": drawModes,
+  "mesh topology": meshTopology,
   "rotating sphere": rotatingUvSphere,
   "rotating cube": rotatingCube,
   "separate samplers": separateSamplers,

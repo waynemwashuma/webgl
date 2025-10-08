@@ -216,12 +216,40 @@ export function topologyFromPipelineKey(key) {
 }
 
 /**
+ * @param {Mesh} mesh 
+ * @returns {bigint}
+ */
+export function keyFromTopology(mesh) {
+  if (mesh.topology === PrimitiveTopology.Points) {
+    return MeshKey.Points
+  }
+  if (mesh.topology === PrimitiveTopology.Lines) {
+    return MeshKey.Lines
+  }
+  if (mesh.topology ===  PrimitiveTopology.LineLoop) {
+    return MeshKey.LineLoop
+  }
+  if (mesh.topology ===  PrimitiveTopology.LineStrip) {
+    return MeshKey.LineStrip
+  }
+  if (mesh.topology ===  PrimitiveTopology.Triangles) {
+    return MeshKey.Triangles
+  }
+  if (mesh.topology ===  PrimitiveTopology.TriangleStrip) {
+    return MeshKey.TriangleStrip
+  }
+  if (mesh.topology ===  PrimitiveTopology.TriangleFan) {
+    return MeshKey.TriangleFan
+  }
+
+  return MeshKey.Triangles
+}
+
+/**
  * @param {Mesh} mesh
  * @returns {bigint}
  */
 export function createPipelineBitsFromMesh(mesh) {
-  let key = MeshKey.None
-  key |= MeshKey.Triangles
-
+  let key = keyFromTopology(mesh)
   return key
 }
