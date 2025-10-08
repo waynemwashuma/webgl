@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   BasicMaterial,
   QuadGeometry,
   Quaternion,
@@ -39,7 +39,7 @@ export function cullface({
   materials[3].cullFace = CullFace.FrontAndBack
   
   //create meshes
-  const meshes = materials.map(material => new Mesh(geometry, material))
+  const meshes = materials.map(material => new MeshMaterial3D(geometry, material))
 
   //transform meshes to their positions
   meshes.forEach((mesh, i) => {

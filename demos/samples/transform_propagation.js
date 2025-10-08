@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   LambertMaterial,
   BoxGeometry,
   Vector3,
@@ -28,8 +28,8 @@ export function transformPropagation({
   const material = new BasicMaterial({
     mainTexture: tex
   })
-  const parent = new Mesh(geometry,material)
-  const child = new Mesh(geometry,material)
+  const parent = new MeshMaterial3D(geometry,material)
+  const child = new MeshMaterial3D(geometry,material)
 
   child.transform.position.x = 1
   renderer.camera.transform.position.z = 2

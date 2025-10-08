@@ -4,7 +4,7 @@ import { Camera } from "../camera/camera.js"
 import { TextureType } from "../constant.js"
 import { Attribute, UBOs, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
-import { Mesh, Object3D } from "../mesh/index.js"
+import { MeshMaterial3D, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Geometry } from "../geometry/index.js"
@@ -204,7 +204,7 @@ export class Renderer {
       const object = this.meshes[i]
       object.update()
       object.traverseDFS((child) => {
-        if (child instanceof Mesh) {
+        if (child instanceof MeshMaterial3D) {
           child.renderGL(gl, caches, _UBOs, attributes, defaultTexture, includes, defines)
         }
         return true

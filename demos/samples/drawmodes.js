@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   BasicMaterial,
   QuadGeometry,
   PrimitiveTopology,
@@ -31,7 +31,7 @@ export function drawModes({renderer}) {
   materials[6].drawMode = PrimitiveTopology.TriangleFan
 
   //create meshes
-  const meshes = materials.map(material => new Mesh(geometry1, material))
+  const meshes = materials.map(material => new MeshMaterial3D(geometry1, material))
 
   //transform meshes to thier positions
   meshes.forEach((mesh, i) => {

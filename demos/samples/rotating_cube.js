@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   LambertMaterial,
   BoxGeometry,
   Quaternion,
@@ -22,7 +22,7 @@ export function rotatingCube({
   renderer.lights.directionalLights.add(light)
 
   const tex = textureLoader.get('uv')
-  const origin = new Mesh(
+  const origin = new MeshMaterial3D(
     new BoxGeometry(1, 1, 1),
     new LambertMaterial({
       mainTexture: tex
