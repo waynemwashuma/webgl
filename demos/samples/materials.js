@@ -17,25 +17,27 @@ import {  } from "../../src/camera/projection.js"
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function materials({
-  renderer,
-  textureLoader
+  renderer
 }) {
   const light = new DirectionalLight()
   light.direction.set(0,-1,-1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
-  const tex = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const geometry1 = new BoxGeometry(1, 1)
   const geometry2 = new UVSphereGeometry(0.7)
   const materials = [
     new BasicMaterial({
-      mainTexture: tex
+      mainTexture: texture
     }),
     new LambertMaterial({
-      mainTexture: tex
+      mainTexture: texture
     }),
     new PhongMaterial({
-      mainTexture: tex,
+      mainTexture: texture,
       specularShininess: 32,
       specularStrength: 0.5
     })

@@ -13,12 +13,11 @@ import { Sampler } from '../../src/texture/sampler.js';
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function separateSamplers({
-  renderer,
-  textureLoader
+  renderer
 }) {
+  const textureLoader = new TextureLoader()
   const texture = textureLoader.load({
-    path: "./assets/uv.jpg",
-    name: 'wrap1',
+    paths: ["./assets/uv.jpg"]
   })
 
   const sampler1 = new Sampler({
@@ -40,7 +39,7 @@ export function separateSamplers({
   const buffer = geometry._attributes.get('uv').value
   const uvs = new Float32Array(
     buffer.buffer,
-    buffer.byteOffset / Float32Array.BYTES_PER_ELEMENT,
+    buffer.byteOffset,
     buffer.byteLength / Float32Array.BYTES_PER_ELEMENT
   )
   for (let i in uvs) {

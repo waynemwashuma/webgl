@@ -15,18 +15,20 @@ import {
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function transformPropagation({
-  renderer,
-  textureLoader
+  renderer
 }) {
   const light = new DirectionalLight()
   light.direction.set(0,-1,-1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
   
-  const tex = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const geometry = new BoxGeometry(0.5, 0.5, 0.5)
   const material = new BasicMaterial({
-    mainTexture: tex
+    mainTexture: texture
   })
   const parent = new MeshMaterial3D(geometry,material)
   const child = new MeshMaterial3D(geometry,material)

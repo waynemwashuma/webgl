@@ -13,19 +13,21 @@ import {
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function rotatingCube({
-  renderer,
-  textureLoader
+  renderer
 }) {
   const light = new DirectionalLight()
   light.direction.set(0, -1, -1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
 
-  const tex = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const origin = new MeshMaterial3D(
     new BoxGeometry(1, 1, 1),
     new LambertMaterial({
-      mainTexture: tex
+      mainTexture: texture
     })
   )
   renderer.camera.transform.position.z = 2

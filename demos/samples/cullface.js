@@ -10,26 +10,28 @@ import {
 } from "webgllis"
 
 /**
- * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ * @param {{renderer:Renderer}} option 
  */
 export function cullface({
-  renderer,
-  textureLoader
+  renderer
 }) {
-  const tex = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const geometry = new QuadGeometry(1, 1)
   const materials = [
     new BasicMaterial({
-      mainTexture: tex
+      mainTexture: texture
     }),
     new BasicMaterial({
-      mainTexture: tex
+      mainTexture: texture
     }),
     new BasicMaterial({
-      mainTexture: tex
+      mainTexture: texture
     }),
     new BasicMaterial({
-      mainTexture: tex
+      mainTexture: texture
     })
   ]
 

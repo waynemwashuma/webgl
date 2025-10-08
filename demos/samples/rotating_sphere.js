@@ -14,10 +14,12 @@ import {
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function rotatingUvSphere({
-  renderer,
-  textureLoader
+  renderer
 }) {
-  const tex = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const light = new DirectionalLight()
   light.direction.set(0, -1, -1).normalize()
   renderer.lights.ambientLight.intensity = 0.15
@@ -26,7 +28,7 @@ export function rotatingUvSphere({
   const origin = new MeshMaterial3D(
     new UVSphereGeometry(1),
     new LambertMaterial({
-      mainTexture: tex,
+      mainTexture: texture,
     })
   )
   renderer.camera.transform.position.z = 2
