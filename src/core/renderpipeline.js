@@ -1,16 +1,18 @@
 import { BlendEquation, CullFace, FrontFaceDirection, PrimitiveTopology } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
 import { Attribute } from "./attribute/attribute.js";
+import { Shader } from "./shader.js";
 import { UBOs } from "./ubo.js";
 
 export class WebGLRenderPipeline {
   /**
+   * @param {WebGL2RenderingContext} context
+   * @param {ReadonlyMap<string,Attribute>} attributes
+   * @param {UBOs} ubos
+   * @param {ReadonlyMap<string,string>} includes
    * @param {WebGLRenderPipelineDescriptor} descriptor
    */
-  constructor({
-    ubos,
-    context,
-    attributes,
+  constructor(context, ubos, attributes,includes, {
     vertex,
     fragment,
     topology,
@@ -23,8 +25,8 @@ export class WebGLRenderPipeline {
   }) {
     const programInfo = createProgramFromSrc(
       context,
-      vertex,
-      fragment,
+      vertex.compile(includes),
+      fragment.compile(includes),
       attributes
     )
     this.program = programInfo.program
@@ -89,11 +91,8 @@ export class WebGLRenderPipeline {
 
 /**
  * @typedef WebGLRenderPipelineDescriptor
- * @property {WebGL2RenderingContext} context
- * @property {ReadonlyMap<string,Attribute>} attributes
- * @property {UBOs} ubos
- * @property {string} vertex
- * @property {string} fragment
+ * @property {Shader} vertex
+ * @property {Shader} fragment
  * @property {VertexLayout} vertexLayout
  * @property {PrimitiveTopology} topology
  * @property {CullFace} [cullFace]

@@ -1,5 +1,5 @@
 /**@import {PipelineKey} from '../material/index.js' */
-import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline } from "../core/index.js"
+import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader } from "../core/index.js"
 import { Geometry } from "../geometry/index.js"
 import { Material } from "../material/index.js"
 import {
@@ -61,7 +61,6 @@ export class MeshMaterial3D extends Object3D {
     const meshBits = createPipelineBitsFromMesh(geometry)
     const pipelineKey = material.getPipelineKey(meshBits)
     const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, ubos, attributes, includes, globalDefines)
-    const drawMode = material.drawMode
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
 
@@ -85,14 +84,14 @@ export class MeshMaterial3D extends Object3D {
 
     //drawing
     if (indices) {
-      gl.drawElements(drawMode,
+      gl.drawElements(pipeline.topology,
         indices.length,
         mapToIndicesType(indices), 0
-      );
+      )
 
     } else {
       const position = geometry.attributes.get(Attribute.Position.name)
-      gl.drawArrays(drawMode, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
+      gl.drawArrays(pipeline.topology, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
     }
     gl.bindVertexArray(null)
   }
@@ -127,74 +126,49 @@ function mapToIndicesType(indices) {
 function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes, globalDefines) {
   //  TODO: Instead of just using the material as the key, use both mesh and material
   // properties to get the pipeline id.
-  let materialCache = caches.material.get(material.constructor.name)
+  let materialCache = caches.materials.get(material.constructor.name)
 
   if (!materialCache) {
     const newCache = new Map()
 
     materialCache = newCache
-    caches.material.set(material.constructor.name, newCache)
+    caches.materials.set(material.constructor.name, newCache)
   }
 
   const id = materialCache.get(key)
 
   let newId
-  if (id) {
-    const pipeline = caches.renderpipelines[id]
-
-    if (pipeline) {
-      if (material.changed) {
-        pipeline.dispose(gl)
-        newId = id
-      } else {
-        return pipeline
-      }
-    } else {
-      newId = caches.renderpipelines.length
-      materialCache.set(key, caches.renderpipelines.length)
-    }
+  if (id !== undefined && caches.renderpipelines[id]) {
+    return caches.renderpipelines[id]
+  } else {
+    newId = caches.renderpipelines.length
+    materialCache.set(key, newId)
   }
-  const preprocessedVertex = preprocessShader(material.vSrc, includes, [globalDefines, material.defines])
-  const preprocessedFragment = preprocessShader(material.fSrc, includes, [globalDefines, material.defines])
-  
-  const newRenderPipeline = new WebGLRenderPipeline({
-    context: gl,
-    attributes,
-    ubos,
+  const descriptor = {
     topology: topologyFromPipelineKey(key),
     // TODO: Actually implement this to use the mesh
     vertexLayout: new VertexLayout(),
-    vertex: preprocessedVertex,
-    fragment: preprocessedFragment,
+    vertex: new Shader({
+      source: material.vSrc
+    }),
+    fragment: new Shader({
+      source: material.fSrc
+    }),
     blend: {
       source: material.srcBlendFunc,
       destination: material.distBlendFunc
     }
-  })
-  
+  }
+
+  for (const [name, value] of globalDefines) {
+    descriptor.vertex.defines.set(name, value)
+    descriptor.fragment.defines.set(name, value)
+  }
+  material.specialize(descriptor)
+  const newRenderPipeline = new WebGLRenderPipeline(gl, ubos, attributes, includes, descriptor)
+
   caches.renderpipelines[newId] = newRenderPipeline
   return newRenderPipeline
-}
-
-/**
- * @param {string} source
- * @param {ReadonlyMap<string,string>} includes 
- * @param {ReadonlyMap<string,string>[]} defines
- * @returns {string}
- */
-function preprocessShader(source, includes, defines) {
-  const version = "#version 300 es\n"
-  const mergedDefines = defines.flatMap(map => [...map.entries()])
-    .map(([name, value]) => `#define ${name} ${value}`)
-    .join("\n")
-  const preprocessed = source.replace(/#include <(.*?)>/g, (_, name) => {
-    const include = includes.get(name)
-    if (!include) {
-      console.error(`Could not find the include "${name}"`)
-    }
-    return include || ""
-  })
-  return version + mergedDefines + preprocessed
 }
 
 // Reserved for the first 32 bits
