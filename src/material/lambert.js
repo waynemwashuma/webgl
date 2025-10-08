@@ -1,11 +1,11 @@
-import { getWebglTexture, Shader } from "./shader.js"
+import { getWebglTexture, Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 import { Texture, Sampler } from "../texture/index.js"
 import { updateTextureSampler } from "../function.js"
 import { Uniform } from "../core/index.js"
 
-export class LambertMaterial extends Shader {
+export class LambertMaterial extends Material {
   /**
    * @type {Color}
    */
