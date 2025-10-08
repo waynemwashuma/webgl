@@ -151,11 +151,7 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
     }),
     fragment: new Shader({
       source: material.fSrc
-    }),
-    blend: {
-      source: material.srcBlendFunc,
-      destination: material.distBlendFunc
-    }
+    })
   }
 
   for (const [name, value] of globalDefines) {
@@ -176,6 +172,7 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
  */
 export const MeshKey = {
   TopologyBits: 0b1111111n,
+  LastBit: 31n,
   None: 0n,
   Points: 1n << 0n,
   Lines: 1n << 1n,
@@ -226,19 +223,19 @@ export function keyFromTopology(mesh) {
   if (mesh.topology === PrimitiveTopology.Lines) {
     return MeshKey.Lines
   }
-  if (mesh.topology ===  PrimitiveTopology.LineLoop) {
+  if (mesh.topology === PrimitiveTopology.LineLoop) {
     return MeshKey.LineLoop
   }
-  if (mesh.topology ===  PrimitiveTopology.LineStrip) {
+  if (mesh.topology === PrimitiveTopology.LineStrip) {
     return MeshKey.LineStrip
   }
-  if (mesh.topology ===  PrimitiveTopology.Triangles) {
+  if (mesh.topology === PrimitiveTopology.Triangles) {
     return MeshKey.Triangles
   }
-  if (mesh.topology ===  PrimitiveTopology.TriangleStrip) {
+  if (mesh.topology === PrimitiveTopology.TriangleStrip) {
     return MeshKey.TriangleStrip
   }
-  if (mesh.topology ===  PrimitiveTopology.TriangleFan) {
+  if (mesh.topology === PrimitiveTopology.TriangleFan) {
     return MeshKey.TriangleFan
   }
 
