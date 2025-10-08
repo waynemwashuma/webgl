@@ -1,9 +1,9 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
 
 
-export class QuadGeometry extends Geometry {
+export class QuadGeometry extends Mesh {
   constructor(w = 1, h = 1) {
     super()
     const indices = [

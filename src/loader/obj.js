@@ -1,5 +1,5 @@
 import { Attribute, AttributeData } from '../core/index.js';
-import { Geometry } from '../geometry/index.js';
+import { Mesh } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
 import { MeshMaterial3D } from '../mesh/index.js';
 
@@ -14,7 +14,7 @@ export class OBJLoader {
   async load(settings) {
     const raw = await (await fetch(settings.path)).text()
     const { attributes,count } = await loadOBJ(raw)
-    const geometry = new Geometry()
+    const geometry = new Mesh()
     const mesh = new MeshMaterial3D(geometry, new BasicMaterial())
     
     

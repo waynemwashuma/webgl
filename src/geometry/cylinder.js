@@ -1,7 +1,7 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
-export class CylinderGeometry extends Geometry {
+export class CylinderGeometry extends Mesh {
   constructor(radius = 1, height = 1, numSegments = 15) {
     super()
     const { indices, vertices, normals, uvs } = createCylinder(radius, height, numSegments);

@@ -1,5 +1,5 @@
 import { Attribute, AttributeData } from '../core/index.js';
-import { Geometry } from '../geometry/index.js';
+import { Mesh } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
 import { MeshMaterial3D, Object3D } from '../mesh/index.js';
 
@@ -935,7 +935,7 @@ function mapAccessorTypeToAttribute(name, type) {
 /**
  * @param {number} mesh
  * @param {GLTFMesh[]} meshes
- * @param {Geometry[][]} geometries
+ * @param {Mesh[][]} geometries
  */
 function parseMeshObject(mesh, meshes, geometries) {
   const meshData = meshes[mesh]
@@ -966,7 +966,7 @@ function parseGeometry(mesh, accessors, bufferViews, buffers) {
   const results = []
   for (let i = 0; i < mesh.primitives.length; i++) {
     const primitive = mesh.primitives[i];
-    const geometry = new Geometry()
+    const geometry = new Mesh()
     if (primitive.indices !== undefined) {
       const [dataView, accessor] = getAccessorData(
         primitive.indices,
@@ -997,7 +997,7 @@ function parseGeometry(mesh, accessors, bufferViews, buffers) {
 /**
  * @param {number} index 
  * @param {GLTF} gltf
- * @param {Geometry[][]} geometries 
+ * @param {Mesh[][]} geometries 
  */
 function parseObject(index, gltf, geometries) {
   const node = gltf.nodes[index]

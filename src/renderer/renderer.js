@@ -7,7 +7,7 @@ import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
-import { Geometry } from "../geometry/index.js"
+import { Mesh } from "../geometry/index.js"
 import { Material } from "../material/index.js"
 
 export class DirectionalLights {
@@ -43,7 +43,7 @@ export class Lights {
 
 export class Caches {
   /**
-   * @type {Map<Geometry, WebGLVertexArrayObject>}
+   * @type {Map<Mesh, WebGLVertexArrayObject>}
    */
   meshes = new Map()
   /**

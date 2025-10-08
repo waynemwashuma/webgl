@@ -1,8 +1,8 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
 
-export class UVSphereGeometry extends Geometry {
+export class UVSphereGeometry extends Mesh {
   constructor(radius = 1, numSegments = 20, numRings = 30) {
     super()
 

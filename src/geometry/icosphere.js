@@ -1,7 +1,7 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
-export class IcosphereGeometry extends Geometry {
+export class IcosphereGeometry extends Mesh {
   constructor(radius = 1, numSegments = 1) {
     super()
 

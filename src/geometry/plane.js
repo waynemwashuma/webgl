@@ -1,8 +1,8 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
 
-export class PlaneGeometry extends Geometry {
+export class PlaneGeometry extends Mesh {
   constructor(width = 1, height = 1, widthSegments = 8, heightSegments = 8) {
     super()
 
