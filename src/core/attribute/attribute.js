@@ -42,54 +42,54 @@ export class Attribute {
   static Position = new Attribute(
     'position',
     0,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     3
   )
 
   static UV = new Attribute(
     'uv',
     1,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     2
   )
 
   static UVB = new Attribute(
     'uvb',
     2,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     2
   )
 
   static Normal = new Attribute(
     'normal',
     3,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     3
   )
 
   static Tangent = new Attribute(
     'tangent',
     4,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     3
   )
 
   static Color = new Attribute(
     'color',
     5,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     4
   )
   static JointWeight = new Attribute(
     'joint_weight',
     6,
-    GlDataType.FLOAT,
+    GlDataType.Float,
     1
   )
   static JointIndex = new Attribute(
     'joint_index',
     7,
-    GlDataType.UNSIGNED_SHORT,
+    GlDataType.UnsignedShort,
     1
   )
 }

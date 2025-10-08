@@ -21,8 +21,8 @@ export function textureWrap({
     name: 'wrap1',
     sampler:{
       ...Sampler.defaultSettings,
-      wrapS: TextureWrap.CLAMP,
-      wrapT: TextureWrap.CLAMP,
+      wrapS: TextureWrap.Clamp,
+      wrapT: TextureWrap.Clamp,
     }
   })
   const tex2 = textureLoader.load({
@@ -30,8 +30,8 @@ export function textureWrap({
     name: 'wrap2',
     sampler:{
       ...Sampler.defaultSettings,
-      wrapS: TextureWrap.REPEAT,
-      wrapT: TextureWrap.REPEAT
+      wrapS: TextureWrap.Repeat,
+      wrapT: TextureWrap.Repeat
     }
   })
   const tex3 = textureLoader.load({
@@ -39,8 +39,8 @@ export function textureWrap({
     name: 'wrap3',
     sampler:{
       ...Sampler.defaultSettings,
-      wrapS: TextureWrap.MIRRORREPEAT,
-      wrapT: TextureWrap.MIRRORREPEAT
+      wrapS: TextureWrap.MirrorRepeat,
+      wrapT: TextureWrap.MirrorRepeat
     }
   })
 

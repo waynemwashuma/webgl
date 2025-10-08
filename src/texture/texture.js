@@ -118,9 +118,9 @@ export class Texture {
    * @type {Readonly<Required<TextureSettings>>}
    */
   static defaultSettings = {
-    format: TextureFormatUsage.RGBA,
-    internalFormat: TextureFormat.RGBA8,
-    dataFormat: GlDataType.UNSIGNED_BYTE,
+    format: TextureFormatUsage.Rgba,
+    internalFormat: TextureFormat.Rgba8,
+    dataFormat: GlDataType.UnsignedByte,
     sampler: Sampler.defaultSettings,
     generateMipmaps: true,
     flipY: false,

@@ -60,15 +60,15 @@ export class Sampler {
    * @type {Readonly<Required<SamplerSettings>>}
    */
   static defaultSettings = {
-    magnificationFilter: TextureFilter.LINEAR,
-    minificationFilter: TextureFilter.LINEAR,
-    mipmapFilter: TextureFilter.LINEAR,
-    wrapS: TextureWrap.CLAMP,
-    wrapT: TextureWrap.CLAMP,
-    wrapR: TextureWrap.CLAMP,
+    magnificationFilter: TextureFilter.Linear,
+    minificationFilter: TextureFilter.Linear,
+    mipmapFilter: TextureFilter.Linear,
+    wrapS: TextureWrap.Clamp,
+    wrapT: TextureWrap.Clamp,
+    wrapR: TextureWrap.Clamp,
     lod: { min: 0, max: 12 },
     anisotropy: 1,
-    compareMode: TextureCompareMode.NONE,
-    compare: CompareFunction.LEQUAL
+    compareMode: TextureCompareMode.None,
+    compare: CompareFunction.Lequal
   }
 }

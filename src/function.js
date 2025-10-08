@@ -71,20 +71,20 @@ function updateSampler(gl, sampler, settings) {
   gl.samplerParameteri(sampler, gl.TEXTURE_MIN_LOD, settings.lod.min)
   gl.samplerParameteri(sampler, gl.TEXTURE_MAX_LOD, settings.lod.max)
 
-  if (settings.minificationFilter === TextureFilter.LINEAR) {
-    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+  if (settings.minificationFilter === TextureFilter.Linear) {
+    if (settings.mipmapFilter === TextureFilter.Linear) {
       gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
-    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+    if (settings.mipmapFilter === TextureFilter.Nearest) {
       gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     }
   }
 
-  if (settings.minificationFilter === TextureFilter.NEAREST) {
-    if (settings.mipmapFilter === TextureFilter.LINEAR) {
+  if (settings.minificationFilter === TextureFilter.Nearest) {
+    if (settings.mipmapFilter === TextureFilter.Linear) {
       gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
     }
-    if (settings.mipmapFilter === TextureFilter.NEAREST) {
+    if (settings.mipmapFilter === TextureFilter.Nearest) {
       gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
     }
   }
@@ -92,7 +92,7 @@ function updateSampler(gl, sampler, settings) {
     gl.samplerParameterf(sampler, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, settings.anisotropy)
   }
 
-  if (settings.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
+  if (settings.compareMode = TextureCompareMode.CompareRefToTexture) {
     gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
     gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_FUNC, settings.compare)
   } else {
@@ -134,20 +134,20 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameteri(texture.type, gl.TEXTURE_MAX_LOD, lod.max)
   }
 
-  if (sampler.minificationFilter === TextureFilter.LINEAR) {
-    if (sampler.mipmapFilter === TextureFilter.LINEAR) {
+  if (sampler.minificationFilter === TextureFilter.Linear) {
+    if (sampler.mipmapFilter === TextureFilter.Linear) {
       gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
-    if (sampler.mipmapFilter === TextureFilter.NEAREST) {
+    if (sampler.mipmapFilter === TextureFilter.Nearest) {
       gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     }
   }
 
-  if (sampler.minificationFilter === TextureFilter.NEAREST) {
-    if (sampler.mipmapFilter === TextureFilter.LINEAR) {
+  if (sampler.minificationFilter === TextureFilter.Nearest) {
+    if (sampler.mipmapFilter === TextureFilter.Linear) {
       gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
     }
-    if (sampler.mipmapFilter === TextureFilter.NEAREST) {
+    if (sampler.mipmapFilter === TextureFilter.Nearest) {
       gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
     }
   }
@@ -155,7 +155,7 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
   }
 
-  if (sampler.compareMode = TextureCompareMode.COMPARE_REF_TO_TEXTURE) {
+  if (sampler.compareMode = TextureCompareMode.CompareRefToTexture) {
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_FUNC, sampler.compare)
   } else {
@@ -172,10 +172,10 @@ export function updateTextureData(gl, texture) {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
 
   switch (texture.type) {
-    case TextureType.TEXTURE_2D:
+    case TextureType.Texture2D:
       updateTexture2D(gl, texture)
       break;
-    case TextureType.TEXTURE_CUBE_MAP:
+    case TextureType.TextureCubeMap:
       updateCubeMap(gl,texture)
     default:
       break;
@@ -290,21 +290,21 @@ export function createProgramFromSrc(gl, vshader, fshader, attributes) {
 export function sizeofUniform(uniform) {
   const type = uniform.type
   switch (type) {
-    case UniformType.INT:
-    case UniformType.FLOAT:
-    case UniformType.BOOL:
-    case UniformType.SAMPLER_2D:
+    case UniformType.Int:
+    case UniformType.Float:
+    case UniformType.Bool:
+    case UniformType.Sampler2D:
       return 1
-    case UniformType.MAT4:
+    case UniformType.Mat4:
       return 16
-    case UniformType.MAT3:
+    case UniformType.Mat3:
       return 9
-    case UniformType.VEC2:
+    case UniformType.Vec2:
       return 2
-    case UniformType.VEC3:
+    case UniformType.Vec3:
       return 3 //Special Case
-    case UniformType.VEC4:
-    case UniformType.MAT2:
+    case UniformType.Vec4:
+    case UniformType.Mat2:
       return 4
     default:
       return 0
@@ -319,24 +319,24 @@ export function typeOfUniform(uniform) {
   let type = typeof uniform
 
   if (type == "boolean")
-    return UniformType.BOOL
+    return UniformType.Bool
   if (type == "number")
-    return UniformType.FLOAT
+    return UniformType.Float
   if (type == "object") {
     if (name === "vector2")
-      return UniformType.VEC2
+      return UniformType.Vec2
     if (name === "vector3")
-      return UniformType.VEC3
+      return UniformType.Vec3
     if (name === "vector4" || name === "color" || name == "quaternion")
-      return UniformType.VEC4
+      return UniformType.Vec4
     if (name === "matrix2")
-      return UniformType.MAT2
+      return UniformType.Mat2
     if (name === "matrix3")
-      return UniformType.MAT3
+      return UniformType.Mat3
     if (name === "matrix4")
-      return UniformType.MAT4
+      return UniformType.Mat4
     if (name === "texture")
-      return UniformType.SAMPLER_2D
+      return UniformType.Sampler2D
   }
   throw "Unsupported type of uniform value  \'" + name + "\'";
 }

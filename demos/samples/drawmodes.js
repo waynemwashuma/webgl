@@ -2,7 +2,7 @@ import {
   Mesh,
   BasicMaterial,
   QuadGeometry,
-  DrawMode,
+  PrimitiveTopology,
   Renderer,
   TextureLoader,
   PerspectiveProjection
@@ -22,13 +22,13 @@ export function drawModes({renderer}) {
     new BasicMaterial(),
     new BasicMaterial(),
   ]
-  materials[0].drawMode = DrawMode.POINTS
-  materials[1].drawMode = DrawMode.LINES
-  materials[2].drawMode = DrawMode.LINE_LOOP
-  materials[3].drawMode = DrawMode.LINE_STRIP
-  materials[4].drawMode = DrawMode.TRIANGLES
-  materials[5].drawMode = DrawMode.TRIANGLE_STRIP
-  materials[6].drawMode = DrawMode.TRIANGLE_FAN
+  materials[0].drawMode = PrimitiveTopology.Points
+  materials[1].drawMode = PrimitiveTopology.Lines
+  materials[2].drawMode = PrimitiveTopology.LineLoop
+  materials[3].drawMode = PrimitiveTopology.LineStrip
+  materials[4].drawMode = PrimitiveTopology.Triangles
+  materials[5].drawMode = PrimitiveTopology.TriangleStrip
+  materials[6].drawMode = PrimitiveTopology.TriangleFan
 
   //create meshes
   const meshes = materials.map(material => new Mesh(geometry1, material))
