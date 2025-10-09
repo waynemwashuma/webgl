@@ -4,31 +4,36 @@ export const phongFragment =
 
   #include <common>
   
+  struct PhongMaterial {
+    vec4 color;
+    float specularShininess;
+    float specularStrength;
+  };
+
   in vec3 v_position;
   in vec2 v_uv;
   in vec3 v_normal;
   in vec3 cam_direction;
   
+  uniform PhongMaterialBlock {
+    PhongMaterial material;
+  };
   uniform AmbientLightBlock {
     AmbientLight ambient_light;
   };
   uniform DirectionalLightBlock {
     DirectionalLights directional_lights;
   };
-  
-  uniform vec4 color;
   uniform sampler2D mainTexture;
-  uniform float specularShininess;
-  uniform float specularStrength;
   
   out vec4 fragment_color;
  
   void main(){
-    vec3 sample_color = texture(mainTexture,v_uv).rgb;
-    vec3 base_color = tint(sample_color, color.rgb);
+    vec3 sample_color = texture(mainTexture, v_uv).rgb;
+    vec3 base_color = tint(sample_color, material.color.rgb);
     vec3 normal = normalize(v_normal);
     vec3 view_direction = normalize(cam_direction);
-    float opacity = color.a;
+    float opacity = material.color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     
     vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
@@ -43,7 +48,7 @@ export const phongFragment =
       vec3 diffuse = base_color * light.color.rgb * diffuse_brightness * light.intensity;
     
       float specular_brightness = calculate_brightness(reflection_direction,view_direction);
-      vec3 specular = pow(specular_brightness,specularShininess) * light.color.rgb * specularStrength;
+      vec3 specular = pow(specular_brightness,material.specularShininess) * light.color.rgb * material.specularStrength;
       accumulate_light_contribution += specular + diffuse;
     }
   

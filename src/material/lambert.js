@@ -2,7 +2,6 @@ import { Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 import { Texture, Sampler } from "../texture/index.js"
-import { Uniform } from "../core/index.js"
 
 export class LambertMaterial extends Material {
   /**
@@ -42,20 +41,10 @@ export class LambertMaterial extends Material {
     return lambertFragment
   }
 
-  /**
-   * 
-   * @param {WebGL2RenderingContext} gl
-   * @param {Map<string,Uniform>} uniforms
-   */
-  uploadUniforms(gl, uniforms) {
-    const {
-      color,
-    } = this
-    const colorInfo = uniforms.get("color")
-
-    if (colorInfo) {
-      gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
-    }
+  getData() {
+    const { color } = this
+    
+    return new Float32Array([...color]).buffer
   }
 
   /**

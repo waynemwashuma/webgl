@@ -2,8 +2,6 @@ import { Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { updateTextureSampler } from "../function.js"
-import { Uniform } from "../core/index.js"
 
 export class PhongMaterial extends Material {
   /**
@@ -46,29 +44,18 @@ export class PhongMaterial extends Material {
     return phongFragment
   }
 
-  /**
-   * @param {WebGL2RenderingContext} gl
-   * @param {Map<string,Uniform>} uniforms
-   */
-  uploadUniforms(gl, uniforms) {
+  getData() {
     const {
       color,
       specularShininess,
       specularStrength
     } = this
-    const colorInfo = uniforms.get("color")
-    const specularShininessInfo = uniforms.get("specularShininess")
-    const specularStrengthInfo = uniforms.get("specularStrength")
-
-    if (colorInfo) {
-      gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
-    }
-    if (specularShininessInfo) {
-      gl.uniform1f(specularShininessInfo.location, specularShininess)
-    }
-    if (specularStrengthInfo) {
-      gl.uniform1f(specularStrengthInfo.location, specularStrength)
-    }
+    
+    return new Float32Array([
+      ...color,
+      specularShininess,
+      specularStrength
+    ]).buffer
   }
 
   /**

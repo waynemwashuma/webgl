@@ -3,8 +3,6 @@ import { Color } from "../math/index.js"
 import { basicVertex, basicFragment } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Sampler } from "../texture/sampler.js"
-import { updateTextureSampler } from "../function.js"
-import { Uniform } from "../core/index.js"
 
 export class BasicMaterial extends Material {
 
@@ -45,22 +43,10 @@ export class BasicMaterial extends Material {
     return basicFragment
   }
 
-  /**
-   * 
-   * @param {WebGL2RenderingContext} gl
-   * @param {Map<string,Uniform>} uniforms
-   */
-  uploadUniforms(gl, uniforms) {
-    const {
-      color,
-      mainSampler
-    } = this
+  getData() {
+    const { color } = this
 
-    const colorInfo = uniforms.get("color")
-
-    if (colorInfo) {
-      gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
-    }
+    return new Float32Array([...color]).buffer
   }
 
   /**

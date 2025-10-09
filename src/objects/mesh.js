@@ -16,7 +16,7 @@ import { RawMaterial } from "../material/index.js"
 
 /**
  * @template {Mesh} [T = Mesh]
- * @template {RawMaterial} [U = Material]
+ * @template {RawMaterial} [U = RawMaterial]
  */
 export class MeshMaterial3D extends Object3D {
   /**
@@ -59,20 +59,29 @@ export class MeshMaterial3D extends Object3D {
   renderGL(gl, caches, ubos, attributes, defaultTexture, includes, globalDefines) {
     const { meshes } = caches
     const { material, geometry, transform } = this
+    const name = material.constructor.name
+    const blockName = material.constructor.name + 'Block'
+    
+    const materialData = material.getData()
     const { indices } = geometry
+    const gpuMesh = meshes.get(geometry)
     const meshBits = createPipelineBitsFromMesh(geometry)
     const pipelineKey = material.getPipelineKey(meshBits)
     const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, ubos, attributes, includes, globalDefines)
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
-
+    const ubo = ubos.get(blockName)
+    
     pipeline.use(gl)
-    material.uploadUniforms(gl, pipeline.uniforms)
+    
+    if(!ubo) {
+      return console.warn(`No material uniform buffer \`${blockName}\` set for ${name}`)
+    }
+    ubo.update(gl,materialData)
     uploadTextures(gl, material, pipeline.uniforms, caches, defaultTexture)
-    const mesh = meshes.get(geometry)
 
-    if (mesh) {
-      gl.bindVertexArray(mesh)
+    if (gpuMesh) {
+      gl.bindVertexArray(gpuMesh)
 
       // TODO: Implement autoupdate when mesh changes and
       // delete the old VAO and its buffers.
