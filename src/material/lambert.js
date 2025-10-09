@@ -3,6 +3,7 @@ import { Color } from "../math/index.js"
 import { basicVertex, lambertFragment } from "../shader/index.js"
 import { Texture, Sampler } from "../texture/index.js"
 import { updateTextureSampler } from "../function.js"
+import { Uniform } from "../core/index.js"
 
 export class LambertMaterial extends Shader {
   /**
@@ -38,16 +39,17 @@ export class LambertMaterial extends Shader {
    * 
    * @param {WebGL2RenderingContext} gl 
    * @param {Map<Texture,WebGLTexture>} cache
-   * @param {Texture} defaultTexture 
+   * @param {Map<string,Uniform>} uniforms
+   * @param {Texture} defaultTexture
    */
-  uploadUniforms(gl, cache, defaultTexture) {
+  uploadUniforms(gl, cache, uniforms, defaultTexture) {
     const {
       color,
       mainTexture = defaultTexture,
       mainSampler
     } = this
-    const colorInfo = this.uniforms.get("color")
-    const mainTextureInfo = this.uniforms.get("mainTexture")
+    const colorInfo = uniforms.get("color")
+    const mainTextureInfo = uniforms.get("mainTexture")
     const maintex = getWebglTexture(gl,mainTexture,cache)
     
 

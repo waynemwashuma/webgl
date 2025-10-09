@@ -1,8 +1,9 @@
-import { Attribute, UBOs } from "../core/index.js"
+import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline } from "../core/index.js"
 import { Geometry } from "../geometry/index.js"
 import { Shader } from "../material/index.js"
 import {
   GlDataType,
+  PrimitiveTopology,
   UNI_MODEL_MAT
 } from "../constant.js"
 import { Texture } from "../texture/index.js"
@@ -42,44 +43,27 @@ export class Mesh extends Object3D {
     newMesh.material = this.material
     return newMesh
   }
-  /**
-   * @param {WebGL2RenderingContext} gl 
-   * @param {UBOs} ubos
-   * @param {ReadonlyMap<string,Attribute>} attributes
-   * @param {ReadonlyMap<string,string>} includes
-   * @param {ReadonlyMap<string,string>} globalDefines
-   */
-  init(gl, ubos, attributes, includes, globalDefines) {
-    this.traverseDFS((object) => {
-      if (!(object instanceof Mesh)) return
-
-      const { material, geometry } = object
-
-      material.init(gl, ubos, attributes, includes, globalDefines)
-
-      return true
-    })
-  }
 
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {import("../renderer/index.js").Caches} caches
+   * @param {UBOs} ubos
    * @param {ReadonlyMap<string,Attribute>} attributes 
    * @param {Texture} defaultTexture
+   * @param {ReadonlyMap<string,string>} includes
+   * @param {ReadonlyMap<string,string>} globalDefines
    */
-  renderGL(gl, caches, attributes, defaultTexture) {
+  renderGL(gl, caches,ubos, attributes, defaultTexture, includes, globalDefines) {
     const { meshes } = caches
     const { material, geometry, transform } = this
     const { indices } = geometry
+    const pipeline = getRenderPipeline(gl, material, caches,ubos, attributes, includes, globalDefines)
     const drawMode = material.drawMode
-    const modelInfo = material.uniforms.get(UNI_MODEL_MAT)
+    const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
 
-    gl.blendFunc(material.srcBlendFunc, material.distBlendFunc)
-    //preping uniforms and activating program
-
-    material.activate(gl)
-    material.uploadUniforms(gl,caches.textures,defaultTexture)
+    pipeline.use(gl)
+    material.uploadUniforms(gl, caches.textures, pipeline.uniforms, defaultTexture)
 
     const mesh = meshes.get(geometry)
 
@@ -90,7 +74,7 @@ export class Mesh extends Object3D {
       // delete the old VAO and its buffers.
     } else {
       const newMesh = createVAO(gl, attributes, geometry)
-      meshes.set(geometry,newMesh)
+      meshes.set(geometry, newMesh)
       gl.bindVertexArray(newMesh)
     }
 
@@ -108,7 +92,6 @@ export class Mesh extends Object3D {
       gl.drawArrays(drawMode, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
     }
     gl.bindVertexArray(null)
-    material.deactivate(gl)
   }
 }
 
@@ -126,4 +109,85 @@ function mapToIndicesType(indices) {
     return GlDataType.UnsignedInt
   }
   throw "This is unreachable!"
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Shader} material
+ * @param {import("../renderer/renderer.js").Caches} caches
+ * @param {UBOs} ubos
+ * @param {ReadonlyMap<string, Attribute>} attributes
+ * @param {ReadonlyMap<string, string>} includes
+ * @param {ReadonlyMap<string, string>} globalDefines
+ */
+function getRenderPipeline(gl, material, caches, ubos, attributes, includes, globalDefines) {
+  //  TODO: Instead of just using the material as the key, use both mesh and material
+  // properties to get the pipeline id.
+  let materialCache = caches.material.get(material.constructor.name)
+
+  if (!materialCache) {
+    const newCache = new Map()
+
+    materialCache = newCache
+    caches.material.set(material.constructor.name, newCache)
+  }
+
+  const id = materialCache.get(material)
+
+  let newId
+  if (id) {
+    const pipeline = caches.renderpipelines[id]
+
+    if (pipeline) {
+      if (material.changed) {
+        pipeline.dispose(gl)
+        newId = id
+      } else {
+        return pipeline
+      }
+    } else {
+      newId = caches.renderpipelines.length
+      materialCache.set(material, caches.renderpipelines.length)
+    }
+  }
+  const preprocessedVertex = preprocessShader(material.vSrc, includes, [globalDefines, material.defines])
+  const preprocessedFragment = preprocessShader(material.fSrc, includes, [globalDefines, material.defines])
+  const newRenderPipeline = new WebGLRenderPipeline({
+    context: gl,
+    attributes,
+    ubos,
+    topology: PrimitiveTopology.Triangles,
+    // TODO: Actually implement this to use the mesh
+    vertexLayout: new VertexLayout(),
+    vertex: preprocessedVertex,
+    fragment: preprocessedFragment,
+    blend: {
+      source: material.srcBlendFunc,
+      destination: material.distBlendFunc
+    }
+  })
+
+  caches.renderpipelines[newId] = newRenderPipeline
+  return newRenderPipeline
+}
+
+/**
+ * @param {string} source
+ * @param {ReadonlyMap<string,string>} includes 
+ * @param {ReadonlyMap<string,string>[]} defines
+ * @returns {string}
+ */
+function preprocessShader(source, includes, defines) {
+  const version = "#version 300 es\n"
+  const mergedDefines = defines.flatMap(map => [...map.entries()])
+    .map(([name, value]) => `#define ${name} ${value}`)
+    .join("\n")
+  const preprocessed = source.replace(/#include <(.*?)>/g, (_, name) => {
+    const include = includes.get(name)
+    if (!include) {
+      console.error(`Could not find the include "${name}"`)
+    }
+    return include || ""
+  })
+  return version + mergedDefines + preprocessed
 }

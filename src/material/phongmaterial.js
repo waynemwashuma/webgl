@@ -3,6 +3,7 @@ import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { updateTextureSampler } from "../function.js"
+import { Uniform } from "../core/index.js"
 
 export class PhongMaterial extends Shader {
   /**
@@ -41,9 +42,10 @@ export class PhongMaterial extends Shader {
   /**
    * @param {WebGL2RenderingContext} gl 
    * @param {Map<Texture,WebGLTexture>} cache
+   * @param {Map<string,Uniform>} uniforms
    * @param {Texture} defaultTexture
    */
-  uploadUniforms(gl, cache, defaultTexture) {
+  uploadUniforms(gl, cache, uniforms, defaultTexture) {
     const {
       color,
       mainTexture = defaultTexture,
@@ -51,12 +53,11 @@ export class PhongMaterial extends Shader {
       specularShininess,
       specularStrength
     } = this
-    const colorInfo = this.uniforms.get("color")
-    const mainTextureInfo = this.uniforms.get("mainTexture")
-    const specularShininessInfo = this.uniforms.get("specularShininess")
-    const specularStrengthInfo = this.uniforms.get("specularStrength")
+    const colorInfo = uniforms.get("color")
+    const mainTextureInfo = uniforms.get("mainTexture")
+    const specularShininessInfo = uniforms.get("specularShininess")
+    const specularStrengthInfo = uniforms.get("specularStrength")
     const maintex = getWebglTexture(gl,mainTexture,cache)
-    
 
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
