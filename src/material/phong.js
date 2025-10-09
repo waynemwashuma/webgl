@@ -1,4 +1,4 @@
-import { getWebglTexture, Material } from "./material.js"
+import { Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
@@ -38,33 +38,27 @@ export class PhongMaterial extends Material {
     this.specularShininess = specularShininess
   }
 
-  vertex(){
+  vertex() {
     return basicVertex
   }
 
-  fragment(){
+  fragment() {
     return phongFragment
   }
 
   /**
-   * @param {WebGL2RenderingContext} gl 
-   * @param {Map<Texture,WebGLTexture>} cache
+   * @param {WebGL2RenderingContext} gl
    * @param {Map<string,Uniform>} uniforms
-   * @param {Texture} defaultTexture
    */
-  uploadUniforms(gl, cache, uniforms, defaultTexture) {
+  uploadUniforms(gl, uniforms) {
     const {
       color,
-      mainTexture = defaultTexture,
-      mainSampler,
       specularShininess,
       specularStrength
     } = this
     const colorInfo = uniforms.get("color")
-    const mainTextureInfo = uniforms.get("mainTexture")
     const specularShininessInfo = uniforms.get("specularShininess")
     const specularStrengthInfo = uniforms.get("specularStrength")
-    const maintex = getWebglTexture(gl,mainTexture,cache)
 
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
@@ -75,15 +69,13 @@ export class PhongMaterial extends Material {
     if (specularStrengthInfo) {
       gl.uniform1f(specularStrengthInfo.location, specularStrength)
     }
-    if (mainTextureInfo) {
-      gl.activeTexture(gl.TEXTURE0)
-      gl.bindTexture(gl.TEXTURE_2D, maintex)
-      gl.uniform1i(mainTextureInfo.location, 0)
+  }
 
-      if (mainSampler) {
-        updateTextureSampler(gl, mainTexture, mainSampler)
-      }
-    }
+  /**
+   * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
+   */
+  getTextures() {
+    return [['mainTexture', 0, this.mainTexture, this.mainSampler]]
   }
 }
 

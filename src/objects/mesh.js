@@ -1,5 +1,6 @@
-/**@import {PipelineKey} from '../material/index.js' */
-import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader } from "../core/index.js"
+/**@import { PipelineKey } from '../material/index.js' */
+/**@import { Caches } from '../renderer/index.js' */
+import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import { Material } from "../material/index.js"
 import {
@@ -10,8 +11,8 @@ import {
 import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
-import { createVAO } from "../function.js"
-import { RawMaterial } from "../material/raw.js"
+import { createTexture, createVAO, updateTextureData, updateTextureSampler } from "../function.js"
+import { RawMaterial } from "../material/index.js"
 
 /**
  * @template {Mesh} [T = Mesh]
@@ -66,8 +67,8 @@ export class MeshMaterial3D extends Object3D {
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
 
     pipeline.use(gl)
-    material.uploadUniforms(gl, caches.textures, pipeline.uniforms, defaultTexture)
-
+    material.uploadUniforms(gl, pipeline.uniforms)
+    uploadTextures(gl, material, pipeline.uniforms, caches, defaultTexture)
     const mesh = meshes.get(geometry)
 
     if (mesh) {
@@ -247,7 +248,54 @@ export function keyFromTopology(mesh) {
  * @param {Mesh} mesh
  * @returns {bigint}
  */
-export function createPipelineBitsFromMesh(mesh) {
+function createPipelineBitsFromMesh(mesh) {
   let key = keyFromTopology(mesh)
   return key
+}
+
+/**
+ * @template {RawMaterial} T
+ * @param {WebGL2RenderingContext} gl
+ * @param {T} material 
+ * @param {ReadonlyMap<string, Uniform>} uniforms
+ * @param {Caches} caches
+ * @param {Texture} defaultTexture
+ */
+function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
+  const textures = material.getTextures()
+
+  for (let i = 0; i < textures.length; i++) {
+    const [name, location, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
+    const textureInfo = uniforms.get(name)
+    const gpuTexture = getWebglTexture(gl, texture, caches.textures)
+
+    if (textureInfo) {
+      gl.activeTexture(gl.TEXTURE0 + location)
+      gl.bindTexture(texture.type, gpuTexture)
+      gl.uniform1i(textureInfo.location, location)
+
+      updateTextureSampler(gl, texture, sampler)
+    }
+  }
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
+ * @param {Map<Texture,WebGLTexture>} cache
+ * @returns {WebGLTexture}
+ */
+function getWebglTexture(gl, texture, cache) {
+  const tex = cache.get(texture)
+
+  if (tex) {
+    if (texture.changed) {
+      gl.bindTexture(texture.type, tex)
+      updateTextureData(gl, texture)
+    }
+    return tex
+  }
+  const newTex = createTexture(gl, texture)
+  cache.set(texture, newTex)
+  return newTex
 }
