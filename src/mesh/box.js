@@ -1,4 +1,4 @@
-import { Mesh } from "./geometry.js"
+import { Mesh } from "./mesh.js"
 import { AttributeData, Attribute } from "../core/index.js"
 
 

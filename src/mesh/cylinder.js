@@ -1,4 +1,4 @@
-import { Mesh } from "./geometry.js"
+import { Mesh } from "./mesh.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
 export class CylinderGeometry extends Mesh {
