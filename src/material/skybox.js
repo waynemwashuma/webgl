@@ -1,10 +1,10 @@
-import { getWebglTexture, Shader } from "./shader.js"
+import { getWebglTexture, Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Uniform } from "../core/index.js"
 
-export class SkyBoxMaterial extends Shader {
+export class SkyBoxMaterial extends Material {
 
   /**
    * @type {Color}

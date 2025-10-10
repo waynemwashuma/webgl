@@ -8,7 +8,7 @@ import { MeshMaterial3D, Object3D } from "../mesh/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Geometry } from "../geometry/index.js"
-import { Shader } from "../material/shader.js"
+import { Material } from "../material/index.js"
 
 export class DirectionalLights {
   /**

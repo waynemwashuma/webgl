@@ -1,4 +1,4 @@
-import { getWebglTexture, Shader } from "./shader.js"
+import { getWebglTexture, Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, basicFragment } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
@@ -6,7 +6,7 @@ import { Sampler } from "../texture/sampler.js"
 import { updateTextureSampler } from "../function.js"
 import { Uniform } from "../core/index.js"
 
-export class BasicMaterial extends Shader {
+export class BasicMaterial extends Material {
 
   /**
    * @type {Color}

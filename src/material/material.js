@@ -10,7 +10,7 @@ import {
 import { Uniform } from "../core/index.js"
 import { Texture } from "../texture/index.js"
 
-export class Shader {
+export class Material {
   #changed = false
   drawMode = PrimitiveTopology.Triangles
   cullFace = CullFace.Back

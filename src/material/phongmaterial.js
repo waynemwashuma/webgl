@@ -1,11 +1,11 @@
-import { getWebglTexture, Shader } from "./shader.js"
+import { getWebglTexture, Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, phongFragment } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { updateTextureSampler } from "../function.js"
 import { Uniform } from "../core/index.js"
 
-export class PhongMaterial extends Shader {
+export class PhongMaterial extends Material {
   /**
    * @type {Color}
    */

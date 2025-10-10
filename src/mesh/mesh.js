@@ -1,7 +1,7 @@
 /**@import {PipelineKey} from '../material/index.js' */
 import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline } from "../core/index.js"
 import { Geometry } from "../geometry/index.js"
-import { Shader } from "../material/index.js"
+import { Material } from "../material/index.js"
 import {
   GlDataType,
   PrimitiveTopology,
@@ -14,7 +14,7 @@ import { createVAO } from "../function.js"
 
 /**
  * @template {Geometry} [T = Geometry]
- * @template {Shader} [U = Shader]
+ * @template {Material} [U = Material]
  */
 export class MeshMaterial3D extends Object3D {
   /**
@@ -116,7 +116,7 @@ function mapToIndicesType(indices) {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {Shader} material
+ * @param {Material} material
  * @param {PipelineKey} key
  * @param {import("../renderer/renderer.js").Caches} caches
  * @param {UBOs} ubos
