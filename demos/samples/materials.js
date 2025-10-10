@@ -30,8 +30,8 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const geometry1 = new BoxGeometry(1, 1)
-const geometry2 = new UVSphereGeometry(0.7)
+const mesh1 = new BoxGeometry(1, 1)
+const mesh2 = new UVSphereGeometry(0.7)
 const materials = [
   new BasicMaterial({
     mainTexture: texture
@@ -46,20 +46,20 @@ const materials = [
   })
 ]
 
-//create meshes
-const meshes = materials.map(material => new MeshMaterial3D(geometry1, material))
-  .concat(materials.map(material => new MeshMaterial3D(geometry2, material)))
+//create objects
+const objects = materials.map(material => new MeshMaterial3D(mesh1, material))
+  .concat(materials.map(material => new MeshMaterial3D(mesh2, material)))
 
-//transform meshes to thier positions
-meshes.forEach((mesh, i) => {
+//transform objects to thier positions
+objects.forEach((object, i) => {
   const stepX = 1.6
   const stepY = 2
   const startX = -1.6
   const startY = 1.6
   const number = 3
 
-  mesh.transform.position.x = startX + stepX * (i % number)
-  mesh.transform.position.y = startY - Math.floor(i / number) * stepY
+  object.transform.position.x = startX + stepX * (i % number)
+  object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
 
 //set up the camera
@@ -69,16 +69,13 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
 
-//add meshes to the renderer
-meshes.forEach(mesh => renderer.add(mesh))
-
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
 requestAnimationFrame(update)
 
 function update() {
-  meshes.forEach(mesh => mesh.transform.orientation.multiply(rotation))
-  renderer.update()
+  objects.forEach(object => object.transform.orientation.multiply(rotation))
+  renderer.render(objects)
 
   requestAnimationFrame(update)
 }

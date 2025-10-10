@@ -46,7 +46,6 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.fov = Math.PI / 2
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
-renderer.add(skyBox)
 
 let number = 0, direction = 1
 const interval = 0.001
@@ -70,7 +69,7 @@ function update() {
   }
 
   renderer.camera.transform.orientation.multiply(rotation)
-  renderer.update()
+  renderer.render([skyBox])
   requestAnimationFrame(update)
 }
 

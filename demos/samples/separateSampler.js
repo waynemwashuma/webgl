@@ -35,8 +35,8 @@ const sampler3 = new Sampler({
   wrapT: TextureWrap.MirrorRepeat
 })
 
-const geometry = new QuadGeometry(1, 1)
-const buffer = geometry._attributes.get('uv').value
+const mesh = new QuadGeometry(1, 1)
+const buffer = mesh.attributes.get('uv').value
 const uvs = new Float32Array(
   buffer.buffer,
   buffer.byteOffset,
@@ -59,27 +59,24 @@ const material3 = new BasicMaterial({
   mainSampler: sampler3
 })
 
-const mesh1 = new MeshMaterial3D(geometry, material1)
-const mesh2 = new MeshMaterial3D(geometry, material2)
-const mesh3 = new MeshMaterial3D(geometry, material3)
+const object1 = new MeshMaterial3D(mesh, material1)
+const object2 = new MeshMaterial3D(mesh, material2)
+const object3 = new MeshMaterial3D(mesh, material3)
 
-mesh1.transform.position.x = -1.2
-mesh2.transform.position.x = 0
-mesh3.transform.position.x = 1.2
+object1.transform.position.x = -1.2
+object2.transform.position.x = 0
+object3.transform.position.x = 1.2
 
 renderer.camera.transform.position.z = 2
 if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.fov = Math.PI / 180 * 120
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
-renderer.add(mesh1)
-renderer.add(mesh2)
-renderer.add(mesh3)
 
 requestAnimationFrame(update)
 
 function update() {
-  renderer.update()
+  renderer.render([object1, object2, object3])
   requestAnimationFrame(update)
 }
 

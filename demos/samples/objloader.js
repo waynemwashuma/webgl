@@ -11,7 +11,7 @@ const renderer = new Renderer(canvas)
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
-
+const objects = []
 const textureLoader = new TextureLoader()
 const loader = new OBJLoader()
 const texture = textureLoader.load({
@@ -22,13 +22,13 @@ const texture = textureLoader.load({
 })
 loader.load({
   path: "assets/models/obj/pirate_girl/pirate_girl.obj"
-}).then((mesh => {
-  const clone = mesh.clone()
-  renderer.add(clone)
+}).then((object => {
+  const clone = object.clone()
 
   if(clone.material instanceof BasicMaterial){
     clone.material.mainTexture = texture
   }
+  objects.push(clone)
 }))
 renderer.camera.transform.position.z = 2
 renderer.camera.transform.position.y = 2
@@ -40,7 +40,7 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
 requestAnimationFrame(update)
 
 function update() {
-  renderer.update()
+  renderer.render(objects)
 
   requestAnimationFrame(update)
 }

@@ -11,14 +11,15 @@ const renderer = new Renderer(canvas)
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
 
+const objects = []
 const loader = new GLTFLoader()
 loader.asyncLoad({
   path: "assets/models/gltf/pirate_girl/index.gltf",
   name: "object"
 }).then((group) => {
-  const renderable = group.clone()
+  const object = group.clone()
 
-  renderer.add(renderable)
+  objects.push(object)
 })
 
 renderer.camera.transform.position.z = 2
@@ -31,7 +32,7 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
 requestAnimationFrame(update)
 
 function update() {
-  renderer.update()
+  renderer.render(objects)
   requestAnimationFrame(update)
 }
 

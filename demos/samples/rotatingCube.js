@@ -27,7 +27,7 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const origin = new MeshMaterial3D(
+const box = new MeshMaterial3D(
   new BoxGeometry(1, 1, 1),
   new LambertMaterial({
     mainTexture: texture
@@ -38,16 +38,15 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.fov = Math.PI / 180 * 120
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
-renderer.add(origin)
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
 requestAnimationFrame(update)
 
 function update() {
-  origin.transform.orientation.multiply(rotation)
+  box.transform.orientation.multiply(rotation)
 
-  renderer.update()
+  renderer.render([box])
   requestAnimationFrame(update)
 }
 

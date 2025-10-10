@@ -31,19 +31,19 @@ meshes[4].topology = PrimitiveTopology.Triangles
 meshes[5].topology = PrimitiveTopology.TriangleStrip
 meshes[6].topology = PrimitiveTopology.TriangleFan
 
-//create meshes
-const objects = meshes.map(mesh => new MeshMaterial3D(mesh, material))
+//create objects
+const objects = meshes.map(object => new MeshMaterial3D(object, material))
 
-//transform meshes to thier positions
-objects.forEach((mesh, i) => {
+//transform objects to thier positions
+objects.forEach((object, i) => {
   const stepX = 1.6
   const stepY = 2
   const startX = -1.6
   const startY = 1.6
   const number = 3
 
-  mesh.transform.position.x = startX + stepX * (i % number)
-  mesh.transform.position.y = startY - Math.floor(i / number) * stepY
+  object.transform.position.x = startX + stepX * (i % number)
+  object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
 
 //set up the camera
@@ -53,13 +53,13 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
 
-//add meshes to the renderer
-objects.forEach(mesh => renderer.add(mesh))
+//add objects to the renderer
+objects.forEach(object => renderer.add(object))
 
 requestAnimationFrame(update)
 
 function update() {
-  renderer.update()
+  renderer.render(objects)
   requestAnimationFrame(update)
 }
 

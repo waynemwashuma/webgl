@@ -24,7 +24,7 @@ const texture = textureLoader.load({
   }
 })
 const light = new DirectionalLight()
-const origin = new MeshMaterial3D(
+const sphere = new MeshMaterial3D(
   new UVSphereGeometry(1),
   new LambertMaterial({
     mainTexture: texture,
@@ -39,15 +39,14 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.fov = Math.PI / 180 * 120
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
-renderer.add(origin)
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
 requestAnimationFrame(update)
 
 function update() {
-  origin.transform.orientation.multiply(rotation)
-  renderer.update()
+  sphere.transform.orientation.multiply(rotation)
+  renderer.render([sphere])
 
   requestAnimationFrame(update)
 }
