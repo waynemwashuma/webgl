@@ -1,7 +1,7 @@
 import { Attribute, AttributeData } from '../core/index.js';
 import { Geometry } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
-import { Mesh, Object3D } from '../mesh/index.js';
+import { MeshMaterial3D, Object3D } from '../mesh/index.js';
 
 export class GLTFLoader {
   /**
@@ -945,11 +945,11 @@ function parseMeshObject(mesh, meshes, geometries) {
     throw "Invalid mesh index on node"
   }
   if (geometry.length === 1) {
-    return new Mesh(geometry[0], new BasicMaterial())
+    return new MeshMaterial3D(geometry[0], new BasicMaterial())
   }
   const object = new Object3D()
   for (let i = 0; i < geometry.length; i++) {
-    const mesh = new Mesh(geometry[i], new BasicMaterial())
+    const mesh = new MeshMaterial3D(geometry[i], new BasicMaterial())
     object.add(mesh)
   }
 

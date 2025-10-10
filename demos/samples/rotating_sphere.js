@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   LambertMaterial,
   UVSphereGeometry,
   Vector3,
@@ -23,7 +23,7 @@ export function rotatingUvSphere({
   renderer.lights.ambientLight.intensity = 0.15
   renderer.lights.directionalLights.add(light)
 
-  const origin = new Mesh(
+  const origin = new MeshMaterial3D(
     new UVSphereGeometry(1),
     new LambertMaterial({
       mainTexture: tex,

@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   BasicMaterial,
   CircleGeometry,
   BoxGeometry,
@@ -34,7 +34,7 @@ export function geometries({
   ]
 
   //create meshes
-  const meshes = geometries.map(geometry => new Mesh(geometry, material))
+  const meshes = geometries.map(geometry => new MeshMaterial3D(geometry, material))
 
   //transform meshes to thier positions
   meshes.forEach((mesh, i) => {

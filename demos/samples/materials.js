@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   BasicMaterial,
   LambertMaterial,
   PhongMaterial,
@@ -42,8 +42,8 @@ export function materials({
   ]
   
   //create meshes
-  const meshes = materials.map(material => new Mesh(geometry1, material))
-    .concat(materials.map(material => new Mesh(geometry2, material)))
+  const meshes = materials.map(material => new MeshMaterial3D(geometry1, material))
+    .concat(materials.map(material => new MeshMaterial3D(geometry2, material)))
   
   //transform meshes to thier positions
   meshes.forEach((mesh, i) => {

@@ -16,7 +16,7 @@ import { createVAO } from "../function.js"
  * @template {Geometry} [T = Geometry]
  * @template {Shader} [U = Shader]
  */
-export class Mesh extends Object3D {
+export class MeshMaterial3D extends Object3D {
   /**
    * @type {T}
    */

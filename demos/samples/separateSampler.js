@@ -1,5 +1,5 @@
 import {
-  Mesh,
+  MeshMaterial3D,
   QuadGeometry,
   TextureWrap,
   BasicMaterial,
@@ -60,9 +60,9 @@ export function separateSamplers({
     mainSampler: sampler3
   })
 
-  const mesh1 = new Mesh(geometry, material1)
-  const mesh2 = new Mesh(geometry, material2)
-  const mesh3 = new Mesh(geometry, material3)
+  const mesh1 = new MeshMaterial3D(geometry, material1)
+  const mesh2 = new MeshMaterial3D(geometry, material2)
+  const mesh3 = new MeshMaterial3D(geometry, material3)
 
   mesh1.transform.position.x = -1.2
   mesh2.transform.position.x = 0

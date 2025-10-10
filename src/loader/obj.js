@@ -1,11 +1,11 @@
 import { Attribute, AttributeData } from '../core/index.js';
 import { Geometry } from '../geometry/index.js';
 import { BasicMaterial } from '../material/basicmaterial.js';
-import { Mesh } from '../mesh/index.js';
+import { MeshMaterial3D } from '../mesh/index.js';
 
 export class OBJLoader {
   /**
-   * @type {Map<string,Mesh>}
+   * @type {Map<string,MeshMaterial3D>}
   */
   meshes = new Map()
   /**
@@ -15,7 +15,7 @@ export class OBJLoader {
     const raw = await (await fetch(settings.path)).text()
     const { attributes,count } = await loadOBJ(raw)
     const geometry = new Geometry()
-    const mesh = new Mesh(geometry, new BasicMaterial())
+    const mesh = new MeshMaterial3D(geometry, new BasicMaterial())
     
     
     geometry.setAttribute(Attribute.Position.name,new AttributeData(attributes.get(Attribute.Position.name)))
@@ -29,7 +29,7 @@ export class OBJLoader {
 
   /**
    * @param {string} name
-   * @returns {Mesh}
+   * @returns {MeshMaterial3D}
    */
   get(name) {
     return this.meshes.get(name)
