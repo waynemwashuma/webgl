@@ -4,11 +4,13 @@ import {
   Renderer,
   SkyBox,
   TextureLoader,
-  TextureType
+  TextureType,
+  Camera
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
 const renderer = new Renderer(canvas)
+const camera = new Camera()
 const textureLoader = new TextureLoader()
 
 document.body.append(canvas)
@@ -41,10 +43,10 @@ const skyBox = new SkyBox({
   day,
   night,
 })
-renderer.camera.transform.position.z = 2
-if (renderer.camera.projection instanceof PerspectiveProjection) {
-  renderer.camera.projection.fov = Math.PI / 2
-  renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+camera.transform.position.z = 2
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 2
+  camera.projection.aspect = innerWidth / innerHeight
 }
 
 let number = 0, direction = 1
@@ -68,16 +70,16 @@ function update() {
     number = next
   }
 
-  renderer.camera.transform.orientation.multiply(rotation)
-  renderer.render([skyBox])
+  camera.transform.orientation.multiply(rotation)
+  renderer.render([skyBox], camera)
   requestAnimationFrame(update)
 }
 
 addEventListener("resize", () => {
   renderer.setViewport(innerWidth, innerHeight)
 
-  if (renderer.camera.projection instanceof PerspectiveProjection) {
+  if (camera.projection instanceof PerspectiveProjection) {
 
-    renderer.camera.projection.aspect = innerWidth / innerHeight
+    camera.projection.aspect = innerWidth / innerHeight
   }
 })

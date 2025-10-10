@@ -16,7 +16,7 @@ export class DirectionalLights {
    */
   lights = []
   maxNumber = 10
-
+  
   /**
    * @param {DirectionalLight} light
    */
@@ -29,7 +29,7 @@ export class DirectionalLights {
       0, 0, 0,
       ...this.lights.flatMap(light => light.pack())
     ]
-
+    
     return {
       name: "DirectionalLightBlock",
       data: new Float32Array(buffer)
@@ -63,36 +63,31 @@ export class Renderer {
   caches = new Caches()
   _UBOs = new UBOs()
   lights = new Lights()
-
-  /**
-   * @type {Camera}
-   */
-  camera = new Camera()
-
+  
   /**
    * @readonly
    * @type {Texture}
    */
   defaultTexture
-
+  
   /**
    * @readonly
    * @type {ReadonlyMap<string,Attribute>}
    */
   attributes
-
+  
   /**
    * @readonly
    * @type {Map<string, string>}
    */
   includes = new Map()
-
+  
   /**
    * @readonly
    * @type {Map<string, string>}
    */
   defines = new Map()
-
+  
   /**
    * @type {HTMLCanvasElement}
    */
@@ -111,10 +106,10 @@ export class Renderer {
   constructor(canvas) {
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
-
+    
     this.gl = canvas.getContext("webgl2")
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-
+    
     if (this.culling) {
       this.gl.enable(this.gl.CULL_FACE)
       this.gl.cullFace(this.gl.BACK)
@@ -126,9 +121,9 @@ export class Renderer {
       this.gl.enable(this.gl.BLEND)
       this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
     }
-
+    
     const attributes = new Map()
-
+    
     attributes
       .set(Attribute.Position.name, Attribute.Position)
       .set(Attribute.UV.name, Attribute.UV)
@@ -138,25 +133,25 @@ export class Renderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-
+    
     this.attributes = attributes
     this.defaultTexture = createDefaultTexture(this.gl)
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
-
+  
   /**
    * @param {{ name: any; data: any; }} dataForm
    */
   updateUBO(dataForm) {
     const { data, name } = dataForm
     const ubo = this._UBOs.get(name)
-
+    
     if (!ubo) return
-
+    
     ubo.update(this.gl, data)
   }
-
+  
   clear(color = true, depth = true, stencil = true) {
     let bit = 0
     if (color) bit |= this.gl.COLOR_BUFFER_BIT
@@ -164,21 +159,19 @@ export class Renderer {
     if (stencil) bit |= this.gl.STENCIL_BUFFER_BIT
     this.gl.clear(bit)
   }
-  render(objects) {
-    const { caches, attributes, defaultTexture, gl,_UBOs, defines, includes } = this
+  render(objects, camera) {
+    const { caches, attributes, defaultTexture, gl, _UBOs, defines, includes } = this
     this.clear()
-    if (this.camera) {
-      this.camera.update()
-      this.updateUBO(this.camera.getData())
-    }
-
+    camera.update()
+    this.updateUBO(camera.getData())
+    
     this.updateUBO(this.lights.ambientLight.getData())
     this.updateUBO(this.lights.directionalLights.getData())
-
+    
     for (let i = 0; i < this.lights.directionalLights.lights.length; i++) {
       this.lights.directionalLights.lights[i].update()
     }
-
+    
     for (let i = 0; i < objects.length; i++) {
       const object = objects[i]
       object.update()
