@@ -1,6 +1,6 @@
 /**@import {PipelineKey} from '../material/index.js' */
 import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader } from "../core/index.js"
-import { Geometry } from "../geometry/index.js"
+import { Mesh } from "../geometry/index.js"
 import { Material } from "../material/index.js"
 import {
   GlDataType,
@@ -13,7 +13,7 @@ import { Affine3 } from "../math/index.js"
 import { createVAO } from "../function.js"
 
 /**
- * @template {Geometry} [T = Geometry]
+ * @template {Mesh} [T = Mesh]
  * @template {Material} [U = Material]
  */
 export class MeshMaterial3D extends Object3D {
@@ -124,8 +124,6 @@ function mapToIndicesType(indices) {
  * @param {ReadonlyMap<string, string>} globalDefines
  */
 function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes, globalDefines) {
-  //  TODO: Instead of just using the material as the key, use both mesh and material
-  // properties to get the pipeline id.
   let materialCache = caches.materials.get(material.constructor.name)
 
   if (!materialCache) {
@@ -218,7 +216,7 @@ export function topologyFromPipelineKey(key) {
 }
 
 /**
- * @param {Geometry} mesh
+ * @param {Mesh} mesh
  * @returns {bigint}
  */
 export function createPipelineBitsFromMesh(mesh) {

@@ -1,8 +1,8 @@
-import { Geometry } from "./geometry.js"
+import { Mesh } from "./geometry.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
 
-export class CircleGeometry extends Geometry {
+export class CircleGeometry extends Mesh {
   constructor(radius = 1, segments = 15, arcstart = 0, arclength = Math.PI * 2) {
     super()
 

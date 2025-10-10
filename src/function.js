@@ -1,4 +1,4 @@
-import { Geometry } from "./geometry/index.js"
+import { Mesh } from "./geometry/index.js"
 import {
   CompareFunction,
   TextureCompareMode,
@@ -233,7 +233,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {ReadonlyMap<string, Attribute>} attributeMap
- * @param {Geometry} geometry
+ * @param {Mesh} geometry
  */
 export function createVAO(gl, attributeMap, geometry) {
   const {indices, attributes } = geometry

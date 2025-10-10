@@ -1,7 +1,6 @@
-import { Attribute, AttributeData } from "../core/index.js"
-import { createVAO } from "../function.js"
+import { AttributeData } from "../core/index.js"
 
-export class Geometry {
+export class Mesh {
   /**
    * @type {Uint8Array | Uint16Array | Uint32Array | undefined}
    */
