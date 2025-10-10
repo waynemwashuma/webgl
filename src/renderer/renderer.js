@@ -57,7 +57,7 @@ export class Caches {
   /**
    * @type {Map<string,Map<PipelineKey, number>>}
    */
-  material = new Map()
+  materials = new Map()
 }
 export class Renderer {
   caches = new Caches()

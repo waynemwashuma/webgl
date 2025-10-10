@@ -1,3 +1,4 @@
+/**@import {WebGLRenderPipelineDescriptor} from '../core/index.js' */
 import {
   createTexture,
   updateTextureData,
@@ -16,10 +17,6 @@ export class Material {
   cullFace = CullFace.Back
   distBlendFunc = BlendMode.OneMinusSrcAlpha
   srcBlendFunc = BlendMode.SrcAlpha
-  /**
-   * @type {Map<string, string>}
-   */
-  defines = new Map()
   /**
    * @param {string} vshaderSrc
    * @param {string} fshaderSrc
@@ -62,6 +59,11 @@ export class Material {
   getPipelineKey(key){
     return /**@type {PipelineKey}*/(key)
   }
+
+  /**
+   * @param {WebGLRenderPipelineDescriptor} descriptor 
+   */
+  specialize(descriptor){}
 }
 
 /**
