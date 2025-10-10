@@ -1,65 +1,44 @@
-import { PerspectiveProjection, Renderer, TextureLoader } from "webgllis"
-import {
-  rotatingCube,
-  textureWrap,
-  materials,
-  meshTopology,
-  geometries,
-  cullface,
-  rotatingUvSphere,
-  skyBox,
-  objLoader,
-  separateSamplers,
-  transformPropagation,
-  gltfLoader
-} from "./samples/index.js"
+import { demos } from "./samples/index.js"
 
-const canvas = /**@type {HTMLCanvasElement}*/(document.getElementById("can"))
-const renderer = new Renderer(canvas)
-const textureLoader = new TextureLoader()
-const manager = {
-  renderer,
-  textureLoader,
-  objLoader
-}
-const demos = {
-  "mesh topology": meshTopology,
-  "rotating sphere": rotatingUvSphere,
-  "rotating cube": rotatingCube,
-  "separate samplers": separateSamplers,
-  "texture wrap": textureWrap,
-  "materials": materials,
-  "geometries": geometries,
-  "cullface": cullface,
-  "skybox": skyBox,
-  "obj loader": objLoader,
-  "gltf loader": gltfLoader,
-  "transform propagation": transformPropagation,
-}
-
-renderer.setViewport(innerWidth, innerHeight)
-
-init(demos)
-setupOpts(demos)
-render(0)
-
+const fetchTemplate = (function () {
+  /**
+   * @type {string}
+   */
+  let template
+  return async function () {
+    if(template) return template
+    const response = await fetch('./template.html')
+    const text = await response.text()
+  
+    template = text
+    return text
+  }
+})()
 /**
- * @param {number} _dt
+ * @param {URL} demoName
  */
-function render(_dt) {
-  renderer.update()
-  requestAnimationFrame(render)
+async function switchDemo(demoName) {
+  const frame = document.getElementById("example-frame")
+
+  if (!(frame instanceof HTMLIFrameElement)) {
+    throw "The element selected is not an i frame"
+  }
+
+  const text = await fetchTemplate()
+  const page = text.replace(/\{demo-src\}/g,demoName.pathname).replace(/\{demo-nonce\}/g,"fegrgwt4rgwgdw4g")
+  frame.srcdoc = page
 }
 
 /**
- * @param {{ [x: string]: (arg0: { renderer: Renderer; textureLoader: TextureLoader; objLoader: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }) => void; drawModes?: ({ renderer }: { renderer: any; }) => void; "rotating sphere"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "rotating cube"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "texture wrap"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; materials?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; geometries?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; cullface?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; skybox?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "obj loader"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }} demos
+ * @param {{ [x: string]: URL }} demos
  */
 function setupOpts(demos) {
   const container = document.body.appendChild(document.createElement("div"))
   const opts = container.appendChild(document.createElement("select"))
 
   container.style.position = "absolute"
-  canvas.before(container)
+  container.style.top = "0px"
+  container.style.left = "0px"
 
   for (const name in demos) {
     const opt = document.createElement("option")
@@ -67,28 +46,26 @@ function setupOpts(demos) {
     opts.append(opt)
   }
   opts.onchange = e => {
-    // @ts-ignore
-    localStorage.setItem("play", e.target.value)
-    renderer.clearMeshes()
+    const {target} = e
+    if(!(target instanceof HTMLSelectElement))return
+    localStorage.setItem("play", target.value)
 
-    // @ts-ignore
-    demos[e.target.value](manager)
+    const url = demos[target.value]
+    switchDemo(url)
   }
 }
 
 /**
- * @param {{ [x: string]: (arg0: { renderer: Renderer; textureLoader: TextureLoader; objLoader: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }) => void; drawModes?: ({ renderer }: { renderer: any; }) => void; "rotating sphere"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "rotating cube"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "texture wrap"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; materials?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; geometries?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; cullface?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; skybox?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; "obj loader"?: ({ renderer, textureLoader }: { renderer: any; textureLoader: any; }) => void; }} demos
+ * @param {{ [x: string]: URL }} demos
  */
 function init(demos) {
   let name = localStorage.getItem("play")
   if (!name)
     name = Object.keys(demos)[0]
   if (!name) return
-  demos[name](manager)
-
-  renderer.domElement.addEventListener("resize", () => {
-    if (renderer.camera.projection instanceof PerspectiveProjection) {
-      renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
-    }
-  })
+  
+  switchDemo(demos[name])
 }
+
+init(demos)
+setupOpts(demos)
