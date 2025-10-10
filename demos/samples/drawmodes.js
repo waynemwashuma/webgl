@@ -11,30 +11,30 @@ import {
 /**
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
-export function drawModes({renderer}) {
-  const geometry1 = new QuadGeometry(1, 1)
-  const materials = [
-    new BasicMaterial(),
-    new BasicMaterial(),
-    new BasicMaterial(),
-    new BasicMaterial(),
-    new BasicMaterial(),
-    new BasicMaterial(),
-    new BasicMaterial(),
+export function meshTopology({renderer}) {
+  const material = new BasicMaterial()
+  const meshes = [
+    new QuadGeometry(),
+    new QuadGeometry(),
+    new QuadGeometry(),
+    new QuadGeometry(),
+    new QuadGeometry(),
+    new QuadGeometry(),
+    new QuadGeometry()
   ]
-  materials[0].drawMode = PrimitiveTopology.Points
-  materials[1].drawMode = PrimitiveTopology.Lines
-  materials[2].drawMode = PrimitiveTopology.LineLoop
-  materials[3].drawMode = PrimitiveTopology.LineStrip
-  materials[4].drawMode = PrimitiveTopology.Triangles
-  materials[5].drawMode = PrimitiveTopology.TriangleStrip
-  materials[6].drawMode = PrimitiveTopology.TriangleFan
+  meshes[0].topology = PrimitiveTopology.Points
+  meshes[1].topology = PrimitiveTopology.Lines
+  meshes[2].topology = PrimitiveTopology.LineLoop
+  meshes[3].topology = PrimitiveTopology.LineStrip
+  meshes[4].topology = PrimitiveTopology.Triangles
+  meshes[5].topology = PrimitiveTopology.TriangleStrip
+  meshes[6].topology = PrimitiveTopology.TriangleFan
 
   //create meshes
-  const meshes = materials.map(material => new MeshMaterial3D(geometry1, material))
+  const objects = meshes.map(mesh => new MeshMaterial3D(mesh, material))
 
   //transform meshes to thier positions
-  meshes.forEach((mesh, i) => {
+  objects.forEach((mesh, i) => {
     const stepX = 1.6
     const stepY = 2
     const startX = -1.6
@@ -53,5 +53,5 @@ export function drawModes({renderer}) {
   }
 
   //add meshes to the renderer
-  meshes.forEach(mesh => renderer.add(mesh))
+  objects.forEach(mesh => renderer.add(mesh))
 }

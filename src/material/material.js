@@ -13,7 +13,6 @@ import { Texture } from "../texture/index.js"
 
 export class Material {
   #changed = false
-  drawMode = PrimitiveTopology.Triangles
   cullFace = CullFace.Back
   distBlendFunc = BlendMode.OneMinusSrcAlpha
   srcBlendFunc = BlendMode.SrcAlpha

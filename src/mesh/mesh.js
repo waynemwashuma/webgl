@@ -1,3 +1,4 @@
+import { PrimitiveTopology } from "../constant.js"
 import { AttributeData } from "../core/index.js"
 
 export class Mesh {
@@ -10,6 +11,11 @@ export class Mesh {
    * @type {Map<string, AttributeData>}
    */
   _attributes
+
+  /**
+   * @type {PrimitiveTopology}
+   */
+  topology = PrimitiveTopology.Triangles
   constructor() {
     this._attributes = new Map()
   }
