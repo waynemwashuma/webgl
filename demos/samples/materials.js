@@ -25,7 +25,10 @@ renderer.lights.directionalLights.add(light)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"]
+  paths: ["./assets/uv.jpg"],
+  textureSettings:{
+    flipY:true
+  }
 })
 const geometry1 = new BoxGeometry(1, 1)
 const geometry2 = new UVSphereGeometry(0.7)

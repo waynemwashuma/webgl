@@ -21,7 +21,10 @@ renderer.setViewport(innerWidth, innerHeight)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"]
+  paths: ["./assets/uv.jpg"],
+  textureSettings:{
+    flipY:true
+  }
 })
 const material = new BasicMaterial({
   mainTexture: texture

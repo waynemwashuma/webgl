@@ -15,7 +15,10 @@ renderer.setViewport(innerWidth, innerHeight)
 const textureLoader = new TextureLoader()
 const loader = new OBJLoader()
 const texture = textureLoader.load({
-  paths: ["assets/models/obj/pirate_girl/pirate_girl.png"]
+  paths: ["assets/models/obj/pirate_girl/pirate_girl.png"],
+  textureSettings:{
+    flipY:true
+  }
 })
 loader.load({
   path: "assets/models/obj/pirate_girl/pirate_girl.obj"
