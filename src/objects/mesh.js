@@ -11,10 +11,11 @@ import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
 import { createVAO } from "../function.js"
+import { RawMaterial } from "../material/raw.js"
 
 /**
  * @template {Mesh} [T = Mesh]
- * @template {Material} [U = Material]
+ * @template {RawMaterial} [U = Material]
  */
 export class MeshMaterial3D extends Object3D {
   /**
@@ -115,7 +116,7 @@ function mapToIndicesType(indices) {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {Material} material
+ * @param {RawMaterial} material
  * @param {PipelineKey} key
  * @param {import("../renderer/renderer.js").Caches} caches
  * @param {UBOs} ubos
