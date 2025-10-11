@@ -3,9 +3,9 @@
 
 import {
   CullFace,
-  FrontFaceDirection,
+  FrontFaceDirection
 } from "../constant.js"
-import { Uniform } from "../core/index.js"
+import { Color } from "../math/index.js"
 import { MeshKey } from "../objects/mesh.js"
 import { RawMaterial } from "./raw.js"
 
@@ -30,6 +30,10 @@ export class Material extends RawMaterial {
    * @type {BlendDescriptor | undefined}
    */
   blend
+  /**
+   * @type {Color}
+   */
+  blendColor = new Color()
 
   /**
    * @returns {string}
@@ -93,7 +97,16 @@ export class Material extends RawMaterial {
    */
   specialize(descriptor) {
     // TODO: Incorporate blending to the pipeline key
-    descriptor.blend = this.blend
+
+    if(this.blend){
+      descriptor.fragment?.targets?.forEach((target)=>{
+        target.blend = {
+          color:this.blend.color.clone(),
+          alpha:this.blend.alpha.clone(),
+        }
+      })
+    }
+
     descriptor.cullFace = this.cullFace
     descriptor.frontFace = this.frontFace
     descriptor.depthTest = this.depthTest

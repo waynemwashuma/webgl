@@ -1,9 +1,96 @@
-import { BlendEquation, CullFace, FrontFaceDirection, PrimitiveTopology } from "../constant.js";
+import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology, TextureFormat } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
 import { Attribute } from "./attribute/attribute.js";
 import { Shader } from "./shader.js";
 import { UBOs } from "./ubo.js";
 
+export class BlendParams {
+  /**
+   * @type {BlendEquation}
+   */
+  operation
+  /**
+   * @type {BlendMode}
+   */
+  source
+  /**
+   * @type {BlendMode}
+   */
+  destination
+
+  /**
+   * @param {BlendEquation} operation
+   * @param {BlendMode} source
+   * @param {BlendMode} destination
+   */
+  constructor(operation, source, destination) {
+    this.operation = operation
+    this.source = source
+    this.destination = destination
+  }
+
+  clone(){
+    return new BlendParams(
+      this.operation,
+      this.source,
+      this.destination,
+    )
+  }
+
+  static Opaque = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.One,
+    BlendMode.Zero
+  ))
+
+  static AlphaBlend = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.SrcAlpha,
+    BlendMode.OneMinusSrcAlpha,
+  ))
+
+  static PremultiplyAlpha = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.One,
+    BlendMode.OneMinusSrcAlpha,
+  ))
+
+  static AdditiveAlpha = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.SrcAlpha,
+    BlendMode.One,
+  ))
+
+  static AdditiveColor = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.One,
+    BlendMode.One,
+  ))
+
+  static Multiply = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.DstColor,
+    BlendMode.Zero,
+  ))
+
+  static Screen = Object.freeze(new BlendParams(
+    BlendEquation.Add,
+    BlendMode.OneMinusDstColor,
+    BlendMode.One,
+  ))
+
+  static Min = Object.freeze(new BlendParams(
+    BlendEquation.Min,
+    BlendMode.One,
+    BlendMode.One,
+  ))
+
+  static Max = Object.freeze(new BlendParams(
+    BlendEquation.Max,
+    BlendMode.One,
+    BlendMode.One,
+  ))
+}
 export class WebGLRenderPipeline {
   /**
    * @param {WebGL2RenderingContext} context
@@ -12,7 +99,7 @@ export class WebGLRenderPipeline {
    * @param {ReadonlyMap<string,string>} includes
    * @param {WebGLRenderPipelineDescriptor} descriptor
    */
-  constructor(context, ubos, attributes,includes, {
+  constructor(context, ubos, attributes, includes, {
     vertex,
     fragment,
     topology,
@@ -20,13 +107,12 @@ export class WebGLRenderPipeline {
     depthTest = true,
     depthWrite = true,
     cullFace = CullFace.Back,
-    frontFace = FrontFaceDirection.CCW,
-    blend
+    frontFace = FrontFaceDirection.CCW
   }) {
     const programInfo = createProgramFromSrc(
       context,
       vertex.compile(includes),
-      fragment.compile(includes),
+      fragment.source.compile(includes),
       attributes
     )
     this.program = programInfo.program
@@ -38,7 +124,7 @@ export class WebGLRenderPipeline {
     this.depthTest = depthTest
     this.depthWrite = depthWrite
     this.frontFace = frontFace
-    this.blend = blend
+    this.targets = fragment.targets || []
 
     for (const [name, uboLayout] of this.uniformBlocks) {
       const ubo = ubos.getorSet(context, name, uboLayout)
@@ -72,10 +158,20 @@ export class WebGLRenderPipeline {
     gl.depthMask(this.depthWrite);
 
     // blending
-    if (this.blend) {
-      const { source, destination } = this.blend;
-      gl.enable(gl.BLEND);
-      gl.blendFunc(source, destination);
+    // NOTE: webgl does not have ability to blend differently on 
+    // different render targets since state is global.
+    const target = this.targets[0]
+    if (target && target.blend) {
+      const { color, alpha } = target.blend
+
+      gl.enable(gl.BLEND)
+      gl.blendEquationSeparate(color.operation, alpha.operation)
+      gl.blendFuncSeparate(
+        color.source,
+        color.destination,
+        alpha.source,
+        alpha.destination
+      )
     } else {
       gl.disable(gl.BLEND);
     }
@@ -92,20 +188,24 @@ export class WebGLRenderPipeline {
 /**
  * @typedef WebGLRenderPipelineDescriptor
  * @property {Shader} vertex
- * @property {Shader} fragment
+ * @property {{ source: Shader, targets:RenderTargetDescriptor[]}} [fragment]
  * @property {VertexLayout} vertexLayout
  * @property {PrimitiveTopology} topology
  * @property {CullFace} [cullFace]
  * @property {boolean} [depthWrite]
  * @property {boolean} [depthTest]
  * @property {FrontFaceDirection} [frontFace]
- * @property {BlendDescriptor} [blend]
  */
 
 /**
+ * @typedef RenderTargetDescriptor
+ * @property {TextureFormat} format
+ * @property {BlendDescriptor} [blend]
+ */
+/**
  * @typedef BlendDescriptor
- * @property {BlendEquation} source
- * @property {BlendEquation} destination
+ * @property {BlendParams} color
+ * @property {BlendParams} alpha
  */
 
 export class VertexLayout {
