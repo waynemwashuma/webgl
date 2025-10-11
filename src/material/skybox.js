@@ -14,9 +14,14 @@ export class SkyBoxMaterial extends Material {
   color
 
   /**
-   * @type {Texture}
+   * @type {Texture | undefined}
    */
-  mainTexture
+  day
+
+  /**
+   * @type {Texture | undefined}
+   */
+  night
 
   /**
    * @param {SkyboxMaterialOptions} param0
