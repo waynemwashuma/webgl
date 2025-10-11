@@ -19,6 +19,7 @@ const textureLoader = new TextureLoader()
 const texture1 = textureLoader.load({
   paths: ["./assets/uv.jpg"],
   textureSettings: {
+    flipY:true,
     sampler: {
       ...Sampler.defaultSettings,
       wrapS: TextureWrap.Clamp,
@@ -29,6 +30,7 @@ const texture1 = textureLoader.load({
 const texture2 = textureLoader.load({
   paths: ["./assets/uv.jpg"],
   textureSettings: {
+    flipY:true,
     sampler: {
       ...Sampler.defaultSettings,
       wrapS: TextureWrap.Repeat,
@@ -39,6 +41,7 @@ const texture2 = textureLoader.load({
 const texture3 = textureLoader.load({
   paths: ["./assets/uv.jpg"],
   textureSettings: {
+    flipY:true,
     sampler: {
       ...Sampler.defaultSettings,
       wrapS: TextureWrap.MirrorRepeat,
