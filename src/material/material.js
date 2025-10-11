@@ -12,7 +12,6 @@ import { Uniform } from "../core/index.js"
 import { Texture } from "../texture/index.js"
 
 export class Material {
-  #changed = false
   cullFace = CullFace.Back
   distBlendFunc = BlendMode.OneMinusSrcAlpha
   srcBlendFunc = BlendMode.SrcAlpha
@@ -26,18 +25,6 @@ export class Material {
   }
 
   /**
-   * @package
-   * @readonly
-   * @returns {boolean}
-   * This is an internal property, do not use!
-   */
-  get changed() {
-    const previous = this.#changed
-    this.#changed = false
-    return previous
-  }
-
-  /**
    * @param {WebGL2RenderingContext} _gl 
    * @param {Map<Texture,WebGLTexture>} _cache
    * @param {Map<string,Uniform>} _uniforms
@@ -45,10 +32,6 @@ export class Material {
    */
   uploadUniforms(_gl, _cache, _uniforms, _defaultTexture) {
     throw `Implement \`${this.constructor.name}.uploadUniforms\``
-  }
-
-  needsUpdate() {
-    this.#changed = true
   }
 
   /**
