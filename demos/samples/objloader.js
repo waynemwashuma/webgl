@@ -17,8 +17,7 @@ export function objLoader({
 }) {
   const loader = new OBJLoader()
   const texture = textureLoader.load({
-    path: "assets/models/obj/pirate_girl/pirate_girl.png",
-    name: "pirate_girl"
+    paths: ["assets/models/obj/pirate_girl/pirate_girl.png"]
   })
   loader.load({
     path: "assets/models/obj/pirate_girl/pirate_girl.obj"

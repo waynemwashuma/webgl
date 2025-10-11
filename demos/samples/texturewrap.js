@@ -13,34 +13,37 @@ import {
  * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
  */
 export function textureWrap({
-  renderer,
-  textureLoader
+  renderer
 }) {
-  const tex1 = textureLoader.load({
-    path: "./assets/uv.jpg",
-    name: 'wrap1',
-    sampler:{
-      ...Sampler.defaultSettings,
-      wrapS: TextureWrap.Clamp,
-      wrapT: TextureWrap.Clamp,
+  const textureLoader = new TextureLoader()
+  const texture1 = textureLoader.load({
+    paths: ["./assets/uv.jpg"],
+    textureSettings: {
+      sampler: {
+        ...Sampler.defaultSettings,
+        wrapS: TextureWrap.Clamp,
+        wrapT: TextureWrap.Clamp,
+      }
     }
   })
-  const tex2 = textureLoader.load({
-    path: "./assets/uv.jpg",
-    name: 'wrap2',
-    sampler:{
-      ...Sampler.defaultSettings,
-      wrapS: TextureWrap.Repeat,
-      wrapT: TextureWrap.Repeat
+  const texture2 = textureLoader.load({
+    paths: ["./assets/uv.jpg"],
+    textureSettings: {
+      sampler: {
+        ...Sampler.defaultSettings,
+        wrapS: TextureWrap.Repeat,
+        wrapT: TextureWrap.Repeat
+      }
     }
   })
-  const tex3 = textureLoader.load({
-    path: "./assets/uv.jpg",
-    name: 'wrap3',
-    sampler:{
-      ...Sampler.defaultSettings,
-      wrapS: TextureWrap.MirrorRepeat,
-      wrapT: TextureWrap.MirrorRepeat
+  const texture3 = textureLoader.load({
+    paths: ["./assets/uv.jpg"],
+    textureSettings: {
+      sampler: {
+        ...Sampler.defaultSettings,
+        wrapS: TextureWrap.MirrorRepeat,
+        wrapT: TextureWrap.MirrorRepeat
+      }
     }
   })
 
@@ -56,13 +59,13 @@ export function textureWrap({
   }
 
   const material1 = new BasicMaterial({
-    mainTexture: tex1
+    mainTexture: texture1
   })
   const material2 = new BasicMaterial({
-    mainTexture: tex2
+    mainTexture: texture2
   })
   const material3 = new BasicMaterial({
-    mainTexture: tex3
+    mainTexture: texture3
   })
 
   const mesh1 = new MeshMaterial3D(geometry, material1)
@@ -74,7 +77,7 @@ export function textureWrap({
   mesh3.transform.position.x = 1.2
 
   renderer.camera.transform.position.z = 2
-  if(renderer.camera.projection instanceof PerspectiveProjection){
+  if (renderer.camera.projection instanceof PerspectiveProjection) {
     renderer.camera.projection.fov = Math.PI / 180 * 120
     renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
   }

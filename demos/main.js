@@ -39,36 +39,6 @@ const demos = {
 
 renderer.setViewport(innerWidth, innerHeight)
 
-textureLoader.load({
-  path: "./assets/uv.jpg",
-  name: "uv"
-})
-
-textureLoader.loadCube({
-  paths: [
-    "./assets/skybox/miramar_right.png",
-    "./assets/skybox/miramar_left.png",
-    "./assets/skybox/miramar_top.png",
-    "./assets/skybox/miramar_bottom.png",
-    "./assets/skybox/miramar_back.png",
-    "./assets/skybox/miramar_front.png",
-
-  ],
-  name: "day"
-})
-
-textureLoader.loadCube({
-  paths: [
-    "./assets/skybox/grimmnight_right.png",
-    "./assets/skybox/grimmnight_left.png",
-    "./assets/skybox/grimmnight_top.png",
-    "./assets/skybox/grimmnight_bottom.png",
-    "./assets/skybox/grimmnight_back.png",
-    "./assets/skybox/grimmnight_front.png",
-  ],
-  name: "night"
-})
-
 init(demos)
 setupOpts(demos)
 render(0)
@@ -116,8 +86,8 @@ function init(demos) {
   if (!name) return
   demos[name](manager)
 
-  renderer.domElement.addEventListener("resize",()=>{
-    if(renderer.camera.projection instanceof PerspectiveProjection){
+  renderer.domElement.addEventListener("resize", () => {
+    if (renderer.camera.projection instanceof PerspectiveProjection) {
       renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
     }
   })

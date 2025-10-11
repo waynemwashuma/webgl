@@ -59,55 +59,23 @@ export class TextureLoader {
    * @param {TextureLoadSettings} settings
    */
   load(settings) {
-    const texture = new Texture({
-      ...settings,
-      data: [new Uint8Array([255, 0, 255, 255])],
-      type: TextureType.Texture2D,
-      width: 1,
-      height: 1
-    })
-
-    this.textures.set(settings.name, texture)
-    this.internalLoad([settings.path], texture)
-    return texture
-  }
-
-  /**
-   * @param {CubeTextureSettings} settings
-   */
-  loadCube(settings) {
     const pixel = new Uint8Array([255, 0, 255, 255])
     const texture = new Texture({
-      ...settings,
-      data: [pixel, pixel, pixel, pixel, pixel, pixel],
-      type: TextureType.Texture2D,
+      ...(settings.textureSettings || {}),
+      data: settings.paths.map(()=>pixel),
+      type: settings.type || TextureType.Texture2D,
       width: 1,
       height: 1
     })
-    this.textures.set(settings.name, texture)
+
     this.internalLoad(settings.paths, texture)
     return texture
-  }
-
-  /**
-   * @param {string} name
-   * @returns {Texture}
-   */
-  get(name) {
-    return this.textures.get(name)
   }
 }
 
 /**
- * @typedef {TextureSettings & {
- *    name:string;
- *    path:string;
- * }} TextureLoadSettings
- */
-
-/***
- * @typedef {TextureSettings & {
- *   name:string;
- *   paths:[string,string,string,string,string,string];
- * }} CubeTextureSettings
+ * @typedef TextureLoadSettings
+ * @property {string[]} paths
+ * @property {TextureType} [type]
+ * @property {TextureSettings} [textureSettings]
  */

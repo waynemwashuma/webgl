@@ -14,13 +14,15 @@ import {
 } from "webgllis"
 
 /**
- * @param {{renderer:Renderer, textureLoader:TextureLoader}} option 
+ * @param {{renderer:Renderer}} option 
  */
 export function geometries({
-  renderer,
-  textureLoader
+  renderer
 }) {
-  const texture = textureLoader.get('uv')
+  const textureLoader = new TextureLoader()
+  const texture = textureLoader.load({
+    paths: ["./assets/uv.jpg"]
+  })
   const material = new BasicMaterial({
     mainTexture: texture
   })

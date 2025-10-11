@@ -4,7 +4,7 @@ import {
   Renderer,
   SkyBox,
   TextureLoader,
-  Vector3
+  TextureType
 } from 'webgllis';
 
 /**
@@ -14,9 +14,32 @@ export function skyBox({
   renderer,
   textureLoader
 }) {
+  const day = textureLoader.load({
+    paths: [
+      "./assets/skybox/miramar_right.png",
+      "./assets/skybox/miramar_left.png",
+      "./assets/skybox/miramar_top.png",
+      "./assets/skybox/miramar_bottom.png",
+      "./assets/skybox/miramar_back.png",
+      "./assets/skybox/miramar_front.png",
+  
+    ],
+    type: TextureType.TextureCubeMap,
+  })
+  const night = textureLoader.load({
+    paths: [
+      "./assets/skybox/grimmnight_right.png",
+      "./assets/skybox/grimmnight_left.png",
+      "./assets/skybox/grimmnight_top.png",
+      "./assets/skybox/grimmnight_bottom.png",
+      "./assets/skybox/grimmnight_back.png",
+      "./assets/skybox/grimmnight_front.png",
+    ],
+    type: TextureType.TextureCubeMap
+  })
   const skyBox = new SkyBox({
-    day: textureLoader.get('day'),
-    night: textureLoader.get('night'),
+    day,
+    night,
   })
   renderer.camera.transform.position.z = 2
   if(renderer.camera.projection instanceof PerspectiveProjection){
