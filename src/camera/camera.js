@@ -8,6 +8,9 @@ import { PerspectiveProjection, Projection } from "./projection.js"
 export class ClearParams {
 	enabled = true
 	value
+	/**
+	 * @param {T} value
+	 */
 	constructor(value){
 		this.value = value
 	}

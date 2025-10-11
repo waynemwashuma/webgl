@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="{demo-location}">
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-   <script type="importmap" nonce="{demo-nonce}">
+   <script type="importmap"">
     {
       "imports": {
-        "webgllis": "/src/index.js"
+        "webgllis": "../src/index.js"
       }
     }
   </script>
-  <script src="{demo-src}" type="module" defer nonce="{demo-nonce}"></script>
-  <style type="text/css" nonce="{demo-nonce}">
+  <script src="./example.js" type="module"></script>
+  <style type="text/css">
     #can{
       background-color: grey
     }

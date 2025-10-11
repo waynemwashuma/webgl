@@ -11,6 +11,7 @@ export const gltfLoader = new URL("./gltfloader.js", import.meta.url)
 export const separateSamplers = new URL("./separateSampler.js", import.meta.url)
 export const transformPropagation = new URL("./transformPropagation.js", import.meta.url)
 
+/**@type {Record<string,URL>} */
 export const demos = {
   "mesh topology": meshTopology,
   "rotating sphere": rotatingSphere,

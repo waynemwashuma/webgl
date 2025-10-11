@@ -137,6 +137,9 @@ export class Renderer {
     ubo.update(this.gl, data)
   }
   
+  /**
+   * @param {Camera} camera
+   */
   clear(camera) {
     const { gl: context } = this
     const { clearColor, clearDepth, clearStencil } = camera
@@ -161,6 +164,10 @@ export class Renderer {
     }
     context.clear(bit)
   }
+  /**
+   * @param {Object3D[]} objects
+   * @param {Camera} camera
+   */
   render(objects, camera) {
     const { caches, attributes, defaultTexture, gl, _UBOs, defines, includes } = this
     this.clear(camera)
