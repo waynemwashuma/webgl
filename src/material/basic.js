@@ -1,4 +1,4 @@
-import { getWebglTexture, Material } from "./material.js"
+import { Material } from "./material.js"
 import { Color } from "../math/index.js"
 import { basicVertex, basicFragment } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
@@ -37,44 +37,37 @@ export class BasicMaterial extends Material {
     this.mainSampler = mainSampler
   }
 
-  vertex(){
+  vertex() {
     return basicVertex
   }
 
-  fragment(){
+  fragment() {
     return basicFragment
   }
 
   /**
    * 
    * @param {WebGL2RenderingContext} gl
-   * @param {Map<Texture,WebGLTexture>} cache
    * @param {Map<string,Uniform>} uniforms
-   * @param {Texture} defaultTexture
    */
-  uploadUniforms(gl, cache,uniforms, defaultTexture) {
+  uploadUniforms(gl, uniforms) {
     const {
       color,
-      mainTexture = defaultTexture,
       mainSampler
     } = this
 
     const colorInfo = uniforms.get("color")
-    const mainTextureInfo = uniforms.get("mainTexture")
-    const maintex = getWebglTexture(gl,mainTexture,cache)
 
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)
     }
-    if (mainTextureInfo) {
-      gl.activeTexture(gl.TEXTURE0)
-      gl.bindTexture(gl.TEXTURE_2D, maintex)
-      gl.uniform1i(mainTextureInfo.location, 0)
+  }
 
-      if (mainSampler) {
-        updateTextureSampler(gl, mainTexture, mainSampler)
-      }
-    }
+  /**
+   * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
+   */
+  getTextures() {
+    return [['mainTexture', 0, this.mainTexture, this.mainSampler]]
   }
 }
 
