@@ -155,7 +155,7 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
   }
 
-  if (sampler.compareMode = TextureCompareMode.CompareRefToTexture) {
+  if (sampler.compareMode === TextureCompareMode.CompareRefToTexture) {
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_FUNC, sampler.compare)
   } else {
