@@ -147,10 +147,10 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
     // TODO: Actually implement this to use the mesh
     vertexLayout: new VertexLayout(),
     vertex: new Shader({
-      source: material.vSrc
+      source: material.vertex()
     }),
     fragment: new Shader({
-      source: material.fSrc
+      source: material.fragment()
     })
   }
 

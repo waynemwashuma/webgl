@@ -24,7 +24,6 @@ export class BasicMaterial extends Material {
   mainSampler
 
   /**
-   * 
    * @param {BasicMaterialOptions} param0 
    */
   constructor({
@@ -32,11 +31,18 @@ export class BasicMaterial extends Material {
     mainTexture = undefined,
     mainSampler = undefined
   } = {}) {
-    super(basicVertex, basicFragment)
-
+    super()
     this.color = color
     this.mainTexture = mainTexture
     this.mainSampler = mainSampler
+  }
+
+  vertex(){
+    return basicVertex
+  }
+
+  fragment(){
+    return basicFragment
   }
 
   /**

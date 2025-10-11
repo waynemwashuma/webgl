@@ -29,10 +29,18 @@ export class LambertMaterial extends Material {
     mainSampler = undefined,
     color = new Color(1, 1, 1)
   } = {}) {
-    super(basicVertex, lambertFragment)
+    super()
     this.color = color
     this.mainTexture = mainTexture
     this.mainSampler = mainSampler
+  }
+
+  vertex() {
+    return basicVertex
+  }
+
+  fragment() {
+    return lambertFragment
   }
 
   /**
@@ -50,8 +58,8 @@ export class LambertMaterial extends Material {
     } = this
     const colorInfo = uniforms.get("color")
     const mainTextureInfo = uniforms.get("mainTexture")
-    const maintex = getWebglTexture(gl,mainTexture,cache)
-    
+    const maintex = getWebglTexture(gl, mainTexture, cache)
+
 
     if (colorInfo) {
       gl.uniform4f(colorInfo.location, color.r, color.g, color.b, color.a)

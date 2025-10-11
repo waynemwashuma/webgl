@@ -1,4 +1,4 @@
 export * from "./material.js"
-export * from "./basicmaterial.js"
+export * from "./basic.js"
 export * from "./lambert.js"
-export * from "./phongmaterial.js"
+export * from "./phong.js"
