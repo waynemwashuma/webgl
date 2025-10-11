@@ -6,7 +6,6 @@ import {
   FrontFaceDirection,
 } from "../constant.js"
 import { Uniform } from "../core/index.js"
-import { Texture } from "../texture/index.js"
 import { MeshKey } from "../objects/mesh.js"
 import { RawMaterial } from "./raw.js"
 
@@ -53,10 +52,9 @@ export class Material extends RawMaterial {
   }
 
   /**
-   * @param {WebGL2RenderingContext} _gl
-   * @param {Map<string,Uniform>} _uniforms
+   * @returns {ArrayBuffer}
    */
-  uploadUniforms(_gl, _uniforms) {
+  getData() {
     if (this.constructor === RawMaterial) {
       throw `\`${RawMaterial.name}\` cannot be used directly as a material.`
     }

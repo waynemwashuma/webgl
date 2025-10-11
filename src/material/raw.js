@@ -1,5 +1,4 @@
-/**@import {WebGLRenderPipelineDescriptor} from '../core/index.js' */
-import { Uniform } from "../core/index.js"
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { Sampler, Texture } from "../texture/index.js"
 
 /**
@@ -28,10 +27,9 @@ export class RawMaterial {
   }
 
   /**
-   * @param {WebGL2RenderingContext} _gl
-   * @param {Map<string,Uniform>} _uniforms
+   * @returns {ArrayBuffer}
    */
-  uploadUniforms(_gl, _uniforms) {
+  getData() {
     if(this.constructor === RawMaterial){
       throw `\`${RawMaterial.name}\` cannot be used directly as a material.`
     }
@@ -54,9 +52,9 @@ export class RawMaterial {
   }
 
   /**
-   * @param {WebGLRenderPipelineDescriptor} descriptor 
+   * @param {WebGLRenderPipelineDescriptor} _descriptor 
    */
-  specialize(descriptor) { }
+  specialize(_descriptor) { }
 }
 
 /**

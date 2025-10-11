@@ -1,17 +1,15 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { Color } from "../math/index.js"
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { Uniform } from "../core/index.js"
 import { CullFace } from "../constant.js"
 import { RawMaterial } from "./raw.js"
 
 export class SkyBoxMaterial extends RawMaterial {
 
   /**
-   * @type {Color}
+   * @type {number}
    */
-  color
+  lerp
 
   /**
    * @type {Texture | undefined}
@@ -46,16 +44,10 @@ export class SkyBoxMaterial extends RawMaterial {
   }
 
   /**
-   * 
-   * @param {WebGL2RenderingContext} gl
-   * @param {Map<string,Uniform>} uniforms
+   * @returns {ArrayBuffer}
    */
-  uploadUniforms(gl, uniforms) {
-    const { lerp } = this
-    const lerpInfo = uniforms.get("lerp")
-    if (lerpInfo) {
-      gl.uniform1f(lerpInfo.location, lerp)
-    }
+  getData() {
+    return new Float32Array([this.lerp]).buffer
   }
 
   /**

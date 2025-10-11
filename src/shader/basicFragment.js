@@ -4,17 +4,23 @@ export const basicFragment =
   
   #include <common>
 
-  uniform sampler2D mainTexture;
-  uniform vec4 color;
-  
+  struct BasicMaterial {
+    vec4 color;
+  };
+
   in vec2 v_uv;
   
   out vec4 fragment_color;
+
+  uniform BasicMaterialBlock {
+    BasicMaterial material;
+  };
+  uniform sampler2D mainTexture;
   
   void main(){
-    vec3 sample_color = texture(mainTexture,v_uv).rgb;
-    float opacity = color.a;
+    vec3 sample_color = texture(mainTexture, v_uv).rgb;
+    float opacity = material.color.a;
 
-    fragment_color = vec4(tint(sample_color,color.rgb), opacity);
+    fragment_color = vec4(tint(sample_color, material.color.rgb), opacity);
   }
 `
