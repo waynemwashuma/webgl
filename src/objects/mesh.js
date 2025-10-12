@@ -5,8 +5,9 @@ import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader, Uniform } f
 import { Mesh } from "../mesh/index.js"
 import {
   GlDataType,
-  PrimitiveTopology,
   TextureFormat,
+  PrimitiveTopology,
+  TextureType,
   UNI_MODEL_MAT
 } from "../constant.js"
 import { Texture } from "../texture/index.js"
@@ -175,7 +176,7 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
         source: material.fragment()
       }),
       targets:[{
-        format: TextureFormat.Rgba8Snorm
+        format: TextureFormat.RGBA8Unorm
       }]
     }
   }

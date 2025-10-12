@@ -1,6 +1,6 @@
 /** @import { TextureSettings } from '../texture/index.js' */
 
-import { GlDataType, TextureFormat, TextureFormatUsage, TextureType } from '../constant.js';
+import { TextureFormat, TextureType } from '../constant.js';
 import { Texture } from '../texture/index.js';
 import { Loader, OnAssetLoadedStrategy } from './loader.js';
 
@@ -38,9 +38,7 @@ export class TextureLoader extends Loader {
     const images = await Promise.all(data)
 
     destination.data = images.map((image) => new Uint8Array(image))
-    destination.internalFormat = TextureFormat.Rgba8
-    destination.format = TextureFormatUsage.Rgba
-    destination.dataFormat = GlDataType.UnsignedByte
+    destination.format = TextureFormat.RGBA8Unorm,
     destination.width = width
     destination.height = height
     destination.update()
