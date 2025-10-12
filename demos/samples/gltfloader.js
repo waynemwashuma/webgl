@@ -3,7 +3,7 @@ import {
   PerspectiveProjection,
   GLTFLoader,
   Camera,
-  Object3D
+  Quaternion
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -13,19 +13,9 @@ const camera = new Camera()
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
 
-
-/**
- * @type {Object3D[]}
- */
-const objects = []
 const loader = new GLTFLoader()
-loader.asyncLoad({
-  path: "assets/models/gltf/pirate_girl/index.gltf",
-  name: "object"
-}).then((group) => {
-  const object = group.clone()
-
-  objects.push(object)
+const model = loader.load({
+  paths: ["assets/models/gltf/pirate_girl/index.gltf"]
 })
 
 camera.transform.position.z = 2
@@ -34,11 +24,12 @@ if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
   camera.projection.aspect = innerWidth / innerHeight
 }
-
+const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render(objects, camera)
+  model.transform.orientation.multiply(rotation)
+  renderer.render([model], camera)
   requestAnimationFrame(update)
 }
 

@@ -1,38 +1,42 @@
 import { Attribute, AttributeData } from '../core/index.js';
 import { Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
-import { MeshMaterial3D } from '../objects/index.js';
+import { MeshMaterial3D, Object3D } from '../objects/index.js';
+import { Loader } from './loader.js';
+import { arrayBufferToText } from './utils.js';
 
-export class OBJLoader {
+/**
+ * @extends {Loader<Object3D, ObjLoadSettings>}
+ */
+export class OBJLoader extends Loader {
+
+  constructor(){
+    super(Object3D)
+  }
+
   /**
-   * @type {Map<string,MeshMaterial3D>}
-  */
-  meshes = new Map()
-  /**
-   * @param {ObjSettings} settings
+   * @param {ArrayBuffer[]} buffers
+   * @param {Object3D} destination 
+   * @param {ObjLoadSettings} settings
    */
-  async load(settings) {
-    const raw = await (await fetch(settings.path)).text()
-    const { attributes,count } = await loadOBJ(raw)
+  async parse(buffers,destination,settings) {
+    if(!buffers.length){
+      return
+    }
+    const raw = arrayBufferToText(buffers[0])
+    const { attributes } = await loadOBJ(raw)
     const geometry = new Mesh()
-    const mesh = new MeshMaterial3D(geometry, new BasicMaterial())
-    
+    const root = new MeshMaterial3D(geometry, new BasicMaterial())
     
     geometry.setAttribute(Attribute.Position.name,new AttributeData(attributes.get(Attribute.Position.name)))
     geometry.setAttribute(Attribute.Normal.name,new AttributeData(attributes.get(Attribute.Normal.name)))
     geometry.setAttribute(Attribute.UV.name,new AttributeData(attributes.get(Attribute.UV.name)))
-    this.meshes.set(settings.name, mesh)
 
-    return mesh
+    destination.add(root)
   }
 
-
-  /**
-   * @param {string} name
-   * @returns {MeshMaterial3D}
-   */
-  get(name) {
-    return this.meshes.get(name)
+  default(){
+    return new Object3D()
   }
 }
 
@@ -133,7 +137,5 @@ function buildBuffers(data) {
 
 
 /**
- * @typedef ObjSettings
- * @property {string} path
- * @property {string} [name]
+ * @typedef {import('./loader.js').LoadSettings} ObjLoadSettings
  */

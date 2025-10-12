@@ -1,6 +1,6 @@
 /** @import { SamplerSettings } from '../function.js' */
 
-import { GlDataType, TextureFilter, TextureFormat, TextureFormatUsage, TextureType } from "../constant.js"
+import { GlDataType, TextureFormat, TextureFormatUsage, TextureType } from "../constant.js"
 import { Sampler } from "./sampler.js"
 
 export class Texture {
@@ -60,7 +60,6 @@ export class Texture {
   flipY
 
   /**
-   * @readonly
    * @type {TextureType}
    */
   type
@@ -111,6 +110,29 @@ export class Texture {
     this.dataFormat = dataFormat
     this.defaultSampler = new Sampler(sampler)
     this.generateMipmaps = generateMipmaps
+  }
+
+  /**
+   * @param {this} other
+   */
+  copy(other){
+    this.data = other.data.map((e)=>e.slice())
+    this.internalFormat = other.internalFormat
+    this.format = other.format
+    this.dataFormat = other.dataFormat
+    this.width = other.width
+    this.height = other.height
+    this.depth = other.depth
+    this.type = other.type
+    this.flipY = other.flipY
+    this.generateMipmaps = other.generateMipmaps
+    this.defaultSampler = other.defaultSampler
+    this.update()
+    return this
+  }
+
+  clone() {
+    return new /**@type {new (...arg:any) => this}*/(this.constructor)({}).copy(this)
   }
 
   /**

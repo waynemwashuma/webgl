@@ -73,11 +73,19 @@ export class Object3D {
     }
   }
 
+  /**
+   * @param {this} object
+   */
+  copy(object){
+    this.transform.copy(object.transform)
+
+    this.add(...object.children.map(child=>child.clone()))
+
+    return this
+  }
+
   clone() {
-    const newObject = new /**@type {new (...args:[])=> this} */(this.constructor)()
-    newObject.transform = this.transform.clone()
-    newObject.add(...this.children.map(chlid=>chlid.clone()))
-    return newObject
+    return new /**@type {new (...arg:any) => this}*/(this.constructor)().copy(this)
   }
 }
 
