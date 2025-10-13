@@ -3,11 +3,13 @@ import {
   BasicMaterial,
   Renderer,
   TextureLoader,
-  PerspectiveProjection
+  PerspectiveProjection,
+  Camera
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
 const renderer = new Renderer(canvas)
+const camera = new Camera()
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
@@ -30,17 +32,17 @@ loader.load({
   }
   objects.push(clone)
 }))
-renderer.camera.transform.position.z = 2
-renderer.camera.transform.position.y = 2
-if (renderer.camera.projection instanceof PerspectiveProjection) {
-  renderer.camera.projection.fov = Math.PI / 180 * 120
-  renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+camera.transform.position.z = 2
+camera.transform.position.y = 2
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 180 * 120
+  camera.projection.aspect = innerWidth / innerHeight
 }
 
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render(objects)
+  renderer.render(objects, camera)
 
   requestAnimationFrame(update)
 }
@@ -48,8 +50,8 @@ function update() {
 addEventListener("resize", () => {
   renderer.setViewport(innerWidth, innerHeight)
 
-  if (renderer.camera.projection instanceof PerspectiveProjection) {
+  if (camera.projection instanceof PerspectiveProjection) {
 
-    renderer.camera.projection.aspect = innerWidth / innerHeight
+    camera.projection.aspect = innerWidth / innerHeight
   }
 })

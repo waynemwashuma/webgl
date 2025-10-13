@@ -4,11 +4,13 @@ import {
   QuadGeometry,
   PrimitiveTopology,
   Renderer,
-  PerspectiveProjection
+  PerspectiveProjection,
+  Camera
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
 const renderer = new Renderer(canvas)
+const camera = new Camera()
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
@@ -34,7 +36,7 @@ meshes[6].topology = PrimitiveTopology.TriangleFan
 //create objects
 const objects = meshes.map(object => new MeshMaterial3D(object, material))
 
-//transform objects to thier positions
+//transform objects to their positions
 objects.forEach((object, i) => {
   const stepX = 1.6
   const stepY = 2
@@ -47,27 +49,24 @@ objects.forEach((object, i) => {
 })
 
 //set up the camera
-renderer.camera.transform.position.z = 5
-if (renderer.camera.projection instanceof PerspectiveProjection) {
-  renderer.camera.projection.fov = Math.PI / 180 * 120
-  renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+camera.transform.position.z = 5
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 180 * 120
+  camera.projection.aspect = innerWidth / innerHeight
 }
-
-//add objects to the renderer
-objects.forEach(object => renderer.add(object))
 
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render(objects)
+  renderer.render(objects, camera)
   requestAnimationFrame(update)
 }
 
 addEventListener("resize", () => {
   renderer.setViewport(innerWidth, innerHeight)
 
-  if (renderer.camera.projection instanceof PerspectiveProjection) {
+  if (camera.projection instanceof PerspectiveProjection) {
 
-    renderer.camera.projection.aspect = innerWidth / innerHeight
+    camera.projection.aspect = innerWidth / innerHeight
   }
 })

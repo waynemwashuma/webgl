@@ -10,11 +10,13 @@ import {
   Quaternion,
   Renderer,
   TextureLoader,
-  PerspectiveProjection
+  PerspectiveProjection,
+  Camera
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
 const renderer = new Renderer(canvas)
+const camera = new Camera()
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
@@ -54,11 +56,12 @@ objects.forEach((object, i) => {
 })
 
 //set up the camera
-renderer.camera.transform.position.z = 5
-if (renderer.camera.projection instanceof PerspectiveProjection) {
-  renderer.camera.projection.fov = Math.PI / 180 * 120
-  renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
+camera.transform.position.z = 5
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 180 * 120
+  camera.projection.aspect = innerWidth / innerHeight
 }
+
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 requestAnimationFrame(update)
@@ -66,15 +69,15 @@ requestAnimationFrame(update)
 function update() {
   objects.forEach(object => object.transform.orientation.multiply(rotation))
   
-  renderer.render(objects)
+  renderer.render(objects, camera)
   requestAnimationFrame(update)
 }
 
 addEventListener("resize", () => {
   renderer.setViewport(innerWidth, innerHeight)
 
-  if (renderer.camera.projection instanceof PerspectiveProjection) {
+  if (camera.projection instanceof PerspectiveProjection) {
 
-    renderer.camera.projection.aspect = innerWidth / innerHeight
+    camera.projection.aspect = innerWidth / innerHeight
   }
 })
