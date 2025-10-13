@@ -1,9 +1,9 @@
 import {
   Renderer,
-  TextureLoader,
   PerspectiveProjection,
   GLTFLoader,
-  Camera
+  Camera,
+  Object3D
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -13,6 +13,10 @@ const camera = new Camera()
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
 
+
+/**
+ * @type {Object3D[]}
+ */
 const objects = []
 const loader = new GLTFLoader()
 loader.asyncLoad({

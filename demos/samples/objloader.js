@@ -4,7 +4,8 @@ import {
   Renderer,
   TextureLoader,
   PerspectiveProjection,
-  Camera
+  Camera,
+  Object3D
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -13,6 +14,9 @@ const camera = new Camera()
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
+/**
+ * @type {Object3D[]}
+ */
 const objects = []
 const textureLoader = new TextureLoader()
 const loader = new OBJLoader()

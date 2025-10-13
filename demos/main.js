@@ -1,32 +1,21 @@
 import { demos } from "./samples/index.js"
 
-const fetchTemplate = (function () {
-  /**
-   * @type {string}
-   */
-  let template
-  return async function () {
-    if(template) return template
-    const response = await fetch('./template.html')
-    const text = await response.text()
-  
-    template = text
-    return text
-  }
-})()
 /**
- * @param {URL} demoName
+ * @param {string} name
  */
-async function switchDemo(demoName) {
+async function switchDemo(name) {
   const frame = document.getElementById("example-frame")
-
+  const link = document.getElementById("popper")
+  const nonce = "453jbibuibjkbjkbohno"
   if (!(frame instanceof HTMLIFrameElement)) {
-    throw "The element selected is not an i frame"
+    throw "The element selected is not an iframe"
   }
-
-  const text = await fetchTemplate()
-  const page = text.replace(/\{demo-src\}/g,demoName.pathname).replace(/\{demo-nonce\}/g,"fegrgwt4rgwgdw4g")
-  frame.srcdoc = page
+  if (!(link instanceof HTMLAnchorElement)) {
+    throw "The element selected is not an anchor"
+  }
+  const linkSource = `./example.html?example=${name}`
+  frame.src = linkSource
+  link.href = linkSource
 }
 
 /**
@@ -46,12 +35,12 @@ function setupOpts(demos) {
     opts.append(opt)
   }
   opts.onchange = e => {
-    const {target} = e
-    if(!(target instanceof HTMLSelectElement))return
+    const { target } = e
+    if (!(target instanceof HTMLSelectElement)) return
     localStorage.setItem("play", target.value)
 
     const url = demos[target.value]
-    switchDemo(url)
+    switchDemo(target.value)
   }
 }
 
@@ -63,8 +52,8 @@ function init(demos) {
   if (!name)
     name = Object.keys(demos)[0]
   if (!name) return
-  
-  switchDemo(demos[name])
+
+  switchDemo(name)
 }
 
 init(demos)
