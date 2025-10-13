@@ -65,11 +65,6 @@ export class Renderer {
   lights = new Lights()
 
   /**
-   * @type {Object3D[]}
-   */
-  meshes = []
-
-  /**
    * @type {Camera}
    */
   camera = new Camera()
@@ -162,22 +157,6 @@ export class Renderer {
     ubo.update(this.gl, data)
   }
 
-  /**
-   * @param {Object3D} object 
-   */
-  add(object) {
-    this.meshes.push(object)
-  }
-  /**
-   * @param {Object3D} mesh
-   */
-  remove(mesh) {
-    let id = this.meshes.indexOf(mesh)
-    this.meshes.splice(id, 1)
-  }
-  clearMeshes() {
-    this.meshes.length = 0
-  }
   clear(color = true, depth = true, stencil = true) {
     let bit = 0
     if (color) bit |= this.gl.COLOR_BUFFER_BIT
@@ -185,7 +164,7 @@ export class Renderer {
     if (stencil) bit |= this.gl.STENCIL_BUFFER_BIT
     this.gl.clear(bit)
   }
-  update() {
+  render(objects) {
     const { caches, attributes, defaultTexture, gl,_UBOs, defines, includes } = this
     this.clear()
     if (this.camera) {
@@ -200,8 +179,8 @@ export class Renderer {
       this.lights.directionalLights.lights[i].update()
     }
 
-    for (let i = 0; i < this.meshes.length; i++) {
-      const object = this.meshes[i]
+    for (let i = 0; i < objects.length; i++) {
+      const object = objects[i]
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof MeshMaterial3D) {

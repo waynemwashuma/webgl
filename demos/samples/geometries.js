@@ -29,7 +29,7 @@ const texture = textureLoader.load({
 const material = new BasicMaterial({
   mainTexture: texture
 })
-const geometries = [
+const meshes = [
   new QuadGeometry(1, 1),
   new CircleGeometry(0.7),
   new BoxGeometry(),
@@ -38,19 +38,19 @@ const geometries = [
   new CylinderGeometry(0.7),
 ]
 
-//create meshes
-const meshes = geometries.map(geometry => new MeshMaterial3D(geometry, material))
+//create objects
+const objects = meshes.map(mesh => new MeshMaterial3D(mesh, material))
 
-//transform meshes to thier positions
-meshes.forEach((mesh, i) => {
+//transform objects to thier positions
+objects.forEach((object, i) => {
   const stepX = 1.6
   const stepY = 2
   const startX = -1.6
   const startY = 1.6
   const number = 3
 
-  mesh.transform.position.x = startX + stepX * (i % number)
-  mesh.transform.position.y = startY - Math.floor(i / number) * stepY
+  object.transform.position.x = startX + stepX * (i % number)
+  object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
 
 //set up the camera
@@ -60,15 +60,13 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
 
-//add meshes to the renderer
-meshes.forEach(mesh => renderer.add(mesh))
-
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 requestAnimationFrame(update)
 
 function update() {
-  meshes.forEach(mesh => mesh.transform.orientation.multiply(rotation))
-  renderer.update()
+  objects.forEach(object => object.transform.orientation.multiply(rotation))
+  
+  renderer.render(objects)
   requestAnimationFrame(update)
 }
 

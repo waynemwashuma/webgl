@@ -29,12 +29,12 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const geometry = new BoxGeometry(0.5, 0.5, 0.5)
+const mesh = new BoxGeometry(0.5, 0.5, 0.5)
 const material = new BasicMaterial({
   mainTexture: texture
 })
-const parent = new MeshMaterial3D(geometry, material)
-const child = new MeshMaterial3D(geometry, material)
+const parent = new MeshMaterial3D(mesh, material)
+const child = new MeshMaterial3D(mesh, material)
 
 child.transform.position.x = 1
 renderer.camera.transform.position.z = 2
@@ -43,7 +43,6 @@ if (renderer.camera.projection instanceof PerspectiveProjection) {
   renderer.camera.projection.aspect = renderer.domElement.width / renderer.domElement.height
 }
 parent.add(child)
-renderer.add(parent)
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
@@ -52,7 +51,7 @@ requestAnimationFrame(update)
 function update() {
   parent.transform.orientation.multiply(rotation)
 
-  renderer.update()
+  renderer.render([parent])
   requestAnimationFrame(update)
 }
 
