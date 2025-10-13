@@ -1,6 +1,6 @@
 /**@import {PipelineKey} from '../material/index.js' */
 import { DirectionalLight } from "../light/index.js"
-import { Camera } from "../camera/camera.js"
+import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
 import { Attribute, UBOs, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
@@ -8,7 +8,6 @@ import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Mesh } from "../mesh/index.js"
-import { Material } from "../material/index.js"
 
 export class DirectionalLights {
   /**
@@ -108,20 +107,6 @@ export class Renderer {
     this.dpr = devicePixelRatio
     
     this.gl = canvas.getContext("webgl2")
-    this.gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    
-    if (this.culling) {
-      this.gl.enable(this.gl.CULL_FACE)
-      this.gl.cullFace(this.gl.BACK)
-    }
-    if (this.depthTest) {
-      this.gl.enable(this.gl.DEPTH_TEST)
-    }
-    if (this.alphaBlending) {
-      this.gl.enable(this.gl.BLEND)
-      this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
-    }
-    
     const attributes = new Map()
     
     attributes
@@ -152,16 +137,33 @@ export class Renderer {
     ubo.update(this.gl, data)
   }
   
-  clear(color = true, depth = true, stencil = true) {
+  clear(camera) {
+    const { gl: context } = this
+    const { clearColor, clearDepth, clearStencil } = camera
     let bit = 0
-    if (color) bit |= this.gl.COLOR_BUFFER_BIT
-    if (depth) bit |= this.gl.DEPTH_BUFFER_BIT
-    if (stencil) bit |= this.gl.STENCIL_BUFFER_BIT
-    this.gl.clear(bit)
+    context.stencilMask(0xFF);
+    
+    if (clearColor.enabled) {
+      const { r, g, b, a } = clearColor.value
+      bit |= context.COLOR_BUFFER_BIT
+      context.colorMask(true, true, true, true)
+      context.clearColor(r, g, b, a)
+    }
+    if (clearDepth.enabled) {
+      bit |= context.DEPTH_BUFFER_BIT
+      context.depthMask(true)
+      context.clearDepth(clearDepth.value)
+    }
+    if (clearStencil.enabled){
+      bit |= context.STENCIL_BUFFER_BIT
+      context.stencilMask(0xFF)
+      context.clearStencil(clearStencil.value)
+    }
+    context.clear(bit)
   }
   render(objects, camera) {
     const { caches, attributes, defaultTexture, gl, _UBOs, defines, includes } = this
-    this.clear()
+    this.clear(camera)
     camera.update()
     this.updateUBO(camera.getData())
     
