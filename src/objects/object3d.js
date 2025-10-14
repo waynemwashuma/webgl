@@ -1,6 +1,10 @@
 import { Transform3D } from "../math/index.js"
 
 export class Object3D {
+  /**
+   * @type {string}
+   */
+  name = ''
   transform = new Transform3D()
 
   /**
