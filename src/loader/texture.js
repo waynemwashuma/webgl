@@ -1,74 +1,65 @@
 /** @import { TextureSettings } from '../texture/index.js' */
 
 import { GlDataType, TextureFormat, TextureFormatUsage, TextureType } from '../constant.js';
-import { Renderer } from '../renderer/index.js';
 import { Texture } from '../texture/index.js';
-export class TextureLoader {
+import { Loader, OnAssetLoadedStrategy } from './loader.js';
+
+/**
+ * @extends {Loader<Texture,TextureLoadSettings>}
+ */
+export class TextureLoader extends Loader {
+
+  constructor() {
+    super(Texture)
+    this.strategy = OnAssetLoadedStrategy.Original
+  }
 
   /**
-   * @type {Map<string,Texture>}
-  */
-  textures = new Map()
-
-  /**
-   * 
-   * @param {string[]} paths
+   * @param {ArrayBuffer[]} buffers
+   * @param {Texture} destination 
+   * @param {TextureLoadSettings} settings
    */
-  async fetch(paths) {
-    let width = 0,height = 0
-    const data = paths.map(async (path) => {
-      const response = await fetch(path)
-      const blob = await response.blob()
+  async parse(buffers, destination, settings) {
+    let width = 0, height = 0
+    const data = buffers.map(async (buffer) => {
+      const blob = await new Blob([buffer])
       const bitmap = await createImageBitmap(blob)
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
       const ctx = canvas.getContext('2d')
 
-      ctx.drawImage(bitmap,0,0)
+      ctx.drawImage(bitmap, 0, 0)
       width = bitmap.width
       height = bitmap.height
 
-      return ctx.getImageData(0,0,bitmap.width,bitmap.height,{
-        colorSpace:"srgb"
+      return ctx.getImageData(0, 0, bitmap.width, bitmap.height, {
+        colorSpace: "srgb"
       }).data
     })
     const images = await Promise.all(data)
 
-    return {
-      width,
-      height,
-      images
-    }
+    destination.data = images.map((image) => new Uint8Array(image))
+    destination.internalFormat = TextureFormat.Rgba8
+    destination.format = TextureFormatUsage.Rgba
+    destination.dataFormat = GlDataType.UnsignedByte
+    destination.width = width
+    destination.height = height
+    destination.update()
   }
 
-  /**
-   * @param {string[]} paths
-   * @param {Texture} texture
-   */
-  async internalLoad(paths, texture) {
-    const data = await this.fetch(paths)
-
-    texture.data = data.images.map((image)=>new Uint8Array(image))
-    texture.internalFormat = TextureFormat.Rgba8
-    texture.format = TextureFormatUsage.Rgba
-    texture.dataFormat = GlDataType.UnsignedByte
-    texture.width = data.width
-    texture.height = data.height
-    texture.update()
-  }
   /**
    * @param {TextureLoadSettings} settings
    */
-  load(settings) {
+  default(settings) {
     const pixel = new Uint8Array([255, 0, 255, 255])
     const texture = new Texture({
       ...(settings.textureSettings || {}),
-      data: settings.paths.map(()=>pixel),
+      data: settings.paths.map(() => pixel),
       type: settings.type || TextureType.Texture2D,
       width: 1,
-      height: 1
+      height: 1,
+      depth:settings.paths.length
     })
 
-    this.internalLoad(settings.paths, texture)
     return texture
   }
 }

@@ -21,12 +21,18 @@ export class Transform3D {
     }
   }
 
+  /**
+   * @param {Transform3D} other
+   */
+  copy(other){
+    this.position.copy(other.position)
+    this.orientation.copy(other.orientation)
+    this.scale.copy(other.scale)
+    this.world.copy(other.world)
+
+    return this
+  }
   clone(){
-    const newTransform = new /**@type {new (...args:[])=> this} */(this.constructor)()
-    newTransform.position = this.position.clone()
-    newTransform.orientation = this.orientation.clone()
-    newTransform.scale = this.scale.clone()
-    newTransform.world = this.world.clone()
-    return newTransform
+    return new Transform3D().copy(this)
   }
 }

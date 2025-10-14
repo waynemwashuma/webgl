@@ -5,7 +5,10 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  Object3D
+  Quaternion,
+  MeshMaterial3D,
+  LambertMaterial,
+  PhongMaterial
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -14,10 +17,7 @@ const camera = new Camera()
 
 document.body.append(canvas)
 renderer.setViewport(innerWidth, innerHeight)
-/**
- * @type {Object3D[]}
- */
-const objects = []
+
 const textureLoader = new TextureLoader()
 const loader = new OBJLoader()
 const texture = textureLoader.load({
@@ -26,16 +26,23 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-loader.load({
-  path: "assets/models/obj/pirate_girl/pirate_girl.obj"
-}).then((object => {
-  const clone = object.clone()
-
-  if(clone.material instanceof BasicMaterial){
-    clone.material.mainTexture = texture
+const model = loader.load({
+  paths: ["assets/models/obj/pirate_girl/pirate_girl.obj"],
+  postprocessor:(asset)=>{
+    asset.traverseDFS((object)=>{
+      if (object instanceof MeshMaterial3D) {
+        if(
+          object.material instanceof BasicMaterial ||
+          object.material instanceof LambertMaterial ||
+          object.material instanceof PhongMaterial
+        ){
+          object.material.mainTexture = texture
+        }
+      }
+      return true
+    })
   }
-  objects.push(clone)
-}))
+})
 camera.transform.position.z = 2
 camera.transform.position.y = 2
 if (camera.projection instanceof PerspectiveProjection) {
@@ -43,10 +50,12 @@ if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.aspect = innerWidth / innerHeight
 }
 
+const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render(objects, camera)
+  model.transform.orientation.multiply(rotation)
+  renderer.render([model], camera)
 
   requestAnimationFrame(update)
 }

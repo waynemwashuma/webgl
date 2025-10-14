@@ -1,31 +1,30 @@
+/**@import { LoadSettings } from './loader.js' */
+
 import { Attribute, AttributeData } from '../core/index.js';
 import { Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D } from '../objects/index.js';
+import { Loader } from './loader.js';
+import { arrayBufferToJSON } from './utils.js';
 
-export class GLTFLoader {
-  /**
-   * @type {Map<string,Object3D>}
-  */
-  roots = new Map()
-  /**
-   * @param {GLTFLoadSettings} settings
-   */
-  load(settings) {
-    const root = new Object3D()
-    this.asyncLoad(settings, root)
-    return root
+/**
+ * @extends {Loader<Object3D, GLTFLoadSettings>}
+ */
+export class GLTFLoader extends Loader {
+
+  constructor(){
+    super(Object3D)
   }
-
   /**
+   * @param {ArrayBuffer[]} buffers
+   * @param {Object3D} destination
    * @param {GLTFLoadSettings} settings
-   * @param {Object3D} [root]
    */
-  async asyncLoad(settings, root) {
-    const response = await fetch(settings.path)
-    const cachedRoot = new Object3D()
-    const gltf = await loadGLTF(response)
-
+  async parse(buffers, destination, settings) {
+    if(!buffers.length){
+      return
+    }
+    const gltf = await loadGLTF(buffers[0],settings.paths[0])
     const scene = gltf.scenes[gltf.scene]
 
     if (!scene) {
@@ -39,22 +38,23 @@ export class GLTFLoader {
       return parseObject(index, gltf, geometries)
     }).filter(a => a !== undefined)
 
-    cachedRoot.add(...objects)
-    if (root) {
-      root.add(...cachedRoot.children.map(c => c.clone()))
-    }
-    this.roots.set(settings.name, cachedRoot)
-    return cachedRoot
+    destination.add(...objects)
+  }
+
+  default(){
+    return new Object3D()
   }
 }
 
 /**
- * @param {Response} data
+ * @param {ArrayBuffer} data
+ * @param {string} baseUrl
  */
-async function loadGLTF(data) {
-  const json = await data.json()
+async function loadGLTF(data,baseUrl) {
+  const url = new URL(baseUrl, location.href)
+  const json = arrayBufferToJSON(data)
   const { buffers: urlBuffers } = json
-  const buffers = urlBuffers instanceof Array ? await loadBuffers(data.url, urlBuffers) : []
+  const buffers = urlBuffers instanceof Array ? await loadBuffers(url.href, urlBuffers) : []
   const gltf = GLTF.deserialize(json)
   gltf.buffers = buffers
 
@@ -66,6 +66,7 @@ async function loadGLTF(data) {
  * @param {{uri: string;}[]} uris
  */
 async function loadBuffers(base, uris) {
+  
   return Promise.all(
     uris.map(async (buffer) => {
       const url = buffer.uri.startsWith('data') ?
@@ -78,9 +79,7 @@ async function loadBuffers(base, uris) {
   )
 }
 /**
- * @typedef GLTFLoadSettings
- * @property {string} path
- * @property {string} [name]
+ * @typedef {LoadSettings} GLTFLoadSettings
  */
 
 class GLTF {
