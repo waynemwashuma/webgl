@@ -1,6 +1,7 @@
 /** @import { TextureSettings } from '../texture/index.js' */
 
 import { TextureFormat, TextureType } from '../constant.js';
+import { getTextureFormatSize } from '../function.js';
 import { Texture } from '../texture/index.js';
 import { Loader, OnAssetLoadedStrategy } from './loader.js';
 
@@ -33,14 +34,25 @@ export class TextureLoader extends Loader {
 
       return ctx.getImageData(0, 0, bitmap.width, bitmap.height, {
         colorSpace: "srgb"
-      }).data
+      }).data.buffer
     })
+    const textureFormat = TextureFormat.RGBA8Unorm
     const images = await Promise.all(data)
-
-    destination.data = images.map((image) => new Uint8Array(image))
-    destination.format = TextureFormat.RGBA8Unorm,
-    destination.width = width
+    const depth = images.length
+    const sliceSize = getTextureFormatSize(textureFormat) * width * height
+    const buffer = new ArrayBuffer(
+      sliceSize * depth
+    )
+    images.forEach((image, i) => {
+      const sourceView = new Uint8Array(image)
+      const destView = new Uint8Array(buffer, sliceSize * i, sliceSize)
+      destView.set(sourceView)
+    })
+    destination.data = buffer
+    destination.format = textureFormat,
+      destination.width = width
     destination.height = height
+    destination.depth = depth
     destination.update()
   }
 
@@ -48,14 +60,16 @@ export class TextureLoader extends Loader {
    * @param {TextureLoadSettings} settings
    */
   default(settings) {
-    const pixel = new Uint8Array([255, 0, 255, 255])
+    const pixel = new Uint8Array(
+      settings.paths.flatMap(()=>[255, 0, 255, 255])
+    )
     const texture = new Texture({
       ...(settings.textureSettings || {}),
-      data: settings.paths.map(() => pixel),
+      data: pixel.buffer,
       type: settings.type || TextureType.Texture2D,
       width: 1,
       height: 1,
-      depth:settings.paths.length
+      depth: settings.paths.length
     })
 
     return texture
