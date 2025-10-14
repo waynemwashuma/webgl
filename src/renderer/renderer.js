@@ -2,7 +2,7 @@
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
-import { Attribute, UBOs, WebGLRenderPipeline } from "../core/index.js"
+import { Attribute, UBOs, WebGLDeviceLimits, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
@@ -58,7 +58,9 @@ export class Caches {
    */
   materials = new Map()
 }
+
 export class Renderer {
+  limits
   caches = new Caches()
   _UBOs = new UBOs()
   lights = new Lights()
@@ -103,11 +105,13 @@ export class Renderer {
    * @param {HTMLCanvasElement} canvas
    */
   constructor(canvas) {
+    const attributes = new Map()
+
     this.domElement = canvas || document.createElement("canvas")
     this.dpr = devicePixelRatio
     
     this.gl = canvas.getContext("webgl2")
-    const attributes = new Map()
+    this.limits = new WebGLDeviceLimits(this.gl)
     
     attributes
       .set(Attribute.Position.name, Attribute.Position)
