@@ -243,9 +243,22 @@ export function createProgram(gl, vshader, fshader, attributes) {
  * @param {Mesh} geometry
  */
 export function createVAO(gl, attributeMap, geometry) {
-  const { indices, attributes } = geometry
   const vao = gl.createVertexArray()
   gl.bindVertexArray(vao)
+
+  updateVAO(gl,attributeMap,geometry)
+
+  return vao
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {ReadonlyMap<string, Attribute>} attributeMap
+ * @param {Mesh} geometry
+ */
+export function updateVAO(gl,attributeMap,geometry) {
+  const { indices, attributes } = geometry
+
   if (indices != void 0) {
     const buffer = gl.createBuffer()
 
@@ -264,12 +277,38 @@ export function createVAO(gl, attributeMap, geometry) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, data.value, gl.STATIC_DRAW)
     gl.enableVertexAttribArray(attribute.id)
-    gl.vertexAttribPointer(attribute.id, attribute.size, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(attribute.id)
-    gl.vertexAttribPointer(attribute.id, attribute.size, attribute.type, false, 0, 0)
+    setVertexAttribute(gl,attribute.id, attribute.type,attribute.size)
   }
+}
 
-  return vao
+/**
+ *
+ * @param {WebGL2RenderingContext} gl - The WebGL2 context.
+ * @param {number} index - The attribute location.
+ * @param {GlDataType} type - One of the values from GlDataType.
+ * @param {number} size - Number of components per attribute (1-4).
+ * @param {number} [stride = 0] - Byte stride between attributes.
+ * @param {number} [offset = 0] - Byte offset of the first attribute.
+ * @param {boolean} [normalized = false] - Whether fixed-point values should be normalized.
+ */
+function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, normalized = false) {  
+  switch (type) {
+    case GlDataType.Float:
+      gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+      break;
+
+    case GlDataType.Byte:
+    case GlDataType.UnsignedByte:
+    case GlDataType.Short:
+    case GlDataType.UnsignedShort:
+    case GlDataType.Int:
+    case GlDataType.UnsignedInt:
+      gl.vertexAttribIPointer(index, size, type, stride, offset);
+      break;
+
+    default:
+      throw new Error(`Unsupported GlDataType: ${type}`);
+  }
 }
 
 /**
