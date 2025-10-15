@@ -6,7 +6,8 @@ import {
   TextureFilter,
   TextureType,
   TextureWrap,
-  UniformType
+  UniformType,
+  GlDataType
 } from "./constant.js"
 import { Attribute, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
@@ -438,7 +439,7 @@ function updateTexture2D(gl, texture) {
     border,
     format,
     dataType,
-    new Uint8Array(data)
+    convertBufferToTypedArray(data, dataType)
   )
 }
 
@@ -459,7 +460,7 @@ function updateCubeMap(gl, texture) {
 
   for (let i = 0; i < 6; i++) {
     const offset = sliceSize * i
-    const src = new Uint8Array(data, offset, sliceSize)
+    const src = convertBufferToTypedArray(data, dataType, offset, sliceSize)
 
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -639,6 +640,38 @@ export function getTextureFormatSize(format) {
 
     default:
       throw new Error(`Unknown or unsupported texture format: ${format}`);
+  }
+}
+
+/**
+ * Converts an ArrayBuffer to a corresponding TypedArray based on `GlDataType`.
+ *
+ * @param {ArrayBuffer} buffer - The buffer to convert.
+ * @param {GlDataType} dataType - One of the values from GlDataType.
+ * @throws {Error} If `dataType` is unknown.
+ */
+export function convertBufferToTypedArray(
+  buffer,
+  dataType,
+  offset = 0,
+  length = buffer.byteLength) {
+  switch (dataType) {
+    case GlDataType.Float:
+      return new Float32Array(buffer, offset, length / Float32Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedInt:
+      return new Uint32Array(buffer, offset, length / Uint32Array.BYTES_PER_ELEMENT);
+    case GlDataType.Int:
+      return new Int32Array(buffer, offset, length / Int32Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedShort:
+      return new Uint16Array(buffer, offset, length / Uint16Array.BYTES_PER_ELEMENT);
+    case GlDataType.Short:
+      return new Int16Array(buffer, offset, length / Int16Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedByte:
+      return new Uint8Array(buffer, offset, length / Uint8Array.BYTES_PER_ELEMENT);
+    case GlDataType.Byte:
+      return new Int8Array(buffer, offset, length / Int8Array.BYTES_PER_ELEMENT);
+    default:
+      throw new Error(`Unsupported GL data type: 0x${dataType.toString(16)}`);
   }
 }
 
