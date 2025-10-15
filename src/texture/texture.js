@@ -1,6 +1,6 @@
 /** @import { SamplerSettings } from '../function.js' */
 
-import { GlDataType, TextureFormat, TextureFormatUsage, TextureType } from "../constant.js"
+import { TextureFormat, TextureType } from "../constant.js"
 import { Sampler } from "./sampler.js"
 
 export class Texture {
@@ -30,19 +30,9 @@ export class Texture {
   depth
 
   /**
-   * @type {TextureFormatUsage}
-   */
-  format
-
-  /**
    * @type {TextureFormat}
    */
-  internalFormat
-
-  /**
-   * @type {GlDataType}
-   */
-  dataFormat
+  format
 
   /**
    * @type {Sampler}
@@ -92,8 +82,6 @@ export class Texture {
    */
   apply({
     format = Texture.defaultSettings.format,
-    internalFormat = Texture.defaultSettings.internalFormat,
-    dataFormat = Texture.defaultSettings.dataFormat,
     sampler = Texture.defaultSettings.sampler,
     generateMipmaps = Texture.defaultSettings.generateMipmaps,
     flipY = Texture.defaultSettings.flipY,
@@ -106,8 +94,6 @@ export class Texture {
     this.depth = depth
     this.flipY = flipY
     this.format = format
-    this.internalFormat = internalFormat
-    this.dataFormat = dataFormat
     this.defaultSampler = new Sampler(sampler)
     this.generateMipmaps = generateMipmaps
   }
@@ -117,9 +103,7 @@ export class Texture {
    */
   copy(other){
     this.data = other.data.map((e)=>e.slice())
-    this.internalFormat = other.internalFormat
     this.format = other.format
-    this.dataFormat = other.dataFormat
     this.width = other.width
     this.height = other.height
     this.depth = other.depth
@@ -140,9 +124,7 @@ export class Texture {
    * @type {Readonly<Required<TextureSettings>>}
    */
   static defaultSettings = {
-    format: TextureFormatUsage.Rgba,
-    internalFormat: TextureFormat.Rgba8,
-    dataFormat: GlDataType.UnsignedByte,
+    format: TextureFormat.RGBA8Unorm,
     sampler: Sampler.defaultSettings,
     generateMipmaps: true,
     flipY: false,
@@ -156,9 +138,7 @@ export class Texture {
  * @typedef TextureSettings
  * @property {boolean} [generateMipmaps=true]
  * @property {Required<SamplerSettings>} [sampler]
- * @property {TextureFormat} [internalFormat]
  * @property {TextureFormat} [format]
- * @property {GlDataType} [dataFormat]
  * @property {boolean} [flipY]
  * @property {number} [width]
  * @property {number} [height]

@@ -1,6 +1,7 @@
 import { Mesh } from "./mesh/index.js"
 import {
   CompareFunction,
+  TextureFormat,
   TextureCompareMode,
   TextureFilter,
   TextureType,
@@ -421,14 +422,9 @@ function getActiveUniformBlocks(gl, program) {
  */
 function updateTexture2D(gl, texture) {
   const level = 0, border = 0
-  const {
-    internalFormat,
-    format,
-    dataFormat,
-    data,
-    width,
-    height
-  } = texture
+  const {internalFormat,format,dataType} = getWebGLTextureFormat(gl, texture.format)
+
+  const { data, width, height } = texture
   if (!data[0]) return
   gl.texImage2D(
     texture.type,
@@ -438,7 +434,7 @@ function updateTexture2D(gl, texture) {
     height,
     border,
     format,
-    dataFormat,
+    dataType,
     data[0]
   )
 }
@@ -449,14 +445,8 @@ function updateTexture2D(gl, texture) {
  */
 function updateCubeMap(gl, texture) {
   const level = 0, border = 0
-  const {
-    internalFormat,
-    format,
-    dataFormat,
-    data,
-    width,
-    height
-  } = texture
+  const {internalFormat,format,dataType} = getWebGLTextureFormat(gl, texture.format)
+  const { data, width, height } = texture
   if (data.length < 6) return
   for (let i = 0; i < 6; i++) {
     const src = data[i];
@@ -469,9 +459,105 @@ function updateCubeMap(gl, texture) {
       height,
       border,
       format,
-      dataFormat,
+      dataType,
       src
     )
+  }
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {number} format
+ * @returns {{ internalFormat: number, format: number, dataType: number } | null}
+ */
+export function getWebGLTextureFormat(gl, format) {
+  switch (format) {
+    // --- 8-bit ---
+    case TextureFormat.R8Unorm:
+      return { internalFormat: gl.R8, format: gl.RED, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.R8Snorm:
+      return { internalFormat: gl.R8_SNORM, format: gl.RED, dataType: gl.BYTE };
+    case TextureFormat.R8Uint:
+      return { internalFormat: gl.R8UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.R8Sint:
+      return { internalFormat: gl.R8I, format: gl.RED_INTEGER, dataType: gl.BYTE };
+
+    // --- 16-bit ---
+    case TextureFormat.R16Uint:
+      return { internalFormat: gl.R16UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_SHORT };
+    case TextureFormat.R16Sint:
+      return { internalFormat: gl.R16I, format: gl.RED_INTEGER, dataType: gl.SHORT };
+    case TextureFormat.R16Float:
+      return { internalFormat: gl.R16F, format: gl.RED, dataType: gl.HALF_FLOAT };
+    case TextureFormat.RG8Unorm:
+      return { internalFormat: gl.RG8, format: gl.RG, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.RG8Snorm:
+      return { internalFormat: gl.RG8_SNORM, format: gl.RG, dataType: gl.BYTE };
+    case TextureFormat.RG8Uint:
+      return { internalFormat: gl.RG8UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.RG8Sint:
+      return { internalFormat: gl.RG8I, format: gl.RG_INTEGER, dataType: gl.BYTE };
+
+    // --- 32-bit ---
+    case TextureFormat.R32Uint:
+      return { internalFormat: gl.R32UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_INT };
+    case TextureFormat.R32Sint:
+      return { internalFormat: gl.R32I, format: gl.RED_INTEGER, dataType: gl.INT };
+    case TextureFormat.R32Float:
+      return { internalFormat: gl.R32F, format: gl.RED, dataType: gl.FLOAT };
+    case TextureFormat.RG16Uint:
+      return { internalFormat: gl.RG16UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_SHORT };
+    case TextureFormat.RG16Sint:
+      return { internalFormat: gl.RG16I, format: gl.RG_INTEGER, dataType: gl.SHORT };
+    case TextureFormat.RG16Float:
+      return { internalFormat: gl.RG16F, format: gl.RG, dataType: gl.HALF_FLOAT };
+    case TextureFormat.RGBA8Unorm:
+      return { internalFormat: gl.RGBA8, format: gl.RGBA, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.RGBA8UnormSRGB:
+      return { internalFormat: gl.SRGB8_ALPHA8, format: gl.RGBA, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.RGBA8Snorm:
+      return { internalFormat: gl.RGBA8_SNORM, format: gl.RGBA, dataType: gl.BYTE };
+    case TextureFormat.RGBA8Uint:
+      return { internalFormat: gl.RGBA8UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_BYTE };
+    case TextureFormat.RGBA8Sint:
+      return { internalFormat: gl.RGBA8I, format: gl.RGBA_INTEGER, dataType: gl.BYTE };
+
+    // --- 64-bit ---
+    case TextureFormat.RG32Uint:
+      return { internalFormat: gl.RG32UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_INT };
+    case TextureFormat.RG32Sint:
+      return { internalFormat: gl.RG32I, format: gl.RG_INTEGER, dataType: gl.INT };
+    case TextureFormat.RG32Float:
+      return { internalFormat: gl.RG32F, format: gl.RG, dataType: gl.FLOAT };
+    case TextureFormat.RGBA16Uint:
+      return { internalFormat: gl.RGBA16UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_SHORT };
+    case TextureFormat.RGBA16Sint:
+      return { internalFormat: gl.RGBA16I, format: gl.RGBA_INTEGER, dataType: gl.SHORT };
+    case TextureFormat.RGBA16Float:
+      return { internalFormat: gl.RGBA16F, format: gl.RGBA, dataType: gl.HALF_FLOAT };
+
+    // --- 128-bit ---
+    case TextureFormat.RGBA32Uint:
+      return { internalFormat: gl.RGBA32UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_INT };
+    case TextureFormat.RGBA32Sint:
+      return { internalFormat: gl.RGBA32I, format: gl.RGBA_INTEGER, dataType: gl.INT };
+    case TextureFormat.RGBA32Float:
+      return { internalFormat: gl.RGBA32F, format: gl.RGBA, dataType: gl.FLOAT };
+
+    // --- Depth / Stencil ---
+    case TextureFormat.Depth16Unorm:
+      return { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, dataType: gl.UNSIGNED_SHORT };
+    case TextureFormat.Depth24Plus:
+      return { internalFormat: gl.DEPTH_COMPONENT24, format: gl.DEPTH_COMPONENT, dataType: gl.UNSIGNED_INT };
+    case TextureFormat.Depth32Float:
+      return { internalFormat: gl.DEPTH_COMPONENT32F, format: gl.DEPTH_COMPONENT, dataType: gl.FLOAT };
+    case TextureFormat.Depth24PlusStencil8:
+      return { internalFormat: gl.DEPTH24_STENCIL8, format: gl.DEPTH_STENCIL, dataType: gl.UNSIGNED_INT_24_8 };
+    case TextureFormat.Depth32FloatStencil8:
+      return { internalFormat: gl.DEPTH32F_STENCIL8, format: gl.DEPTH_STENCIL, dataType: gl.FLOAT_32_UNSIGNED_INT_24_8_REV };
+
+    default:
+      return null;
   }
 }
 

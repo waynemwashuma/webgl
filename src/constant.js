@@ -171,101 +171,57 @@ export const BlendEquation = {
 }
 
 /**
- * @readonly
  * @enum {number}
- * Internal texture formats
  */
 export const TextureFormat = {
-  // 8-bit normalized formats
-  R8: 0x8229,
-  R8Snorm: 0x8F94,
-  Rg8: 0x822B,
-  Rg8Snorm: 0x8F95,
-  Rgb8: 0x8051,
-  Rgb8Snorm: 0x8F96,
-  Rgba8: 0x8058,
-  Rgba8Snorm: 0x8F97,
+  // --- 8-bit ---
+  R8Unorm: 1,
+  R8Snorm: 2,
+  R8Uint: 3,
+  R8Sint: 4,
 
-  // Packed formats
-  Rgb565: 0x8D62,
-  Rgba4: 0x8056,
-  Rgb5A1: 0x8057,
-  Rgb10A2: 0x8059,
-  Rgb10A2ui: 0x906F,
-  R11fG11fB10f: 0x8C3A,
-  Rgb9E5: 0x8C3D,
+  // --- 16-bit ---
+  R16Uint: 5,
+  R16Sint: 6,
+  R16Float: 7,
+  RG8Unorm: 8,
+  RG8Snorm: 9,
+  RG8Uint: 10,
+  RG8Sint: 11,
 
-  // sRGB formats
-  Srgb8: 0x8C41,
-  Srgb8Alpha8: 0x8C43,
+  // --- 32-bit ---
+  R32Uint: 12,
+  R32Sint: 13,
+  R32Float: 14,
+  RG16Uint: 15,
+  RG16Sint: 16,
+  RG16Float: 17,
+  RGBA8Unorm: 18,
+  RGBA8UnormSRGB: 19,
+  RGBA8Snorm: 20,
+  RGBA8Uint: 21,
+  RGBA8Sint: 22,
 
-  // Float formats
-  R16f: 0x822D,
-  Rg16f: 0x822F,
-  Rgb16f: 0x881B,
-  Rgba16f: 0x881A,
-  R32f: 0x822E,
-  Rg32f: 0x8230,
-  Rgb32f: 0x8815,
-  Rgba32f: 0x8814,
+  // --- 64-bit ---
+  RG32Uint: 23,
+  RG32Sint: 24,
+  RG32Float: 25,
+  RGBA16Uint: 26,
+  RGBA16Sint: 27,
+  RGBA16Float: 28,
 
-  // Signed nteger formats
-  R8i: 0x8231,
-  R16i: 0x8233,
-  R32i: 0x8235,
-  Rg8i: 0x8237,
-  Rg16i: 0x8239,
-  Rg32i: 0x823B,
-  Rgb8i: 0x8D8F,
-  Rgb16i: 0x8D89,
-  Rgb32i: 0x8D83,
-  Rgba8i: 0x8D8E,
-  Rgba16i: 0x8D88,
-  Rgba32i: 0x8D82,
+  // --- 128-bit ---
+  RGBA32Uint: 29,
+  RGBA32Sint: 30,
+  RGBA32Float: 31,
 
-  // Unsigned integer formats
-  R8ui: 0x8232,
-  R16ui: 0x8234,
-  R32ui: 0x8236,
-  Rg8ui: 0x8238,
-  Rg16ui: 0x823A,
-  Rg32ui: 0x823C,
-  Rgb8ui: 0x8D7D,
-  Rgb16ui: 0x8D77,
-  Rgb32ui: 0x8D71,
-  Rgba8ui: 0x8D7C,
-  Rgba16ui: 0x8D76,
-  Rgba32ui: 0x8D70,
-
-  // Depth / stencil formats
-  Depth16: 0x81A5,
-  Depth24: 0x81A6,
-  Depth32f: 0x8CAC,
-  Depth24Stencil8: 0x88F0,
-  Depth32fStencil8: 0x8CAD,
-  StencilIndex8: 0x8D48,
-}
-
-/**
- * @readonly
- * @enum {number}
- */
-export const TextureFormatUsage = {
-  // Base color formats
-  Red: 0x1903,
-  Rg: 0x8227,
-  Rgb: 0x1907,
-  Rgba: 0x1908,
-
-  // Integer formats
-  RedInteger: 0x8D94,
-  RgInteger: 0x8228,
-  RgbInteger: 0x8D98,
-  RgbaInteger: 0x8D99,
-
-  // Depth / stencil formats
-  DepthComponent: 0x1902,
-  DepthStencil: 0x84F9,
+  // --- Depth / Stencil ---
+  Stencil8: 32,
+  Depth16Unorm: 33,
+  Depth24Plus: 34,
+  Depth24PlusStencil8: 35,
+  Depth32Float: 36,
+  Depth32FloatStencil8: 37,
 }
 
 /**
