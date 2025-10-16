@@ -10,7 +10,7 @@ export class Texture {
    */
   #changed
   /**
-   * @type {Uint8Array[]}
+   * @type {ArrayBuffer}
    */
   data
 
@@ -54,7 +54,7 @@ export class Texture {
    */
   type
   /**
-   * @param {TextureSettings & {data: Uint8Array[], type:TextureType}} settings
+   * @param {TextureSettings & {data: ArrayBuffer, type:TextureType}} settings
    */
   constructor(settings) {
     this.data = settings.data
@@ -102,7 +102,7 @@ export class Texture {
    * @param {this} other
    */
   copy(other){
-    this.data = other.data.map((e)=>e.slice())
+    this.data = other.data.slice()
     this.format = other.format
     this.width = other.width
     this.height = other.height

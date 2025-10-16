@@ -108,9 +108,9 @@ export function createTexture(gl, texture) {
   const webglTexture = gl.createTexture()
 
   gl.bindTexture(texture.type, webglTexture)
-  updateTextureData(gl,texture)
+  updateTextureData(gl, texture)
   updateTextureSampler(gl, texture, texture.defaultSampler)
-  
+
   gl.bindTexture(texture.type, null)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return webglTexture
@@ -177,11 +177,11 @@ export function updateTextureData(gl, texture) {
       updateTexture2D(gl, texture)
       break;
     case TextureType.TextureCubeMap:
-      updateCubeMap(gl,texture)
+      updateCubeMap(gl, texture)
     default:
       break;
   }
-  if(texture.generateMipmaps){
+  if (texture.generateMipmaps) {
     gl.generateMipmap(texture.type)
   }
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
@@ -237,7 +237,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
  * @param {Mesh} geometry
  */
 export function createVAO(gl, attributeMap, geometry) {
-  const {indices, attributes } = geometry
+  const { indices, attributes } = geometry
   const vao = gl.createVertexArray()
   gl.bindVertexArray(vao)
   if (indices != void 0) {
@@ -422,10 +422,13 @@ function getActiveUniformBlocks(gl, program) {
  */
 function updateTexture2D(gl, texture) {
   const level = 0, border = 0
-  const {internalFormat,format,dataType} = getWebGLTextureFormat(gl, texture.format)
+  const { internalFormat, format, dataType } = getWebGLTextureFormat(gl, texture.format)
 
   const { data, width, height } = texture
-  if (!data[0]) return
+  const pixelSize = getTextureFormatSize(texture.format)
+  if (data.byteLength < width * height * pixelSize) {
+    return console.warn("Provided image data does not fit a " + "2d texture")
+  }
   gl.texImage2D(
     texture.type,
     level,
@@ -435,7 +438,7 @@ function updateTexture2D(gl, texture) {
     border,
     format,
     dataType,
-    data[0]
+    new Uint8Array(data)
   )
 }
 
@@ -445,11 +448,18 @@ function updateTexture2D(gl, texture) {
  */
 function updateCubeMap(gl, texture) {
   const level = 0, border = 0
-  const {internalFormat,format,dataType} = getWebGLTextureFormat(gl, texture.format)
-  const { data, width, height } = texture
-  if (data.length < 6) return
+  const { internalFormat, format, dataType } = getWebGLTextureFormat(gl, texture.format)
+  const { data, width, height, depth } = texture
+  const pixelSize = getTextureFormatSize(texture.format)
+  const sliceSize = pixelSize * width * height
+
+  if (data.byteLength < sliceSize * 6) {
+    return console.warn("Provided image data does not fit a " + "cubemap texture")
+  }
+
   for (let i = 0; i < 6; i++) {
-    const src = data[i];
+    const offset = sliceSize * i
+    const src = new Uint8Array(data, offset, sliceSize)
 
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -562,6 +572,78 @@ export function getWebGLTextureFormat(gl, format) {
 }
 
 /**
+ * Returns the size in bytes per texel for a given TextureFormat.
+ * @param {TextureFormat} format
+ * @returns {number}
+ */
+export function getTextureFormatSize(format) {
+  switch (format) {
+    // 8-bit = 1 byte
+    case TextureFormat.R8Unorm:
+    case TextureFormat.R8Snorm:
+    case TextureFormat.R8Uint:
+    case TextureFormat.R8Sint:
+      return 1;
+
+    // 16-bit = 2 bytes
+    case TextureFormat.R16Uint:
+    case TextureFormat.R16Sint:
+    case TextureFormat.R16Float:
+    case TextureFormat.RG8Unorm:
+    case TextureFormat.RG8Snorm:
+    case TextureFormat.RG8Uint:
+    case TextureFormat.RG8Sint:
+      return 2;
+
+    // 32-bit = 4 bytes
+    case TextureFormat.R32Uint:
+    case TextureFormat.R32Sint:
+    case TextureFormat.R32Float:
+    case TextureFormat.RG16Uint:
+    case TextureFormat.RG16Sint:
+    case TextureFormat.RG16Float:
+    case TextureFormat.RGBA8Unorm:
+    case TextureFormat.RGBA8UnormSRGB:
+    case TextureFormat.RGBA8Snorm:
+    case TextureFormat.RGBA8Uint:
+    case TextureFormat.RGBA8Sint:
+      return 4;
+
+    // 64-bit = 8 bytes
+    case TextureFormat.RG32Uint:
+    case TextureFormat.RG32Sint:
+    case TextureFormat.RG32Float:
+    case TextureFormat.RGBA16Uint:
+    case TextureFormat.RGBA16Sint:
+    case TextureFormat.RGBA16Float:
+      return 8;
+
+    // 128-bit = 16 bytes
+    case TextureFormat.RGBA32Uint:
+    case TextureFormat.RGBA32Sint:
+    case TextureFormat.RGBA32Float:
+      return 16;
+
+    // Depth/stencil formats — size varies and is implementation-specific
+    case TextureFormat.Stencil8:
+      return 1;
+    case TextureFormat.Depth16Unorm:
+      return 2;
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth24PlusStencil8:
+      return 4; // Typically 3 or 4 bytes — assume 4
+    case TextureFormat.Depth32Float:
+      return 4;
+    case TextureFormat.Depth32FloatStencil8:
+      return 5; // 4 (depth) + 1 (stencil) — approximate
+
+    default:
+      throw new Error(`Unknown or unsupported texture format: ${format}`);
+  }
+}
+
+
+/**
  * @param {string} code
  */
 function formatGlsl(code) {
@@ -572,7 +654,7 @@ function formatGlsl(code) {
     const num = (idx + 1).toString()
     return `${num}: ${ln}`;
   })
-  .join("\n");
+    .join("\n");
 }
 
 /**

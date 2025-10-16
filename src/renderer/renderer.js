@@ -226,7 +226,7 @@ function createDefaultTexture(gl) {
   const texture = new Texture({
     width,
     height,
-    data: [pixel],
+    data: pixel.buffer,
     type: TextureType.Texture2D
   })
   return texture
