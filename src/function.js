@@ -136,21 +136,25 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameteri(texture.type, gl.TEXTURE_MAX_LOD, lod.max)
   }
 
-  if (sampler.minificationFilter === TextureFilter.Linear) {
-    if (sampler.mipmapFilter === TextureFilter.Linear) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  if (texture.generateMipmaps) {
+    if (sampler.minificationFilter === TextureFilter.Linear) {
+      if (sampler.mipmapFilter === TextureFilter.Linear) {
+        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
+        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+      }
+    } else if (sampler.minificationFilter === TextureFilter.Nearest) {
+      if (sampler.mipmapFilter === TextureFilter.Linear) {
+        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
+        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+      }
     }
-    if (sampler.mipmapFilter === TextureFilter.Nearest) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-    }
-  }
-
-  if (sampler.minificationFilter === TextureFilter.Nearest) {
-    if (sampler.mipmapFilter === TextureFilter.Linear) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-    }
-    if (sampler.mipmapFilter === TextureFilter.Nearest) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+  } else {
+    if (sampler.minificationFilter === TextureFilter.Nearest) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    } else if (sampler.minificationFilter === TextureFilter.Linear) {
+      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     }
   }
   if (anisotropyExtenstion) {
@@ -187,6 +191,7 @@ export function updateTextureData(gl, texture) {
   }
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
 }
+
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLShader} vshader 
