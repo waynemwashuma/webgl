@@ -126,7 +126,7 @@ export class Texture {
   static defaultSettings = {
     format: TextureFormat.RGBA8Unorm,
     sampler: Sampler.defaultSettings,
-    generateMipmaps: true,
+    generateMipmaps: false,
     flipY: false,
     width: 0,
     height: 0,
