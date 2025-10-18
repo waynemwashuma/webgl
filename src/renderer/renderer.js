@@ -128,6 +128,7 @@ export class Renderer {
     this.defaultTexture = createDefaultTexture(this.gl)
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
+    this.extensions.get("OES_texture_float_linear")
   }
   
   /**
