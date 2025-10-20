@@ -132,8 +132,8 @@ export class MeshMaterial3D extends Object3D {
     this.material = material
   }
 
-  clone() {
-    const newMesh = super.clone()
+  clone(entityMap) {
+    const newMesh = super.clone(entityMap)
 
     newMesh.geometry = this.geometry
     newMesh.material = this.material
