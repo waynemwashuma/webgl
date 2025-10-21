@@ -84,12 +84,12 @@ export class Attribute {
     'joint_weight',
     6,
     GlDataType.Float,
-    1
+    4
   )
   static JointIndex = new Attribute(
     'joint_index',
     7,
     GlDataType.UnsignedShort,
-    1
+    4
   )
 }
