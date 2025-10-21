@@ -10,7 +10,13 @@
       "reAttach": true,
       "name": "Launch iFirefox",
       "url": "http://127.0.0.1:5500/demos/index.html",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "pathMappings": [
+        {
+          "url": "http://127.0.0.1:5500",
+          "path": "${workspaceFolder}"
+        }
+      ]
     },
     {
       "type": "chrome",
