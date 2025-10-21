@@ -5,6 +5,7 @@ export class Object3D {
    * @type {string}
    */
   name = ''
+
   transform = new Transform3D()
 
   /**
@@ -41,10 +42,10 @@ export class Object3D {
   remove(...children) {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
-      
+
       const index = this.children.indexOf(child)
       if (index === -1) return
-  
+
       child.parent = undefined
       this.children.splice(index, 1)
     }
@@ -56,7 +57,7 @@ export class Object3D {
     /**@type {Object3D[]} */
     const queue = [this]
 
-    for (let i = 0; i < queue.length; i++) {
+    while (queue.length) {
       const object = queue.shift()
       const visible = func(object)
 
@@ -79,17 +80,32 @@ export class Object3D {
 
   /**
    * @param {this} object
+   * @param {Map<Object3D,Object3D>} [entityMap] 
    */
-  copy(object){
+  copy(object, entityMap) {
     this.transform.copy(object.transform)
+    this.name = object.name
+    this.add(...object.children.map(child => {
+      const childClone = child.clone(entityMap)
 
-    this.add(...object.children.map(child=>child.clone()))
+      if (entityMap) {
+        entityMap.set(child,childClone)
+      }
 
+      return childClone
+    }))
+
+    if (entityMap) {
+      entityMap.set(object, this)
+    }
     return this
   }
 
-  clone() {
-    return new /**@type {new (...arg:any) => this}*/(this.constructor)().copy(this)
+  /**
+   * @param {Map<Object3D, Object3D>} [entityMap]
+   */
+  clone(entityMap) {
+    return new /**@type {new (...arg:any) => this}*/(this.constructor)().copy(this,entityMap)
   }
 }
 
