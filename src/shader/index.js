@@ -1,4 +1,5 @@
 export * from './common/index.js'
+export * from './debug/index.js'
 export * from './basicVertex.js'
 export * from './basicFragment.js'
 export * from './lambertFragment.js'
