@@ -1,8 +1,6 @@
 import {
   MeshMaterial3D,
-  LambertMaterial,
   BoxGeometry,
-  Vector3,
   Quaternion,
   DirectionalLight,
   Renderer,
