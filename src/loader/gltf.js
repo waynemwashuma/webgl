@@ -3,16 +3,19 @@
 import { Attribute, AttributeData } from '../core/index.js';
 import { Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
-import { MeshMaterial3D, Object3D } from '../objects/index.js';
+import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
 import { arrayBufferToJSON } from './utils.js';
+import { Bone3D } from '../objects/bone.js';
+import { Affine3 } from '../math/index.js';
+import { GlDataType } from '../constant.js';
 
 /**
  * @extends {Loader<Object3D, GLTFLoadSettings>}
  */
 export class GLTFLoader extends Loader {
 
-  constructor(){
+  constructor() {
     super(Object3D)
   }
   /**
@@ -21,27 +24,75 @@ export class GLTFLoader extends Loader {
    * @param {GLTFLoadSettings} settings
    */
   async parse(buffers, destination, settings) {
-    if(!buffers.length){
+    if (!buffers.length) {
       return
     }
-    const gltf = await loadGLTF(buffers[0],settings.paths[0])
+
+    /**@type {Map<number, Object3D>} */
+    const entityMap = new Map()
+    const gltf = await loadGLTF(buffers[0], settings.paths[0])
     const scene = gltf.scenes[gltf.scene]
 
     if (!scene) {
       throw "No root scene defined"
     }
+
     const geometries = gltf.meshes.map((data) => {
-      return parseGeometry(data, gltf.accessors, gltf.bufferViews, gltf.buffers)
+      return parseGeometry(data, gltf)
     })
 
-    const objects = scene.nodes.map((index) => {
-      return parseObject(index, gltf, geometries)
-    }).filter(a => a !== undefined)
+    gltf.nodes.forEach((node, index) => {
+      const object = parseObject(index, node, gltf, geometries)
 
-    destination.add(...objects)
+      if (object) {
+        entityMap.set(index, object)
+      }
+    })
+
+    gltf.nodes.forEach((node, index) => {
+      const parent = entityMap.get(index)
+
+      if (!parent) {
+        return
+      }
+
+      for (const child of node.children) {
+        const childEntity = entityMap.get(child)
+
+        if (childEntity) {
+          parent.add(childEntity)
+        }
+      }
+    })
+
+    scene.nodes.forEach((node) => {
+      entityMap.get(node).update()
+    });
+
+    const skins = gltf.skins.map((skin) => {
+      return parseSkin(skin, gltf, entityMap)
+    })
+
+    entityMap.forEach((entity, index) => {
+      const node = gltf.nodes[index]
+      if (node.skin !== undefined) {
+        entity.traverseBFS((mesh) => {
+          if (mesh instanceof MeshMaterial3D) {
+            mesh.skin = skins[node.skin]
+          }
+          return true
+        })
+      }
+    })
+
+    const sceneEntities = scene.nodes.map((node) => {
+      return entityMap.get(node)
+    })
+
+    destination.add(...sceneEntities)
   }
 
-  default(){
+  default() {
     return new Object3D()
   }
 }
@@ -50,7 +101,7 @@ export class GLTFLoader extends Loader {
  * @param {ArrayBuffer} data
  * @param {string} baseUrl
  */
-async function loadGLTF(data,baseUrl) {
+async function loadGLTF(data, baseUrl) {
   const url = new URL(baseUrl, location.href)
   const json = arrayBufferToJSON(data)
   const { buffers: urlBuffers } = json
@@ -66,7 +117,7 @@ async function loadGLTF(data,baseUrl) {
  * @param {{uri: string;}[]} uris
  */
 async function loadBuffers(base, uris) {
-  
+
   return Promise.all(
     uris.map(async (buffer) => {
       const url = buffer.uri.startsWith('data') ?
@@ -100,6 +151,10 @@ class GLTF {
    */
   meshes = []
   /**
+   * @type {GLTFSkin[]}
+   */
+  skins = []
+  /**
    * @type {ArrayBuffer[]}
    */
   buffers = []
@@ -120,7 +175,7 @@ class GLTF {
    * @param {any} data
    */
   static deserialize(data) {
-    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset } = data
+    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, skins } = data
     const gltf = new GLTF()
 
     if (
@@ -147,6 +202,11 @@ class GLTF {
     gltf.bufferViews = bufferViews.map((/**@type {any}*/d) => GLTFBufferView.deserialize(d))
     gltf.accessors = accessors.map((/**@type {any}*/d) => GLTFAccessor.deserialize(d))
 
+    if (skins instanceof Array) {
+      gltf.skins = skins.map(a => GLTFSkin.deserialize(a))
+    } else {
+      gltf.skins = []
+    }
     return gltf
   }
 }
@@ -274,6 +334,10 @@ class GLTFNode {
         nrotation,
         nscale
       )
+    } else if (matrix) {
+      node.transform = MatrixTransform.deserialize(matrix)
+    } else {
+      node.transform = new TRSTransform()
     }
 
     if (children instanceof Array) {
@@ -357,6 +421,45 @@ class GLTFMesh {
       mesh.extras = {}
     }
     return mesh
+  }
+}
+
+class GLTFSkin {
+  /**
+   * @type {number}
+   */
+  inverseBindMatrices
+
+  /**
+   * @type {number | undefined}
+   */
+  skeleton
+  /**
+   * @type {number[]}
+   */
+  joints
+
+  /**
+   * 
+   * @param {any} data 
+   */
+  static deserialize(data) {
+    const { joints, inverseBindMatrices, skeleton } = data
+    const object = new GLTFSkin()
+
+    if (
+      !(joints instanceof Array) ||
+      typeof inverseBindMatrices !== 'number'
+    ) {
+      throw 'Invalid skin'
+    }
+    object.inverseBindMatrices = inverseBindMatrices
+    object.joints = joints.filter(e => typeof e === 'number')
+
+    if (typeof skeleton === 'number') {
+      object.skeleton = skeleton
+    }
+    return object
   }
 }
 
@@ -673,7 +776,6 @@ export const GLTFAttributeName = {
   Weights0: "WEIGHTS_0"
 }
 
-
 /**
  * @enum {number}
  */
@@ -780,7 +882,20 @@ class TRSTransform {
    * @type {[number,number,number]}
    */
   scale
-
+  /**
+   * @param {[number, number, number]} [translation]
+   * @param {[number, number, number, number]} [rotation]
+   * @param {[number, number, number]} [scale]
+   */
+  constructor(
+    translation = [0, 0, 0],
+    rotation = [0, 0, 0, 1],
+    scale = [1, 1, 1]
+  ) {
+    this.translation = translation
+    this.rotation = rotation
+    this.scale = scale
+  }
   /**
    * @param {any} translation
    * @param {any} rotation
@@ -834,16 +949,14 @@ class MatrixTransform {
 /**
  * 
  * @param {number} index 
- * @param {GLTFAccessor[]} accessors 
- * @param {GLTFBufferView[]} bufferViews 
- * @param {ArrayBuffer[]} buffers 
+ * @param {GLTF} gltf
  * @returns {[DataView,GLTFAccessor]}
  */
-function getAccessorData(index, accessors, bufferViews, buffers) {
+function getAccessorData(index, gltf) {
+  const { accessors, bufferViews, buffers } = gltf
   const accessor = accessors[index]
   if (!accessor) throw "Invalid access to accessors"
 
-  const { count, componentType } = accessor
   const view = bufferViews[accessor.view]
 
   if (!view) throw "Invalid access to buffer views"
@@ -889,43 +1002,53 @@ function mapToIndices(accessor, view) {
 
 /**
  * @param {string} name
- * @param {GLTFComponentType} type
- * @returns {string}
+ * @param {GLTFAccessor} accessor
+ * @param {DataView} buffer
+ * @returns {[string, DataView]}
  */
-function mapAccessorTypeToAttribute(name, type) {
+function mapAccessorTypeToAttribute(name, accessor, buffer) {
+  const { componentType: type } = accessor
   switch (name) {
     case GLTFAttributeName.Position:
       if (type !== Attribute.Position.type)
         throw "Attribute types do not match"
-      return Attribute.Position.name
+      return [Attribute.Position.name, buffer]
     case GLTFAttributeName.TexCoord0:
       if (type !== Attribute.UV.type)
         throw "Attribute types do not match"
-      return Attribute.UV.name
+      return [Attribute.UV.name, buffer]
     case GLTFAttributeName.TexCoord1:
       if (type !== Attribute.UVB.type)
         throw "Attribute types do not match"
-      return Attribute.UVB.name
+      return [Attribute.UVB.name, buffer]
     case GLTFAttributeName.Normal:
       if (type !== Attribute.Normal.type)
         throw "Attribute types do not match"
-      return Attribute.Normal.name
+      return [Attribute.Normal.name, buffer]
     case GLTFAttributeName.Tangent:
       if (type !== Attribute.Tangent.type)
         throw "Attribute types do not match"
-      return Attribute.Tangent.name
+      return [Attribute.Tangent.name, buffer]
     case GLTFAttributeName.Color0:
       if (type !== Attribute.Color.type)
         throw "Attribute types do not match"
-      return Attribute.Color.name
+      return [Attribute.Color.name, buffer]
     case GLTFAttributeName.Weights0:
       if (type !== Attribute.JointWeight.type)
         throw "Attribute types do not match"
-      return Attribute.JointWeight.name
+      return [Attribute.JointWeight.name, buffer]
     case GLTFAttributeName.Joints0:
-      if (type !== Attribute.JointIndex.type)
+      if (type === Attribute.JointIndex.type) {
+        return [Attribute.JointIndex.name, buffer]
+      } else if (type === GlDataType.UnsignedByte) {
+        const newBuffer = widenTypedArray(
+          new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength),
+          Uint16Array
+        )
+        return [Attribute.JointIndex.name, new DataView(newBuffer.buffer)]
+      } else {
         throw "Attribute types do not match"
-      return Attribute.JointIndex.name
+      }
     default:
       return undefined;
   }
@@ -957,11 +1080,9 @@ function parseMeshObject(mesh, meshes, geometries) {
 
 /**
  * @param {GLTFMesh} mesh
- * @param {GLTFAccessor[]} accessors
- * @param {GLTFBufferView[]} bufferViews
- * @param {ArrayBuffer[]} buffers
+ * @param {GLTF} gltf
  */
-function parseGeometry(mesh, accessors, bufferViews, buffers) {
+function parseGeometry(mesh, gltf) {
   const results = []
   for (let i = 0; i < mesh.primitives.length; i++) {
     const primitive = mesh.primitives[i];
@@ -969,68 +1090,126 @@ function parseGeometry(mesh, accessors, bufferViews, buffers) {
     if (primitive.indices !== undefined) {
       const [dataView, accessor] = getAccessorData(
         primitive.indices,
-        accessors, bufferViews,
-        buffers
+        gltf
       )
       geometry.indices = mapToIndices(accessor, dataView)
     }
     for (const [name, location] of primitive.attributes) {
       const [buffer, accessor] = getAccessorData(
         location,
-        accessors, bufferViews,
-        buffers,
+        gltf
       )
-      const attrName = mapAccessorTypeToAttribute(name, accessor.componentType)
-
-      if (!attrName) continue
-
+      const attribute = mapAccessorTypeToAttribute(name, accessor, buffer)
+      if (!attribute) continue
+      const [attributeName, attributeBuffer] = attribute
       geometry.setAttribute(
-        attrName,
-        new AttributeData(buffer))
+        attributeName,
+        new AttributeData(attributeBuffer))
     }
+
+    geometry.normalizeJointWeights()
+
     results.push(geometry)
   }
   return results
 }
 
 /**
- * @param {number} index 
+ * @param {GLTFSkin} gltfSkin
+ * @param {GLTF} gltf
+ * @param {Map<number, Object3D>} entityMap
+ * @returns {Skin}
+ */
+function parseSkin(gltfSkin, gltf, entityMap) {
+  const [bindPoseData] = getAccessorData(gltfSkin.inverseBindMatrices, gltf)
+  const bindPose = convertToInverseBindPose(bindPoseData)
+  const skin = new Skin()
+
+  skin.inverseBindPose = bindPose
+  skin.bones = gltfSkin.joints.map(joint => {
+    const entity = entityMap.get(joint)
+    if (!(entity instanceof Bone3D)) {
+      throw "One of the bones is not a `Bone3D`"
+    }
+
+    return entity
+  })
+
+  // TODO: Remove when you figure what is wrong with the gltf inverse bind matrix
+  // something is wrong when you are parsing it
+  skin.setBindPose()
+  return skin
+}
+
+/**
+ * 
+ * @param {DataView} poseData 
+ * @returns {Affine3[]}
+ */
+function convertToInverseBindPose(poseData) {
+  const results = []
+  const data = new Float32Array(
+    poseData.buffer,
+    poseData.byteOffset,
+    poseData.byteLength / Float32Array.BYTES_PER_ELEMENT
+  )
+
+  for (let offset = 0; offset < data.length; offset += 16) {
+    const affine = new Affine3(
+      data[offset + 0], data[offset + 4], data[offset + 8], data[offset + 11],
+      data[offset + 1], data[offset + 5], data[offset + 9], data[offset + 12],
+      data[offset + 2], data[offset + 6], data[offset + 10], data[offset + 13],
+    )
+
+    results.push(affine)
+  }
+
+  return results
+}
+
+/**
+ * @param {GLTFNode} node 
  * @param {GLTF} gltf
  * @param {Mesh[][]} geometries 
  */
-function parseObject(index, gltf, geometries) {
-  const node = gltf.nodes[index]
-  const { mesh, children, transform, skin } = node
+function parseObject(index, node, gltf, geometries) {
+  const { mesh, transform, name } = node
 
   let object
-  if (mesh !== undefined && skin === undefined) {
+  if (mesh !== undefined) {
     object = parseMeshObject(mesh, gltf.meshes, geometries)
-    if (transform) {
-      transferTransform(object, transform)
-    }
-  } else if (mesh !== undefined && skin !== undefined) {
-    // TODO: Actually implement a skinning here
-    object = parseMeshObject(mesh, gltf.meshes, geometries)
-    if (transform) {
-      transferTransform(object, transform)
-    }
-  } else if (transform) {
-    object = new Object3D()
-    transferTransform(object, transform)
   } else {
-    object = new Object3D()
-  }
+    const bone = parseBone(index, gltf)
 
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i]
-
-    const childobject = parseObject(child, gltf, geometries)
-
-    if (childobject && object) {
-      object.add(childobject)
+    if (bone) {
+      object = bone
+    } else {
+      object = new Object3D()
     }
   }
+
+  if (transform) {
+    transferTransform(object, transform)
+  }
+
+  object.name = name
+
   return object
+}
+
+/**
+ * @param {number} index
+ * @param {GLTF} gltf
+ */
+function parseBone(index, gltf) {
+  for (const skin of gltf.skins) {
+    const boneIndex = skin.joints.findIndex((v) => v === index)
+    if (boneIndex !== -1) {
+      const bone = new Bone3D()
+      bone.index = boneIndex
+      return bone
+    }
+  }
 }
 
 /**
@@ -1054,3 +1233,23 @@ function transferTransform(object, transform) {
     throw "matrix transform not yet supported"
   }
 }
+
+/**
+ * 
+ * @param {TypedArray} from 
+ * @param {new (...args:any[])=>TypedArray} to 
+ * @returns 
+ */
+function widenTypedArray(from, to) {
+  const result = new to(from.length);
+  for (let i = 0; i < from.length; i++) {
+    result[i] = from[i];
+  }
+  return result;
+}
+
+/**
+
+ *@typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | BigInt64Array | BigUint64Array} TypedArray
+
+ */
