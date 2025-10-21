@@ -123,6 +123,11 @@ export class MeshMaterial3D extends Object3D {
   material
 
   /**
+   * @type {Skin | undefined}
+   */
+  skin
+
+  /**
    * @param {T} geometry 
    * @param {U} material 
    */
@@ -137,6 +142,8 @@ export class MeshMaterial3D extends Object3D {
 
     newMesh.geometry = this.geometry
     newMesh.material = this.material
+    newMesh.skin = this.skin ? this.skin.clone() : undefined
+
     return newMesh
   }
 
@@ -158,10 +165,11 @@ export class MeshMaterial3D extends Object3D {
     const materialData = material.getData()
     const { indices } = geometry
     const gpuMesh = meshes.get(geometry)
-    const meshBits = createPipelineBitsFromMesh(geometry)
+    const meshBits = createPipelineBitsFromMesh(geometry, this)
     const pipelineKey = material.getPipelineKey(meshBits)
     const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, ubos, attributes, includes, globalDefines)
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
+    const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
     const ubo = ubos.get(blockName)
 
@@ -172,6 +180,18 @@ export class MeshMaterial3D extends Object3D {
     }
     ubo.update(gl, materialData)
     uploadTextures(gl, material, pipeline.uniforms, caches, defaultTexture)
+
+    if (boneMatricesInfo && this.skin) {
+      gl.activeTexture(gl.TEXTURE0 + 4)
+
+      this.skin.bindMatrix.copy(this.transform.world)
+      this.skin.inverseBindMatrix.copy(this.skin.bindMatrix).invert()
+      this.skin.updateTexture()
+      const texture = getWebglTexture(gl, this.skin.boneTexture, caches.textures)
+
+      gl.bindTexture(this.skin.boneTexture.type, texture)
+      gl.uniform1i(boneMatricesInfo.location, 4)
+    }
 
     if (gpuMesh) {
       gl.bindVertexArray(gpuMesh)
@@ -184,7 +204,9 @@ export class MeshMaterial3D extends Object3D {
       gl.bindVertexArray(newMesh)
     }
 
-    gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
+    if (modelInfo) {
+      gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
+    }
 
     //drawing
     if (indices) {
@@ -248,7 +270,7 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
   }
 
   let blend
-  if(material instanceof Material){
+  if (material instanceof Material) {
     blend = material.blend
   }
 
@@ -266,151 +288,167 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
       source: new Shader({
         source: material.fragment()
       }),
-      targets:[{
+      targets: [{
         format: TextureFormat.RGBA8Unorm
       }]
     }
   }
-  for(const [name, value] of globalDefines) {
-      descriptor.vertex.defines.set(name, value)
-      descriptor.fragment.source.defines.set(name, value)
-    }
+
+  if (key & MeshKey.Skinned) {
+    descriptor.vertex.defines.set("SKINNED", "")
+    descriptor.fragment?.source?.defines?.set("SKINNED", "")
+  }
+  for (const [name, value] of globalDefines) {
+    descriptor.vertex.defines.set(name, value)
+    descriptor.fragment.source.defines.set(name, value)
+  }
   material.specialize(descriptor)
   const newRenderPipeline = new WebGLRenderPipeline(gl, ubos, attributes, includes, descriptor)
 
   caches.renderpipelines[newId] = newRenderPipeline
   return newRenderPipeline
+}
+
+// Reserved for the first 32 bits
+// Note: Should we reserve it for this many bits?
+/**
+ * @enum {bigint}
+ */
+export const MeshKey = {
+  TopologyBits: 0b1111111n,
+  LastBit: 31n,
+  None: 0n,
+  Points: 1n << 0n,
+  Lines: 1n << 1n,
+  LineLoop: 1n << 2n,
+  LineStrip: 1n << 3n,
+  Triangles: 1n << 4n,
+  TriangleStrip: 1n << 5n,
+  TriangleFan: 1n << 6n,
+  Skinned: 1n << 7n
+}
+
+/**
+ * @param {PipelineKey} key 
+ */
+export function topologyFromPipelineKey(key) {
+  if (key & MeshKey.Points) {
+    return PrimitiveTopology.Points
   }
-
-  // Reserved for the first 32 bits
-  // Note: Should we reserve it for this many bits?
-  /**
-   * @enum {bigint}
-   */
-  export const MeshKey = {
-    TopologyBits: 0b1111111n,
-    LastBit: 31n,
-    None: 0n,
-    Points: 1n << 0n,
-    Lines: 1n << 1n,
-    LineLoop: 1n << 2n,
-    LineStrip: 1n << 3n,
-    Triangles: 1n << 4n,
-    TriangleStrip: 1n << 5n,
-    TriangleFan: 1n << 6n
+  if (key & MeshKey.Lines) {
+    return PrimitiveTopology.Lines
   }
-
-  /**
-   * @param {PipelineKey} key 
-   */
-  export function topologyFromPipelineKey(key) {
-    if (key & MeshKey.Points) {
-      return PrimitiveTopology.Points
-    }
-    if (key & MeshKey.Lines) {
-      return PrimitiveTopology.Lines
-    }
-    if (key & MeshKey.LineLoop) {
-      return PrimitiveTopology.LineLoop
-    }
-    if (key & MeshKey.LineStrip) {
-      return PrimitiveTopology.LineStrip
-    }
-    if (key & MeshKey.Triangles) {
-      return PrimitiveTopology.Triangles
-    }
-    if (key & MeshKey.TriangleStrip) {
-      return PrimitiveTopology.TriangleStrip
-    }
-    if (key & MeshKey.TriangleFan) {
-      return PrimitiveTopology.TriangleFan
-    }
-
+  if (key & MeshKey.LineLoop) {
+    return PrimitiveTopology.LineLoop
+  }
+  if (key & MeshKey.LineStrip) {
+    return PrimitiveTopology.LineStrip
+  }
+  if (key & MeshKey.Triangles) {
     return PrimitiveTopology.Triangles
   }
+  if (key & MeshKey.TriangleStrip) {
+    return PrimitiveTopology.TriangleStrip
+  }
+  if (key & MeshKey.TriangleFan) {
+    return PrimitiveTopology.TriangleFan
+  }
 
-  /**
-   * @param {Mesh} mesh 
-   * @returns {bigint}
-   */
-  export function keyFromTopology(mesh) {
-    if (mesh.topology === PrimitiveTopology.Points) {
-      return MeshKey.Points
-    }
-    if (mesh.topology === PrimitiveTopology.Lines) {
-      return MeshKey.Lines
-    }
-    if (mesh.topology === PrimitiveTopology.LineLoop) {
-      return MeshKey.LineLoop
-    }
-    if (mesh.topology === PrimitiveTopology.LineStrip) {
-      return MeshKey.LineStrip
-    }
-    if (mesh.topology === PrimitiveTopology.Triangles) {
-      return MeshKey.Triangles
-    }
-    if (mesh.topology === PrimitiveTopology.TriangleStrip) {
-      return MeshKey.TriangleStrip
-    }
-    if (mesh.topology === PrimitiveTopology.TriangleFan) {
-      return MeshKey.TriangleFan
-    }
+  return PrimitiveTopology.Triangles
+}
 
+/**
+ * @param {Mesh} mesh 
+ * @returns {bigint}
+ */
+export function keyFromTopology(mesh) {
+  if (mesh.topology === PrimitiveTopology.Points) {
+    return MeshKey.Points
+  }
+  if (mesh.topology === PrimitiveTopology.Lines) {
+    return MeshKey.Lines
+  }
+  if (mesh.topology === PrimitiveTopology.LineLoop) {
+    return MeshKey.LineLoop
+  }
+  if (mesh.topology === PrimitiveTopology.LineStrip) {
+    return MeshKey.LineStrip
+  }
+  if (mesh.topology === PrimitiveTopology.Triangles) {
     return MeshKey.Triangles
   }
-
-  /**
-   * @param {Mesh} mesh
-   * @returns {bigint}
-   */
-  function createPipelineBitsFromMesh(mesh) {
-    let key = keyFromTopology(mesh)
-    return key
+  if (mesh.topology === PrimitiveTopology.TriangleStrip) {
+    return MeshKey.TriangleStrip
+  }
+  if (mesh.topology === PrimitiveTopology.TriangleFan) {
+    return MeshKey.TriangleFan
   }
 
-  /**
-   * @template {RawMaterial} T
-   * @param {WebGL2RenderingContext} gl
-   * @param {T} material 
-   * @param {ReadonlyMap<string, Uniform>} uniforms
-   * @param {Caches} caches
-   * @param {Texture} defaultTexture
-   */
-  function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
-    const textures = material.getTextures()
+  return MeshKey.Triangles
+}
 
-    for (let i = 0; i < textures.length; i++) {
-      const [name, location, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
-      const textureInfo = uniforms.get(name)
+/**
+ * @param {Mesh} mesh
+ * @param {MeshMaterial3D} object
+ * @returns {bigint}
+ */
+function createPipelineBitsFromMesh(mesh, object) {
+  let key = keyFromTopology(mesh)
+
+  if (
+    mesh.attributes.has(Attribute.JointIndex.name) &&
+    mesh.attributes.has(Attribute.JointWeight.name) &&
+    object.skin
+  ) {
+    key |= MeshKey.Skinned
+  }
+  return key
+}
+
+/**
+ * @template {RawMaterial} T
+ * @param {WebGL2RenderingContext} gl
+ * @param {T} material 
+ * @param {ReadonlyMap<string, Uniform>} uniforms
+ * @param {Caches} caches
+ * @param {Texture} defaultTexture
+ */
+function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
+  const textures = material.getTextures()
+
+  for (let i = 0; i < textures.length; i++) {
+    const [name, location, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
+    const textureInfo = uniforms.get(name)
+
+    gl.activeTexture(gl.TEXTURE0 + location)
+
+    if (textureInfo) {
       const gpuTexture = getWebglTexture(gl, texture, caches.textures)
+      gl.bindTexture(texture.type, gpuTexture)
+      gl.uniform1i(textureInfo.location, location)
 
-      if (textureInfo) {
-        gl.activeTexture(gl.TEXTURE0 + location)
-        gl.bindTexture(texture.type, gpuTexture)
-        gl.uniform1i(textureInfo.location, location)
-
-        updateTextureSampler(gl, texture, sampler)
-      }
+      updateTextureSampler(gl, texture, sampler)
     }
   }
+}
 
-  /**
-   * @param {WebGL2RenderingContext} gl
-   * @param {Texture} texture
-   * @param {Map<Texture,WebGLTexture>} cache
-   * @returns {WebGLTexture}
-   */
-  function getWebglTexture(gl, texture, cache) {
-    const tex = cache.get(texture)
+/**
+ * @param {WebGL2RenderingContext} gl
+ * @param {Texture} texture
+ * @param {Map<Texture,WebGLTexture>} cache
+ * @returns {WebGLTexture}
+ */
+function getWebglTexture(gl, texture, cache) {
+  const tex = cache.get(texture)
 
-    if (tex) {
-      if (texture.changed) {
-        gl.bindTexture(texture.type, tex)
-        updateTextureData(gl, texture)
-      }
-      return tex
+  if (tex) {
+    if (texture.changed) {
+      gl.bindTexture(texture.type, tex)
+      updateTextureData(gl, texture)
     }
-    const newTex = createTexture(gl, texture)
-    cache.set(texture, newTex)
-    return newTex
+    return tex
   }
+  const newTex = createTexture(gl, texture)
+  cache.set(texture, newTex)
+  return newTex
+}
