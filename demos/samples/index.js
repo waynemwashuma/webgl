@@ -10,6 +10,7 @@ export const objLoader = new URL("./objloader.js", import.meta.url)
 export const gltfLoader = new URL("./gltfloader.js", import.meta.url)
 export const separateSamplers = new URL("./separateSampler.js", import.meta.url)
 export const transformPropagation = new URL("./transformPropagation.js", import.meta.url)
+export const skeleton = new URL("./skeleton.js", import.meta.url)
 
 /**@type {Record<string,URL>} */
 export const demos = {
@@ -25,4 +26,5 @@ export const demos = {
   "obj loader": objLoader,
   "gltf loader": gltfLoader,
   "transform propagation": transformPropagation,
+  "skeleton": skeleton,
 }
