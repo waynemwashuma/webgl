@@ -4,20 +4,19 @@ import {
   BoxGeometry,
   Quaternion,
   DirectionalLight,
-  Renderer,
+  WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
-  Camera
+  Camera,
+  WebGLCanvasSurface
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
-const renderer = new Renderer(canvas)
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
 const camera = new Camera()
-
-document.body.append(canvas)
-renderer.setViewport(innerWidth, innerHeight)
-
 const light = new DirectionalLight()
+
 light.direction.set(0, -1, -1).normalize()
 renderer.lights.ambientLight.intensity = 0.15
 renderer.lights.directionalLights.add(light)
@@ -25,8 +24,8 @@ renderer.lights.directionalLights.add(light)
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["./assets/uv.jpg"],
-  textureSettings:{
-    flipY:true
+  textureSettings: {
+    flipY: true
   }
 })
 const box = new MeshMaterial3D(
@@ -38,25 +37,29 @@ const box = new MeshMaterial3D(
 camera.transform.position.z = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
-  camera.projection.aspect = innerWidth / innerHeight
 }
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
+document.body.append(canvas)
+updateView()
+addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
   box.transform.orientation.multiply(rotation)
 
-  renderer.render([box], camera)
+  renderer.render([box], surface, camera)
   requestAnimationFrame(update)
 }
 
-addEventListener("resize", () => {
-  renderer.setViewport(innerWidth, innerHeight)
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
 
   if (camera.projection instanceof PerspectiveProjection) {
-
     camera.projection.aspect = innerWidth / innerHeight
   }
-})
+}

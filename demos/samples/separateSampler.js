@@ -3,35 +3,30 @@ import {
   QuadGeometry,
   TextureWrap,
   BasicMaterial,
-  Renderer,
+  WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
-  Camera
+  Camera,
+  WebGLCanvasSurface
 } from 'webgllis';
 import { Sampler } from '../../src/texture/sampler.js';
 
 const canvas = document.createElement('canvas')
-const renderer = new Renderer(canvas)
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
 const camera = new Camera()
-
-document.body.append(canvas)
-renderer.setViewport(innerWidth, innerHeight)
-
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["./assets/uv.jpg"]
 })
-
 const sampler1 = new Sampler({
   wrapS: TextureWrap.Clamp,
   wrapT: TextureWrap.Clamp
 })
-
 const sampler2 = new Sampler({
   wrapS: TextureWrap.Repeat,
   wrapT: TextureWrap.Repeat
 })
-
 const sampler3 = new Sampler({
   wrapS: TextureWrap.MirrorRepeat,
   wrapT: TextureWrap.MirrorRepeat
@@ -72,21 +67,25 @@ object3.transform.position.x = 1.2
 camera.transform.position.z = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
-  camera.projection.aspect = innerWidth / innerHeight
 }
 
+document.body.append(canvas)
+updateView()
+addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render([object1, object2, object3], camera)
+  renderer.render([object1, object2, object3],surface, camera)
   requestAnimationFrame(update)
 }
 
-addEventListener("resize", () => {
-  renderer.setViewport(innerWidth, innerHeight)
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
 
   if (camera.projection instanceof PerspectiveProjection) {
-
     camera.projection.aspect = innerWidth / innerHeight
   }
-})
+}

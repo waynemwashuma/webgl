@@ -1,20 +1,20 @@
 import {
-  Renderer,
+  WebGLRenderer,
   PerspectiveProjection,
   GLTFLoader,
   Camera,
   Quaternion,
   SkeletonHelper,
-  MeshMaterial3D
+  MeshMaterial3D,
+  WebGLCanvasSurface
 } from 'webgllis';
 import { Bone3D } from '../../src/objects/bone.js';
 
 const canvas = document.createElement('canvas')
-const renderer = new Renderer(canvas)
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
 const camera = new Camera()
 const objects = []
-document.body.append(canvas)
-renderer.setViewport(innerWidth, innerHeight)
 
 const loader = new GLTFLoader()
 loader.asyncLoad({
@@ -52,6 +52,10 @@ if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.aspect = innerWidth / innerHeight
 }
 const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
+
+document.body.append(canvas)
+updateView()
+addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
@@ -84,16 +88,18 @@ function update() {
   }
 
   if (objects.length > 0) {
-    renderer.render(objects, camera)
+    renderer.render(objects, surface, camera)
   }
   requestAnimationFrame(update)
 }
 
-addEventListener("resize", () => {
-  renderer.setViewport(innerWidth, innerHeight)
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
 
   if (camera.projection instanceof PerspectiveProjection) {
-
     camera.projection.aspect = innerWidth / innerHeight
   }
-})
+}

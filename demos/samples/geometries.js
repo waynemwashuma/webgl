@@ -8,18 +8,17 @@ import {
   CylinderGeometry,
   QuadGeometry,
   Quaternion,
-  Renderer,
+  WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
-  Camera
+  Camera,
+  WebGLCanvasSurface
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
-const renderer = new Renderer(canvas)
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
 const camera = new Camera()
-
-document.body.append(canvas)
-renderer.setViewport(innerWidth, innerHeight)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
@@ -64,20 +63,26 @@ if (camera.projection instanceof PerspectiveProjection) {
 
 
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
+
+document.body.append(canvas)
+addEventListener("resize", updateView)
+updateView()
 requestAnimationFrame(update)
 
 function update() {
   objects.forEach(object => object.transform.orientation.multiply(rotation))
   
-  renderer.render(objects, camera)
+  renderer.render(objects,surface, camera)
   requestAnimationFrame(update)
 }
 
-addEventListener("resize", () => {
-  renderer.setViewport(innerWidth, innerHeight)
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
 
   if (camera.projection instanceof PerspectiveProjection) {
-
     camera.projection.aspect = innerWidth / innerHeight
   }
-})
+}
