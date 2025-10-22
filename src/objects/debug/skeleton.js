@@ -52,10 +52,10 @@ export class SkeletonHelper extends MeshMaterial3D {
       console.warn("The provided object does not have a skin")
       return
     }
-    const {bones,boneTexture,inverseBindPose } = this.skinnedMesh.skin
+    const {bones,boneTexture } = this.skinnedMesh.skin
     const pipeline = getRenderPipeline(gl, pipelineid, caches, ubos, attributes, includes)
-    const modelInfo = pipeline.uniforms.get("model")
     const transformsInfo = pipeline.uniforms.get("transforms")
+    const modelInfo = pipeline.uniforms.get("model")
     const parentInfo = pipeline.uniforms.get("parent_index")
     const childInfo = pipeline.uniforms.get("child_index")
 
@@ -71,9 +71,8 @@ export class SkeletonHelper extends MeshMaterial3D {
     
     const transformsTexture = getWebglTexture(gl, boneTexture, caches.textures)
 
-    gl.activeTexture(gl.TEXTURE0)
+    gl.activeTexture(gl.TEXTURE0 + transformsInfo.texture_unit)
     gl.bindTexture(boneTexture.type, transformsTexture)
-    gl.uniform1i(transformsInfo.location, 0)
 
     gl.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(this.skinnedMesh.transform.world)])
     this.rootBone.traverseBFS((parent) => {
