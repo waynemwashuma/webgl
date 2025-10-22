@@ -1,14 +1,9 @@
 import {
-  MeshMaterial3D,
-  LambertMaterial,
-  UVSphereGeometry,
-  Vector3,
-  Quaternion,
-  DirectionalLight,
   WebGLRenderer,
-  TextureLoader,
   PerspectiveProjection,
+  GLTFLoader,
   Camera,
+  Quaternion,
   WebGLCanvasSurface
 } from 'webgllis';
 
@@ -17,42 +12,31 @@ const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer()
 const camera = new Camera()
 
-const textureLoader = new TextureLoader()
-const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"],
-  textureSettings:{
-    flipY:true
-  }
-})
-const light = new DirectionalLight()
-const sphere = new MeshMaterial3D(
-  new UVSphereGeometry(1),
-  new LambertMaterial({
-    mainTexture: texture,
-  })
-)
+document.body.append(canvas)
+updateView()
 
-light.direction.set(0, -1, -1).normalize()
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
+const loader = new GLTFLoader()
+const model = loader.load({
+  paths: ["/assets/models/gltf/pirate_girl/index.gltf"]
+})
+
 camera.transform.position.z = 2
+camera.transform.position.y = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
   camera.projection.aspect = innerWidth / innerHeight
 }
 
-const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
+const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
 
 document.body.append(canvas)
 updateView()
 addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
-
 function update() {
-  sphere.transform.orientation.multiply(rotation)
-  renderer.render([sphere],surface, camera)
-
+  model.transform.orientation.multiply(rotation)
+  renderer.render([model], surface, camera)
   requestAnimationFrame(update)
 }
 

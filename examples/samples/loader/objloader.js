@@ -1,13 +1,14 @@
 import {
-  MeshMaterial3D,
-  LambertMaterial,
-  BoxGeometry,
-  Quaternion,
-  DirectionalLight,
+  OBJLoader,
+  BasicMaterial,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
+  Quaternion,
+  MeshMaterial3D,
+  LambertMaterial,
+  PhongMaterial,
   WebGLCanvasSurface
 } from 'webgllis';
 
@@ -15,31 +16,39 @@ const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer()
 const camera = new Camera()
-const light = new DirectionalLight()
-
-light.direction.set(0, -1, -1).normalize()
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
-
 const textureLoader = new TextureLoader()
+const loader = new OBJLoader()
 const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"],
-  textureSettings: {
-    flipY: true
+  paths: ["/assets/models/obj/pirate_girl/pirate_girl.png"],
+  textureSettings:{
+    flipY:true
   }
 })
-const box = new MeshMaterial3D(
-  new BoxGeometry(1, 1, 1),
-  new LambertMaterial({
-    mainTexture: texture
-  })
-)
+const model = loader.load({
+  paths: ["/assets/models/obj/pirate_girl/pirate_girl.obj"],
+  postprocessor:(asset)=>{
+    asset.traverseDFS((object)=>{
+      if (object instanceof MeshMaterial3D) {
+        if(
+          object.material instanceof BasicMaterial ||
+          object.material instanceof LambertMaterial ||
+          object.material instanceof PhongMaterial
+        ){
+          object.material.mainTexture = texture
+        }
+      }
+      return true
+    })
+  }
+})
 camera.transform.position.z = 2
+camera.transform.position.y = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
+  camera.projection.aspect = innerWidth / innerHeight
 }
 
-const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
+const rotation = Quaternion.fromEuler(0, Math.PI / 1000, 0)
 
 document.body.append(canvas)
 updateView()
@@ -47,9 +56,9 @@ addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
-  box.transform.orientation.multiply(rotation)
+  model.transform.orientation.multiply(rotation)
+  renderer.render([model], surface, camera)
 
-  renderer.render([box], surface, camera)
   requestAnimationFrame(update)
 }
 
