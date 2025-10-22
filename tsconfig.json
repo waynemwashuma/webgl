@@ -18,7 +18,8 @@
     "target": "ES2020",
     "skipLibCheck":true,
     "paths":{
-      "webgllis":["./src/index.js"]
+      "webgllis":["./src/index.js"],
+      "dat.gui":["./node_modules/@types/dat.gui","./libs/dat.gui.module.js"],
     }
   }
 }
