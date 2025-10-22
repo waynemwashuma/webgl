@@ -754,10 +754,9 @@ class GLTFPrimitive {
 
 /**
  * Enum of GLTF's semantic mesh attribute names.
- * @readonly
  * @enum {string}
  */
-export const GLTFAttributeName = {
+export const GLTFAttributeName = /**@type {const}*/({
   /** Vertex positions */
   Position: "POSITION",
   /** Vertex normals */
@@ -774,24 +773,24 @@ export const GLTFAttributeName = {
   Joints0: "JOINTS_0",
   /** Joint weights for skinning set 0 */
   Weights0: "WEIGHTS_0"
-}
+})
 
 /**
  * @enum {number}
  */
-export const GLTFComponentType = {
+export const GLTFComponentType = /**@type {const}*/({
   Byte: 0x1400,
   UnsignedByte: 0x1401,
   Short: 0x1402,
   UnsignedShort: 0x1403,
   UnsignedInt: 0x1405,
   Float: 0x1406
-}
+})
 
 /**
  * @enum {number}
  */
-export const GLTFAccessorType = {
+export const GLTFAccessorType = /**@type {const}*/({
   Scalar: 0,
   Vec2: 1,
   Vec3: 2,
@@ -799,12 +798,12 @@ export const GLTFAccessorType = {
   Mat2: 4,
   Mat3: 5,
   Mat4: 6
-}
+})
 
 /**
  * @enum {number}
  */
-export const GLTFPrimitiveMode = {
+export const GLTFPrimitiveMode = /**@type {const}*/({
   Points: 0,
   Lines: 1,
   LineLoop: 2,
@@ -812,7 +811,7 @@ export const GLTFPrimitiveMode = {
   Triangles: 4,
   TriangleStrip: 5,
   TriangleFan: 6
-}
+})
 
 /**
  * Maps a raw glTF accessor type string to a valid AccessorType enum value.

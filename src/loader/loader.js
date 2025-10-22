@@ -1,10 +1,10 @@
 /**
  * @enum {number}
  */
-export const OnAssetLoadedStrategy = {
+export const OnAssetLoadedStrategy = /**@type {const}*/({
   Original: 0,
   Clone: 1
-}
+})
 
 /**
  * @template {Clonable<Asset> & Copyable<Asset>} Asset

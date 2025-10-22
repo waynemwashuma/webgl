@@ -3,11 +3,10 @@ export const UNI_CAM_MAT = "view"
 export const UNI_MODEL_MAT = "model"
 
 /**
- * @readonly
  * @enum {number}
  * Uniform types (scalars, vectors, matrices, and samplers).
  */
-export const UniformType = {
+export const UniformType = /** @type {const} */({
   // Scalars
   Float: 0x1406,
   Int: 0x1404,
@@ -65,13 +64,12 @@ export const UniformType = {
   USampler3D: 0x8DD3,
   USamplerCube: 0x8DD4,
   USampler2DArray: 0x8DD7
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  */
-export const GlDataType = {
+export const GlDataType = /** @type {const} */({
   Float: 0x1406,
   UnsignedInt: 0x1405,
   Int: 0x1404,
@@ -79,13 +77,12 @@ export const GlDataType = {
   Short: 0x1402,
   UnsignedByte: 0x1401,
   Byte: 0x1400
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  */
-export const PrimitiveTopology = {
+export const PrimitiveTopology = /** @type {const} */({
   Points: 0x0000,
   Lines: 0x0001,
   LineLoop: 0x0002,
@@ -93,24 +90,22 @@ export const PrimitiveTopology = {
   Triangles: 0x0004,
   TriangleStrip: 0x0005,
   TriangleFan: 0x0006
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  */
-export const BufferUsage = {
+export const BufferUsage = /** @type {const} */({
   Static: 0x88E4,
   Dynamic: 0x88E8,
   Stream: 0x88E0
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Buffer binding targets
  */
-export const BufferTarget = {
+export const BufferTarget = /** @type {const} */({
   ArrayBuffer: 0x8892,              // gl.ARRAY_BUFFER
   ElementArrayBuffer: 0x8893,       // gl.ELEMENT_ARRAY_BUFFER
   CopyReadBuffer: 0x8F36,           // gl.COPY_READ_BUFFER
@@ -119,27 +114,25 @@ export const BufferTarget = {
   PixelUnpackBuffer: 0x88EC,        // gl.PIXEL_UNPACK_BUFFER
   UniformBuffer: 0x8A11,            // gl.UNIFORM_BUFFER
   TransformFeedbackBuffer: 0x8C8E   // gl.TRANSFORM_FEEDBACK_BUFFER
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Face culling modes
  */
-export const CullFace = {
+export const CullFace = /** @type {const} */({
   None: 0x0000,          // Represents no culling
   Front: 0x0404,         // gl.FRONT
   Back: 0x0405,          // gl.BACK
   FrontAndBack: 0x0408   // gl.FRONT_AND_BACK
-}
+})
 
 
 /**
- * @readonly
  * @enum {number}
  * Blend function factors
  */
-export const BlendMode = {
+export const BlendMode = /** @type {const} */({
   Zero: 0x0000,                    // gl.ZERO
   One: 0x0001,                     // gl.ONE
   SrcColor: 0x0300,                // gl.SRC_COLOR
@@ -155,25 +148,24 @@ export const BlendMode = {
   OneMinusConstantColor: 0x8002,   // gl.ONE_MINUS_CONSTANT_COLOR
   ConstantAlpha: 0x8003,           // gl.CONSTANT_ALPHA
   OneMinusConstantAlpha: 0x8004    // gl.ONE_MINUS_CONSTANT_ALPHA
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Blend equation modes
  */
-export const BlendEquation = {
+export const BlendEquation = /** @type {const} */({
   Add: 0x8006,             // gl.FUNC_ADD
   Subtract: 0x800A,        // gl.FUNC_SUBTRACT
   ReverseSubtract: 0x800B, // gl.FUNC_REVERSE_SUBTRACT
   Min: 0x8007,             // gl.MIN
   Max: 0x8008              // gl.MAX
-}
+})
 
 /**
  * @enum {number}
  */
-export const TextureFormat = {
+export const TextureFormat = /** @type {const} */({
   // --- 8-bit ---
   R8Unorm: 1,
   R8Snorm: 2,
@@ -222,45 +214,41 @@ export const TextureFormat = {
   Depth24PlusStencil8: 35,
   Depth32Float: 36,
   Depth32FloatStencil8: 37,
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  */
-export const TextureFilter = {
+export const TextureFilter = /** @type {const} */({
   Nearest: 0x2600,
   Linear: 0x2601
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  */
-export const TextureWrap = {
+export const TextureWrap = /** @type {const} */({
   Repeat: 0x2901,
   Clamp: 0x812F,
   MirrorRepeat: 0x8370
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Texture binding targets
  */
-export const TextureType = {
+export const TextureType = /** @type {const} */({
   Texture2D: 0x0DE1,         // gl.TEXTURE_2D
   Texture2DArray: 0x8C1A,    // gl.TEXTURE_2D_ARRAY
   Texture3D: 0x806F,         // gl.TEXTURE_3D
   TextureCubeMap: 0x8513     // gl.TEXTURE_CUBE_MAP
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Comparison functions for depth, stencil, and sampler tests
  */
-export const CompareFunction = {
+export const CompareFunction = /** @type {const} */({
   Never: 0x0200,      // gl.NEVER
   Less: 0x0201,       // gl.LESS
   Equal: 0x0202,      // gl.EQUAL
@@ -269,25 +257,22 @@ export const CompareFunction = {
   NotEqual: 0x0205,   // gl.NOTEQUAL
   Gequal: 0x0206,     // gl.GEQUAL
   Always: 0x0207      // gl.ALWAYS
-}
-
+})
 
 /**
- * @readonly
  * @enum {number}
  * Texture comparison modes for depth samplers
  */
-export const TextureCompareMode = {
+export const TextureCompareMode = /** @type {const} */({
   None: 0x0000,                  // gl.NONE — comparison disabled
   CompareRefToTexture: 0x884E    // gl.COMPARE_REF_TO_TEXTURE — depth comparison enabled
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Stencil and depth buffer operations.
  */
-export const StencilOp = {
+export const StencilOp = /** @type {const} */({
   Keep: 0x1E00,        // gl.KEEP
   Zero: 0x0000,        // gl.ZERO
   Replace: 0x1E01,     // gl.REPLACE
@@ -296,45 +281,41 @@ export const StencilOp = {
   Decr: 0x1E03,        // gl.DECR
   DecrWrap: 0x8508,    // gl.DECR_WRAP
   Invert: 0x150A       // gl.INVERT
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Polygon winding directions for front-face determination.
  */
-export const FrontFaceDirection = {
+export const FrontFaceDirection = /** @type {const} */({
   CW: 0x0900,   // gl.CW
   CCW: 0x0901   // gl.CCW
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Primitive output modes for transform feedback
  */
-export const TransformFeedbackPrimitiveTopology = {
+export const TransformFeedbackPrimitiveTopology = /** @type {const} */({
   Points: 0x0000,      // gl.POINTS
   Lines: 0x0001,       // gl.LINES
   Triangles: 0x0004    // gl.TRIANGLES
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Buffer storage modes for transform feedback varyings
  */
-export const TransformFeedbackBufferMode = {
+export const TransformFeedbackBufferMode = /** @type {const} */({
   Interleaved: 0x8C8C,  // gl.INTERLEAVED_ATTRIBS
   Separate: 0x8C8D      // gl.SEPARATE_ATTRIBS
-}
+})
 
 /**
- * @readonly
  * @enum {number}
  * Internal formats for renderbuffers
  */
-export const RenderbufferFormat = {
+export const RenderbufferFormat = /** @type {const} */({
   Rgba4: 0x8056,            // gl.RGBA4
   Rgb565: 0x8D62,           // gl.RGB565
   Rgb5A1: 0x8057,           // gl.RGB5_A1
@@ -344,4 +325,4 @@ export const RenderbufferFormat = {
   Depth32f: 0x8CAC,         // gl.DEPTH_COMPONENT32F
   Depth24Stencil8: 0x88F0,  // gl.DEPTH24_STENCIL8
   Depth32fStencil8: 0x8CAD  // gl.DEPTH32F_STENCIL8
-}
+})
