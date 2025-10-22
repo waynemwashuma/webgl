@@ -9,7 +9,7 @@ import {
   Camera,
   WebGLCanvasSurface
 } from 'webgllis';
-import { Sampler } from '../../src/texture/sampler.js';
+import { Sampler } from '../../../src/texture/sampler.js';
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
