@@ -314,7 +314,7 @@ function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes
 /**
  * @enum {bigint}
  */
-export const MeshKey = {
+export const MeshKey = /**@type {const}*/({
   TopologyBits: 0b1111111n,
   LastBit: 31n,
   None: 0n,
@@ -326,7 +326,7 @@ export const MeshKey = {
   TriangleStrip: 1n << 5n,
   TriangleFan: 1n << 6n,
   Skinned: 1n << 7n
-}
+})
 
 /**
  * @param {PipelineKey} key 

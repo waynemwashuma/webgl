@@ -117,7 +117,7 @@ export class Material extends RawMaterial {
 /**
  * @enum {bigint}
  */
-export const MaterialKey = {
+export const MaterialKey = /**@type {const}*/({
   LastBit: 63n,
   None: 0n,
   CullFaceFront: 1n << 0n,
@@ -126,4 +126,4 @@ export const MaterialKey = {
   FrontFaceCW: 1n << 3n,
   DepthWrite: 1n << 4n,
   DepthTest: 1n << 5n
-}
+})
