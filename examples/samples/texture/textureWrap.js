@@ -5,38 +5,57 @@ import {
   BasicMaterial,
   WebGLRenderer,
   TextureLoader,
+  Sampler,
   PerspectiveProjection,
   Camera,
   WebGLCanvasSurface
 } from 'webgllis';
-import { Sampler } from '../../../src/texture/sampler.js';
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer()
 const camera = new Camera()
+
 const textureLoader = new TextureLoader()
-const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"]
+const texture1 = textureLoader.load({
+  paths: ["/assets/images/uv.jpg"],
+  textureSettings: {
+    flipY: true,
+    sampler: {
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.Clamp,
+      wrapT: TextureWrap.Clamp,
+    }
+  }
 })
-const sampler1 = new Sampler({
-  wrapS: TextureWrap.Clamp,
-  wrapT: TextureWrap.Clamp
+const texture2 = textureLoader.load({
+  paths: ["/assets/images/uv.jpg"],
+  textureSettings: {
+    flipY: true,
+    sampler: {
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.Repeat,
+      wrapT: TextureWrap.Repeat
+    }
+  }
 })
-const sampler2 = new Sampler({
-  wrapS: TextureWrap.Repeat,
-  wrapT: TextureWrap.Repeat
-})
-const sampler3 = new Sampler({
-  wrapS: TextureWrap.MirrorRepeat,
-  wrapT: TextureWrap.MirrorRepeat
+const texture3 = textureLoader.load({
+  paths: ["/assets/images/uv.jpg"],
+  textureSettings: {
+    flipY: true,
+    sampler: {
+      ...Sampler.defaultSettings,
+      wrapS: TextureWrap.MirrorRepeat,
+      wrapT: TextureWrap.MirrorRepeat
+    }
+  }
 })
 
 const mesh = new QuadGeometry(1, 1)
 const buffer = mesh.attributes.get('uv').value
 const uvs = new Float32Array(
   buffer.buffer,
-  buffer.byteOffset,
+  buffer.byteOffset / Float32Array.BYTES_PER_ELEMENT,
   buffer.byteLength / Float32Array.BYTES_PER_ELEMENT
 )
 for (let i in uvs) {
@@ -44,16 +63,13 @@ for (let i in uvs) {
 }
 
 const material1 = new BasicMaterial({
-  mainTexture: texture,
-  mainSampler: sampler1
+  mainTexture: texture1
 })
 const material2 = new BasicMaterial({
-  mainTexture: texture,
-  mainSampler: sampler2
+  mainTexture: texture2
 })
 const material3 = new BasicMaterial({
-  mainTexture: texture,
-  mainSampler: sampler3
+  mainTexture: texture3
 })
 
 const object1 = new MeshMaterial3D(mesh, material1)
@@ -67,6 +83,7 @@ object3.transform.position.x = 1.2
 camera.transform.position.z = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
+  camera.projection.aspect = innerWidth / innerHeight
 }
 
 document.body.append(canvas)
@@ -75,7 +92,8 @@ addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render([object1, object2, object3],surface, camera)
+  renderer.render([object1, object2, object3], surface, camera)
+
   requestAnimationFrame(update)
 }
 

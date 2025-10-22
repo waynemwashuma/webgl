@@ -18,7 +18,7 @@ const camera = new Camera()
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"]
+  paths: ["/assets/images/uv.jpg"]
 })
 const mesh = new QuadGeometry(1, 1)
 const materials = [

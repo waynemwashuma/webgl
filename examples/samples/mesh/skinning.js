@@ -6,9 +6,9 @@ import {
   Quaternion,
   SkeletonHelper,
   MeshMaterial3D,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  Bone3D
 } from 'webgllis';
-import { Bone3D } from '../../../src/objects/bone.js';
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
@@ -18,7 +18,7 @@ const objects = []
 
 const loader = new GLTFLoader()
 loader.asyncLoad({
-  paths: ["assets/models/gltf/pirate_girl/index.gltf"]
+  paths: ["/assets/models/gltf/pirate_girl/index.gltf"]
 }).then((model) => {
   const entityMap = new Map()
   const clone = model.clone(entityMap)

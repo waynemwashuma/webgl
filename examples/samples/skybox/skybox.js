@@ -16,24 +16,24 @@ const camera = new Camera()
 const textureLoader = new TextureLoader()
 const day = textureLoader.load({
   paths: [
-    "./assets/skybox/miramar_right.png",
-    "./assets/skybox/miramar_left.png",
-    "./assets/skybox/miramar_top.png",
-    "./assets/skybox/miramar_bottom.png",
-    "./assets/skybox/miramar_back.png",
-    "./assets/skybox/miramar_front.png",
+    "/assets/images/skybox/miramar_right.png",
+    "/assets/images/skybox/miramar_left.png",
+    "/assets/images/skybox/miramar_top.png",
+    "/assets/images/skybox/miramar_bottom.png",
+    "/assets/images/skybox/miramar_back.png",
+    "/assets/images/skybox/miramar_front.png",
 
   ],
   type: TextureType.TextureCubeMap,
 })
 const night = textureLoader.load({
   paths: [
-    "./assets/skybox/grimmnight_right.png",
-    "./assets/skybox/grimmnight_left.png",
-    "./assets/skybox/grimmnight_top.png",
-    "./assets/skybox/grimmnight_bottom.png",
-    "./assets/skybox/grimmnight_back.png",
-    "./assets/skybox/grimmnight_front.png",
+    "/assets/images/skybox/grimmnight_right.png",
+    "/assets/images/skybox/grimmnight_left.png",
+    "/assets/images/skybox/grimmnight_top.png",
+    "/assets/images/skybox/grimmnight_bottom.png",
+    "/assets/images/skybox/grimmnight_back.png",
+    "/assets/images/skybox/grimmnight_front.png",
   ],
   type: TextureType.TextureCubeMap
 })

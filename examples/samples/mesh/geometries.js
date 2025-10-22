@@ -22,7 +22,7 @@ const camera = new Camera()
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["./assets/uv.jpg"],
+  paths: ["/assets/images/uv.jpg"],
   textureSettings:{
     flipY:true
   }

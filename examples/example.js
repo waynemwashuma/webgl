@@ -28,7 +28,8 @@ function init() {
  * @returns {string}
  */
 function recursiveSelect(items,map){
-  const item = map[items.shift()]
+  const name = items.shift()
+  const item = map[name]
 
   if(item instanceof URL){
     return item.pathname
