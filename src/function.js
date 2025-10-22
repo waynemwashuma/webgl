@@ -226,6 +226,7 @@ export function createProgram(gl, vshader, fshader, attributes) {
     return null
   }
 
+  gl.useProgram(program)
   gl.detachShader(program, vshader)
   gl.detachShader(program, fshader)
   gl.deleteShader(vshader)
@@ -246,7 +247,7 @@ export function createVAO(gl, attributeMap, geometry) {
   const vao = gl.createVertexArray()
   gl.bindVertexArray(vao)
 
-  updateVAO(gl,attributeMap,geometry)
+  updateVAO(gl, attributeMap, geometry)
 
   return vao
 }
@@ -256,7 +257,7 @@ export function createVAO(gl, attributeMap, geometry) {
  * @param {ReadonlyMap<string, Attribute>} attributeMap
  * @param {Mesh} geometry
  */
-export function updateVAO(gl,attributeMap,geometry) {
+export function updateVAO(gl, attributeMap, geometry) {
   const { indices, attributes } = geometry
 
   if (indices != void 0) {
@@ -277,7 +278,7 @@ export function updateVAO(gl,attributeMap,geometry) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, data.value, gl.STATIC_DRAW)
     gl.enableVertexAttribArray(attribute.id)
-    setVertexAttribute(gl,attribute.id, attribute.type,attribute.size)
+    setVertexAttribute(gl, attribute.id, attribute.type, attribute.size)
   }
 }
 
@@ -291,7 +292,7 @@ export function updateVAO(gl,attributeMap,geometry) {
  * @param {number} [offset = 0] - Byte offset of the first attribute.
  * @param {boolean} [normalized = false] - Whether fixed-point values should be normalized.
  */
-function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, normalized = false) {  
+function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, normalized = false) {
   switch (type) {
     case GlDataType.Float:
       gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
@@ -425,23 +426,59 @@ function getUBOLayout(gl, program, index) {
  * @returns {Map<string,Uniform>}
  */
 function getActiveUniforms(gl, program) {
+  let texture2d = 0, cubemap = 0, texture2dArray = 0, texture3d = 0
   const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
   const map = new Map()
   for (let i = 0; i < numUniforms; i++) {
-    const info = gl.getActiveUniform(program, i);
+    const info = gl.getActiveUniform(program, i)
+    const location = gl.getUniformLocation(program, info.name)
     const [blockIndex] = gl.getActiveUniforms(
       program,
       [i],
       gl.UNIFORM_BLOCK_INDEX
     )
     if (blockIndex !== -1) continue
-    map.set(info.name, new Uniform(
-      gl.getUniformLocation(program, info.name),
+    const uniform = new Uniform(
+      location,
       info.type,
       info.size
-    ))
-  }
+    )
 
+    switch (info.type) {
+      case UniformType.Sampler2D:
+      case UniformType.ISampler2D:
+      case UniformType.USampler2D:
+      case UniformType.Sampler2DShadow:
+        uniform.texture_unit = texture2d
+        texture2d += 1
+        gl.uniform1i(location, uniform.texture_unit)
+        break
+      case UniformType.Sampler2DArray:
+      case UniformType.ISampler2DArray:
+      case UniformType.USampler2DArray:
+      case UniformType.Sampler2DArrayShadow:
+        uniform.texture_unit = texture2dArray
+        texture2dArray += 1
+        gl.uniform1i(location, uniform.texture_unit)
+        break
+      case UniformType.SamplerCube:
+      case UniformType.ISamplerCube:
+      case UniformType.USamplerCube:
+      case UniformType.SamplerCubeShadow:
+        uniform.texture_unit = cubemap
+        cubemap += 1
+        gl.uniform1i(location, uniform.texture_unit)
+        break
+      case UniformType.Sampler3D:
+      case UniformType.ISampler3D:
+      case UniformType.USampler3D:
+        uniform.texture_unit = texture3d
+        texture3d += 1
+        gl.uniform1i(location, uniform.texture_unit)
+        break
+    }
+    map.set(info.name, uniform)
+  }
   return map
 }
 

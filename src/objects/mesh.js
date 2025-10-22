@@ -181,8 +181,8 @@ export class MeshMaterial3D extends Object3D {
     ubo.update(gl, materialData)
     uploadTextures(gl, material, pipeline.uniforms, caches, defaultTexture)
 
-    if (boneMatricesInfo && this.skin) {
-      gl.activeTexture(gl.TEXTURE0 + 4)
+    if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && this.skin) {
+      gl.activeTexture(gl.TEXTURE0 + boneMatricesInfo.texture_unit)
 
       this.skin.bindMatrix.copy(this.transform.world)
       this.skin.inverseBindMatrix.copy(this.skin.bindMatrix).invert()
@@ -190,7 +190,6 @@ export class MeshMaterial3D extends Object3D {
       const texture = getWebglTexture(gl, this.skin.boneTexture, caches.textures)
 
       gl.bindTexture(this.skin.boneTexture.type, texture)
-      gl.uniform1i(boneMatricesInfo.location, 4)
     }
 
     if (gpuMesh) {
@@ -417,16 +416,14 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
   const textures = material.getTextures()
 
   for (let i = 0; i < textures.length; i++) {
-    const [name, location, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
+    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
     const textureInfo = uniforms.get(name)
 
-    gl.activeTexture(gl.TEXTURE0 + location)
-
-    if (textureInfo) {
+    if (textureInfo && textureInfo.texture_unit !== undefined) {
       const gpuTexture = getWebglTexture(gl, texture, caches.textures)
-      gl.bindTexture(texture.type, gpuTexture)
-      gl.uniform1i(textureInfo.location, location)
 
+      gl.activeTexture(gl.TEXTURE0 + textureInfo.texture_unit)
+      gl.bindTexture(texture.type, gpuTexture)
       updateTextureSampler(gl, texture, sampler)
     }
   }

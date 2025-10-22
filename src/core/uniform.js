@@ -5,6 +5,10 @@ export class Uniform {
   size
   type
   /**
+   * @type {number | undefined}
+   */
+  texture_unit
+  /**
    * @param {WebGLUniformLocation} location
    * @param {number} size
    * @param {UniformType} type
