@@ -8,7 +8,7 @@ import {
   MeshMaterial3D,
   WebGLCanvasSurface
 } from 'webgllis';
-import { Bone3D } from '../../src/objects/bone.js';
+import { Bone3D } from '../../../src/objects/bone.js';
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
