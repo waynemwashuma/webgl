@@ -8,6 +8,7 @@ import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Mesh } from "../mesh/index.js"
+import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 
 export class DirectionalLights {
   /**
@@ -15,7 +16,7 @@ export class DirectionalLights {
    */
   lights = []
   maxNumber = 10
-  
+
   /**
    * @param {DirectionalLight} light
    */
@@ -28,7 +29,7 @@ export class DirectionalLights {
       0, 0, 0,
       ...this.lights.flatMap(light => light.pack())
     ]
-    
+
     return {
       name: "DirectionalLightBlock",
       data: new Float32Array(buffer)
@@ -59,61 +60,47 @@ export class Caches {
   materials = new Map()
 }
 
-export class Renderer {
+export class WebGLRenderer {
   limits
   caches = new Caches()
   _UBOs = new UBOs()
   lights = new Lights()
-  
+
   /**
    * @readonly
    * @type {Texture}
    */
   defaultTexture
-  
+
   /**
    * @readonly
    * @type {ReadonlyMap<string,Attribute>}
    */
   attributes
-  
+
   /**
    * @readonly
    * @type {Map<string, string>}
    */
   includes = new Map()
-  
+
   /**
    * @readonly
    * @type {Map<string, string>}
    */
   defines = new Map()
-  
-  /**
-   * @type {HTMLCanvasElement}
-   */
-  domElement = null
-  /**
-   * @type {WebGL2RenderingContext}
-   */
-  gl = null
   dpr = 0
   culling = true
   depthTest = true
   alphaBlending = true
-  /**
-   * @param {HTMLCanvasElement} canvas
-   */
-  constructor(canvas) {
-    const attributes = new Map()
 
-    this.domElement = canvas || document.createElement("canvas")
+  constructor() {
+    const dummy = new OffscreenCanvas(100, 100)
+    const context = dummy.getContext('webgl2')
+    const attributes = new Map()
     this.dpr = devicePixelRatio
-    
-    this.gl = canvas.getContext("webgl2")
-    this.limits = new WebGLDeviceLimits(this.gl)
-    this.extensions = new WebGLExtensions(this.gl)
-    
+    this.limits = new WebGLDeviceLimits(context)
+
     attributes
       .set(Attribute.Position.name, Attribute.Position)
       .set(Attribute.UV.name, Attribute.UV)
@@ -123,35 +110,35 @@ export class Renderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    
+
     this.attributes = attributes
-    this.defaultTexture = createDefaultTexture(this.gl)
+    this.defaultTexture = createDefaultTexture()
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
-    this.extensions.get("OES_texture_float_linear")
   }
-  
+
   /**
    * @param {{ name: any; data: any; }} dataForm
    */
-  updateUBO(dataForm) {
+  updateUBO(context, dataForm) {
     const { data, name } = dataForm
     const ubo = this._UBOs.get(name)
-    
+
     if (!ubo) return
-    
-    ubo.update(this.gl, data)
+
+    ubo.update(context, data)
   }
-  
+
   /**
    * @param {Camera} camera
+   * @param {WebGLCanvasSurface} surface 
    */
-  clear(camera) {
-    const { gl: context } = this
+  clear(camera, surface) {
+    const { context } = surface
     const { clearColor, clearDepth, clearStencil } = camera
     let bit = 0
     context.stencilMask(0xFF);
-    
+
     if (clearColor.enabled) {
       const { r, g, b, a } = clearColor.value
       bit |= context.COLOR_BUFFER_BIT
@@ -163,7 +150,7 @@ export class Renderer {
       context.depthMask(true)
       context.clearDepth(clearDepth.value)
     }
-    if (clearStencil.enabled){
+    if (clearStencil.enabled) {
       bit |= context.STENCIL_BUFFER_BIT
       context.stencilMask(0xFF)
       context.clearStencil(clearStencil.value)
@@ -172,55 +159,47 @@ export class Renderer {
   }
   /**
    * @param {Object3D[]} objects
+   * @param {WebGLCanvasSurface} surface 
    * @param {Camera} camera
    */
-  render(objects, camera) {
-    const { caches, attributes, defaultTexture, gl, _UBOs, defines, includes } = this
-    this.clear(camera)
+  render(objects, surface, camera) {
+    const { context } = surface
+    const { caches, attributes, defaultTexture, _UBOs, defines, includes } = this
     camera.update()
-    this.updateUBO(camera.getData())
-    
-    this.updateUBO(this.lights.ambientLight.getData())
-    this.updateUBO(this.lights.directionalLights.getData())
-    
+
+    this.setViewport(surface)
+    this.clear(camera, surface)
+    this.updateUBO(context, camera.getData())
+
+    this.updateUBO(context, this.lights.ambientLight.getData())
+    this.updateUBO(context, this.lights.directionalLights.getData())
+
     for (let i = 0; i < this.lights.directionalLights.lights.length; i++) {
       this.lights.directionalLights.lights[i].update()
     }
-    
+
     for (let i = 0; i < objects.length; i++) {
       const object = objects[i]
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof MeshMaterial3D) {
-          child.renderGL(gl, caches, _UBOs, attributes, defaultTexture, includes, defines)
+          child.renderGL(context, caches, _UBOs, attributes, defaultTexture, includes, defines)
         }
         return true
       })
     }
   }
   /**
-   * @param {number} w
-   * @param {number} h
+   * @param {WebGLCanvasSurface} surface
    */
-  setViewport(w, h) {
-    let canvas = this.gl.canvas
-    if (canvas instanceof HTMLCanvasElement) {
-      canvas.style.width = w + "px"
-      canvas.style.height = h + "px"
-    }
-    canvas.width = w * this.dpr
-    canvas.height = h * this.dpr
-    this.gl.viewport(0, 0,
-      w * this.dpr,
-      h * this.dpr
-    )
+  setViewport(surface) {
+    const { canvas, context } = surface
+
+    context.viewport(0, 0, canvas.width, canvas.height)
   }
 }
 
-/**
- * @param {WebGL2RenderingContext} gl
- */
-function createDefaultTexture(gl) {
+function createDefaultTexture() {
   const width = 1
   const height = 1
   const pixel = new Uint8Array([255, 255, 255, 255])

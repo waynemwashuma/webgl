@@ -3,19 +3,18 @@ import {
   QuadGeometry,
   TextureWrap,
   BasicMaterial,
-  Renderer,
+  WebGLRenderer,
   TextureLoader,
   Sampler,
   PerspectiveProjection,
-  Camera
+  Camera,
+  WebGLCanvasSurface
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
-const renderer = new Renderer(canvas)
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
 const camera = new Camera()
-
-document.body.append(canvas)
-renderer.setViewport(innerWidth, innerHeight)
 
 const textureLoader = new TextureLoader()
 const texture1 = textureLoader.load({
@@ -87,19 +86,24 @@ if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.aspect = innerWidth / innerHeight
 }
 
+document.body.append(canvas)
+updateView()
+addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
-  renderer.render([object1, object2, object3], camera)
+  renderer.render([object1, object2, object3], surface, camera)
 
   requestAnimationFrame(update)
 }
 
-addEventListener("resize", () => {
-  renderer.setViewport(innerWidth, innerHeight)
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
 
   if (camera.projection instanceof PerspectiveProjection) {
-
     camera.projection.aspect = innerWidth / innerHeight
   }
-})
+}
