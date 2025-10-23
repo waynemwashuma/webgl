@@ -4,6 +4,7 @@ import mesh from "./mesh/index.js"
 import loader from "./loader/index.js"
 import others from "./other/index.js"
 import skyBox from "./skybox/index.js"
+import renderTarget from "./rendertarget/index.js"
 import transform from "./transform/index.js"
 
 /**@type {Record<string, any>} */
@@ -13,6 +14,7 @@ export const demos = {
   "texture": texture,
   "transform": transform,
   "skybox": skyBox,
+  "render target":renderTarget,
   "loaders": loader,
   "others":others,
 }
