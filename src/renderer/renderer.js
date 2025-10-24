@@ -9,6 +9,7 @@ import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { Mesh } from "../mesh/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
+import { CanvasTarget } from "../rendertarget/canvastarget.js"
 
 export class DirectionalLights {
   /**
@@ -118,7 +119,8 @@ export class WebGLRenderer {
   }
 
   /**
-   * @param {{ name: any; data: any; }} dataForm
+   * @param {{name: any;data: any;}} dataForm
+   * @param {WebGL2RenderingContext} context
    */
   updateUBO(context, dataForm) {
     const { data, name } = dataForm
@@ -163,11 +165,13 @@ export class WebGLRenderer {
    * @param {Camera} camera
    */
   render(objects, surface, camera) {
-    const { context } = surface
+    const { canvas, context } = surface
+    const { target: renderTarget } = camera
     const { caches, attributes, defaultTexture, _UBOs, defines, includes } = this
+
     camera.update()
 
-    this.setViewport(surface)
+    this.setViewport(surface, renderTarget)
     this.clear(camera, surface)
     this.updateUBO(context, camera.getData())
 
@@ -190,12 +194,27 @@ export class WebGLRenderer {
     }
   }
   /**
+   * @private
    * @param {WebGLCanvasSurface} surface
+   * @param {CanvasTarget} [target]
    */
-  setViewport(surface) {
+  setViewport(surface, target) {
     const { canvas, context } = surface
 
-    context.viewport(0, 0, canvas.width, canvas.height)
+    if (target) {
+      if (target.scissor) {
+        const { offset, size } = target.scissor
+        context.enable(context.SCISSOR_TEST)
+        context.scissor(offset.x, offset.y, size.x, size.y)
+      } else{
+        context.disable(context.SCISSOR_TEST)
+      }
+      const { offset, size } = target.viewport
+      context.viewport(offset.x, offset.y, size.x, size.y)
+    } else {
+      context.disable(context.SCISSOR_TEST)
+      context.viewport(0, 0, canvas.width, canvas.height)
+    }
   }
 }
 
