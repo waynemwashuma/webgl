@@ -202,14 +202,14 @@ export class WebGLRenderer {
     const { canvas, context } = surface
 
     if (target) {
+      context.enable(context.SCISSOR_TEST)
+      const { offset, size } = target.viewport
       if (target.scissor) {
         const { offset, size } = target.scissor
-        context.enable(context.SCISSOR_TEST)
         context.scissor(offset.x, offset.y, size.x, size.y)
       } else{
-        context.disable(context.SCISSOR_TEST)
+        context.scissor(offset.x, offset.y, size.x, size.y)
       }
-      const { offset, size } = target.viewport
       context.viewport(offset.x, offset.y, size.x, size.y)
     } else {
       context.disable(context.SCISSOR_TEST)
