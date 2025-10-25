@@ -1,25 +1,9 @@
-import { Affine3, Color, Matrix4, Transform3D } from "../math/index.js"
+import { Affine3, Matrix4, Transform3D } from "../math/index.js"
 import { Object3D } from "../objects/index.js"
 import { CanvasTarget } from "../rendertarget/index.js"
 import { PerspectiveProjection, Projection } from "./projection.js"
 
-/**
- * @template T
- */
-export class ClearParams {
-	enabled = true
-	value
-	/**
-	 * @param {T} value
-	 */
-	constructor(value){
-		this.value = value
-	}
-}
 export class Camera extends Object3D {
-	clearColor = new ClearParams(new Color(0, 0, 0, 0))
-	clearDepth = new ClearParams(1)
-	clearStencil = new ClearParams(0)
 	transform = new Transform3D()
 	
 	near = 0.1
