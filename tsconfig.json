@@ -1,18 +1,13 @@
 {
   "include": [
     "./src",
-    "./demos"
+    "./examples"
   ],
   "compilerOptions": {
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "alwaysStrict": true,
     "checkJs": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "noEmit": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "target": "ES2020",

@@ -1,0 +1,32 @@
+{
+  "name": "webgl",
+  "version": "0.0.0",
+  "description": "A rendering library",
+  "keywords": [
+    "rendering",
+    "3D",
+    "draw",
+    "game"
+  ],
+  "homepage": "https://github.com/waynemwashuma/webgl#readme",
+  "bugs": {
+    "url": "https://github.com/waynemwashuma/webgl/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waynemwashuma/webgl.git"
+  },
+  "license": "MIT",
+  "author": "Wayne Mwashuma",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "npm test"
+  },
+  "devDependencies": {
+    "@types/dat.gui": "^0.7.13"
+  }
+}
