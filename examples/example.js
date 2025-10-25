@@ -6,14 +6,20 @@ function init() {
   const params = new URLSearchParams(window.location.search);
   const name = params.get("example")
   
-  if(!name) return
+  if(!name || name === '') {
+    const warning = "No example selected."
+    document.body.append(document.createTextNode(warning))
+  }
   
   const demo = recursiveSelect(
     name.split('/').filter(e=>e.length !== 0),
     demos
   )
 
-  if(!demo) return
+  if(!demo) {
+    const warning = "The example selected does not exist."
+    document.body.append(document.createTextNode(warning))
+  }
 
   const script = document.createElement('script')
 
@@ -25,14 +31,17 @@ function init() {
 /**
  * @param {string[]} items
  * @param {Record<string,any>} map 
- * @returns {string}
+ * @returns {string | undefined}
  */
 function recursiveSelect(items,map){
   const name = items.shift()
   const item = map[name]
 
-  if(item instanceof URL){
+  if(item instanceof URL) {
     return item.pathname
+  }
+  if(item === undefined) {
+    return undefined
   }
 
   return recursiveSelect(items,item)
