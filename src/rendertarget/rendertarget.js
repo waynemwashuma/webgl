@@ -1,7 +1,11 @@
 import { Color } from "../math/index.js";
 import { ViewRectangle, Range, ClearParams } from "../utils/index.js";
 
+/**
+ * @abstract
+ */
 export class RenderTarget {
+
   /**
    * @type {ClearParams<Color>}
    */

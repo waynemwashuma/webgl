@@ -21,7 +21,7 @@ import {
 } from "webgllis"
 
 const settings = {
-  slider: 0.5
+  slider: 0
 }
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
@@ -115,23 +115,11 @@ function update() {
 function updateView() {
   const fullWidth = innerWidth * devicePixelRatio
   const fullHeight = innerWidth * devicePixelRatio
-  const width = fullWidth * settings.slider
 
   canvas.style.width = innerWidth + "px"
   canvas.style.height = innerHeight + "px"
   canvas.width = fullWidth
   canvas.height = fullHeight
-  renderTarget1.viewport.offset.set(0, 0)
-  renderTarget1.viewport.size.set(fullWidth, fullHeight)
-  renderTarget2.viewport.offset.set(0, 0)
-  renderTarget2.viewport.size.set(fullWidth, fullHeight)
-
-  if(renderTarget1.scissor && renderTarget2.scissor){
-    renderTarget1.scissor.offset.set(0, 0)
-    renderTarget1.scissor.size.set(width, fullHeight)
-    renderTarget2.scissor.offset.set(width, 0)
-    renderTarget2.scissor.size.set(fullWidth - width, fullHeight)
-  }
 
   if (camera1.projection instanceof PerspectiveProjection) {
     camera1.projection.aspect = fullWidth / fullHeight
@@ -145,5 +133,13 @@ function updateView() {
 const controls = new GUI()
 const screenFolder = controls.addFolder("Settings")
 const slider = screenFolder.add(settings, 'slider', 0, 1).name("Slider")
-slider.onChange(updateView)
+slider.onChange(updateRenderTargets)
 screenFolder.open()
+
+function updateRenderTargets(value) {
+  if (renderTarget1.scissor && renderTarget2.scissor) {
+    renderTarget1.scissor.size.set(value, 1)
+    renderTarget2.scissor.offset.set(value, 0)
+    renderTarget2.scissor.size.set(1 - value, 1)
+  }
+}

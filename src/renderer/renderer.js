@@ -261,27 +261,51 @@ export class WebGLRenderer {
   setViewport(surface, target) {
     const { canvas, context } = surface
 
-    if (target) {
-      if (target instanceof ImageRenderTarget) {
-        const buffer = this.caches.getFrameBuffer(context, target)
-        context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
-      } else {
-        context.bindFramebuffer(context.FRAMEBUFFER, null)
-      }
-      context.enable(context.SCISSOR_TEST)
-      const { offset, size } = target.viewport
-      if (target.scissor) {
-        const { offset, size } = target.scissor
-        context.scissor(offset.x, offset.y, size.x, size.y)
-      } else {
-        context.scissor(offset.x, offset.y, size.x, size.y)
-      }
-      context.viewport(offset.x, offset.y, size.x, size.y)
-    } else {
+    if (!target) {
       context.bindFramebuffer(context.FRAMEBUFFER, null)
       context.disable(context.SCISSOR_TEST)
       context.viewport(0, 0, canvas.width, canvas.height)
+      return
     }
+    if (target instanceof ImageRenderTarget) {
+      const buffer = this.caches.getFrameBuffer(context, target)
+
+      context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
+      context.enable(context.SCISSOR_TEST)
+      this.setViewportScissor(context, target.viewport, target.scissor,target.width, target.height)
+    } else if (target instanceof CanvasTarget) {
+      context.bindFramebuffer(context.FRAMEBUFFER, null)
+      context.enable(context.SCISSOR_TEST)
+      this.setViewportScissor(context, target.viewport, target.scissor, canvas.width, canvas.height)
+    }
+  }
+
+  setViewportScissor(context, viewport, scissors, width, height) {
+    const { offset, size } = viewport
+
+    if (scissors) {
+      const { offset, size } = scissors
+      context.scissor(
+        offset.x * width,
+        offset.y * height, 
+        size.x * width, 
+        size.y * height
+      )
+    } else {
+      context.scissor(
+        offset.x * width,
+        offset.y * height, 
+        size.x * width, 
+        size.y * height
+      )
+    }
+
+    context.viewport(
+      offset.x * width,
+      offset.y * height, 
+      size.x * width, 
+      size.y * height
+    )
   }
 }
 

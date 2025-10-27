@@ -20,8 +20,7 @@ import {
 } from "webgllis"
 import { GUI } from "dat.gui";
 
-const fullWidth = innerWidth * devicePixelRatio
-const fullHeight = innerWidth * devicePixelRatio
+
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderTarget = new CanvasTarget()
@@ -75,8 +74,7 @@ objects.forEach((object, i) => {
   object.transform.position.x = startX + stepX * (i % number)
   object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
-// set up render target
-renderTarget.viewport.size.set(fullWidth, fullHeight)
+
 //set up the camera
 camera.target = renderTarget
 camera.transform.position.z = 5
@@ -87,6 +85,7 @@ if (camera.projection instanceof PerspectiveProjection) {
 
 document.body.append(canvas)
 updateView()
+addEventListener('resize',updateView)
 requestAnimationFrame(update)
 
 function update() {
@@ -99,6 +98,9 @@ function update() {
 }
 
 function updateView() {
+  const fullWidth = innerWidth * devicePixelRatio
+  const fullHeight = innerWidth * devicePixelRatio
+
   canvas.style.width = innerWidth + "px"
   canvas.style.height = innerHeight + "px"
   canvas.width = fullWidth
@@ -114,21 +116,20 @@ const settings = {
 }
 const controls = new GUI()
 const canvasopts = controls.addFolder("Canvas Render Target")
-canvasopts.add(renderTarget.viewport.offset, 'x', 0, fullWidth).name("Viewport X")
-canvasopts.add(renderTarget.viewport.offset, 'y', 0, fullHeight).name("Viewport Y")
-canvasopts.add(renderTarget.viewport.size, 'x', 0, fullWidth).name("Viewport Width")
-canvasopts.add(renderTarget.viewport.size, 'y', 0, fullHeight).name("Viewport Hieght")
+canvasopts.add(renderTarget.viewport.offset, 'x', 0, 1).name("Viewport X")
+canvasopts.add(renderTarget.viewport.offset, 'y', 0, 1).name("Viewport Y")
+canvasopts.add(renderTarget.viewport.size, 'x', 0, 1).name("Viewport Width")
+canvasopts.add(renderTarget.viewport.size, 'y', 0, 1).name("Viewport Hieght")
 /**@type {GUI} */
 let scissorsFolder
 canvasopts.add(settings, "enableScissors").onChange((value) => {
   if (value) {
     renderTarget.scissor = new ViewRectangle()
-    renderTarget.scissor.size.set(fullWidth, fullHeight)
     scissorsFolder = canvasopts.addFolder('Scissors')
-    scissorsFolder.add(renderTarget.scissor.offset, 'x', 0, fullWidth).name("Scissor X")
-    scissorsFolder.add(renderTarget.scissor.offset, 'y', 0, fullHeight).name("Scissor Y")
-    scissorsFolder.add(renderTarget.scissor.size, 'x', 0, fullWidth).name("Scissor Width")
-    scissorsFolder.add(renderTarget.scissor.size, 'y', 0, fullHeight).name("Scissor Hieght")
+    scissorsFolder.add(renderTarget.scissor.offset, 'x', 0, 1).name("Scissor X")
+    scissorsFolder.add(renderTarget.scissor.offset, 'y', 0, 1).name("Scissor Y")
+    scissorsFolder.add(renderTarget.scissor.size, 'x', 0, 1).name("Scissor Width")
+    scissorsFolder.add(renderTarget.scissor.size, 'y', 0, 1).name("Scissor Hieght")
   } else {
     canvasopts.removeFolder(scissorsFolder)
     renderTarget.scissor = undefined
