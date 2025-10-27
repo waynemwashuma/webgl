@@ -2,7 +2,7 @@
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
-import { Attribute, UBOs, WebGLDeviceLimits, WebGLExtensions, WebGLRenderPipeline } from "../core/index.js"
+import { Attribute, UBOs, WebGLDeviceLimits, WebGLRenderPipeline } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
@@ -10,6 +10,8 @@ import { Texture } from "../texture/index.js"
 import { Mesh } from "../mesh/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
+import { ClearParams } from "../utils/index.js"
+import { Color } from "../math/index.js"
 
 export class DirectionalLights {
   /**
@@ -132,12 +134,14 @@ export class WebGLRenderer {
   }
 
   /**
-   * @param {Camera} camera
-   * @param {WebGLCanvasSurface} surface 
+   * @private
+   * @param {WebGLCanvasSurface} surface
+   * @param {ClearParams<Color>} clearColor
+   * @param {ClearParams} clearDepth
+   * @param {ClearParams} clearStencil
    */
-  clear(camera, surface) {
+  clear(surface, clearColor, clearDepth, clearStencil) {
     const { context } = surface
-    const { clearColor, clearDepth, clearStencil } = camera
     let bit = 0
     context.stencilMask(0xFF);
 
@@ -165,16 +169,26 @@ export class WebGLRenderer {
    * @param {Camera} camera
    */
   render(objects, surface, camera) {
-    const { canvas, context } = surface
+    const { context } = surface
     const { target: renderTarget } = camera
     const { caches, attributes, defaultTexture, _UBOs, defines, includes } = this
 
     camera.update()
 
     this.setViewport(surface, renderTarget)
-    this.clear(camera, surface)
-    this.updateUBO(context, camera.getData())
 
+    if (renderTarget) {
+      const { clearColor, clearDepth, clearStencil } = renderTarget
+      this.clear(surface, clearColor, clearDepth, clearStencil)
+    } else {
+      this.clear(
+        surface,
+        new ClearParams(new Color(0, 0, 0, 1)),
+        new ClearParams(1),
+        new ClearParams(0)
+      )
+    }
+    this.updateUBO(context, camera.getData())
     this.updateUBO(context, this.lights.ambientLight.getData())
     this.updateUBO(context, this.lights.directionalLights.getData())
 
@@ -207,7 +221,7 @@ export class WebGLRenderer {
       if (target.scissor) {
         const { offset, size } = target.scissor
         context.scissor(offset.x, offset.y, size.x, size.y)
-      } else{
+      } else {
         context.scissor(offset.x, offset.y, size.x, size.y)
       }
       context.viewport(offset.x, offset.y, size.x, size.y)

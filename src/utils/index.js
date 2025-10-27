@@ -37,3 +37,17 @@ export class Range {
     return new Range().copy(this)
   }
 }
+
+/**
+ * @template T
+ */
+export class ClearParams {
+  enabled = true
+  value
+  /**
+   * @param {T} value
+   */
+  constructor(value){
+    this.value = value
+  }
+}
