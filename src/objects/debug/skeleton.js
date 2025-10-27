@@ -69,7 +69,7 @@ export class SkeletonHelper extends MeshMaterial3D {
 
     updateDataTexture(boneTexture, bones.map((bone)=>bone.transform.world))
     
-    const transformsTexture = getWebglTexture(gl, boneTexture, caches.textures)
+    const transformsTexture = caches.getTexture(gl, boneTexture)
 
     gl.activeTexture(gl.TEXTURE0 + transformsInfo.texture_unit)
     gl.bindTexture(boneTexture.type, transformsTexture)
@@ -136,27 +136,6 @@ function getRenderPipeline(gl, id, caches, ubos, attributes, includes) {
   pipelineid = newId
   caches.renderpipelines[id] = newRenderPipeline
   return newRenderPipeline
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- * @param {Map<Texture,WebGLTexture>} cache
- * @returns {WebGLTexture}
- */
-function getWebglTexture(gl, texture, cache) {
-  const tex = cache.get(texture)
-
-  if (tex) {
-    if (texture.changed) {
-      gl.bindTexture(texture.type, tex)
-      updateTextureData(gl, texture)
-    }
-    return tex
-  }
-  const newTex = createTexture(gl, texture)
-  cache.set(texture, newTex)
-  return newTex
 }
 
 // NOTE: This could be expanded to pack numbers, vectors, matrices and affines

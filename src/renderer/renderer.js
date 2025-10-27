@@ -12,6 +12,9 @@ import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { ClearParams } from "../utils/index.js"
 import { Color } from "../math/index.js"
+import { ImageRenderTarget } from "../rendertarget/image.js"
+import { ImageFrameBuffer as FrameBuffer } from "../core/framebuffer.js"
+import { createTexture, updateTextureData } from "../function.js"
 
 export class DirectionalLights {
   /**
@@ -61,6 +64,49 @@ export class Caches {
    * @type {Map<string,Map<PipelineKey, number>>}
    */
   materials = new Map()
+
+  /**
+   * @type {Map<ImageRenderTarget, FrameBuffer>}
+   */
+  renderTargets = new Map()
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {ImageRenderTarget} target
+   * @returns {FrameBuffer}
+   */
+  getFrameBuffer(context, target) {
+    const current = this.renderTargets.get(target)
+
+    if (current) {
+      return current
+    }
+
+    const newTarget = new FrameBuffer(context, target, this)
+
+    this.renderTargets.set(target, newTarget)
+    return newTarget
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {Texture} texture
+   * @returns {WebGLTexture}
+   */
+  getTexture(context, texture) {
+    const tex = this.textures.get(texture)
+
+    if (tex) {
+      if (texture.changed) {
+        context.bindTexture(texture.type, tex)
+        updateTextureData(context, texture)
+      }
+      return tex
+    }
+    const newTex = createTexture(context, texture)
+    this.textures.set(texture, newTex)
+    return newTex
+  }
 }
 
 export class WebGLRenderer {
@@ -173,9 +219,8 @@ export class WebGLRenderer {
     const { target: renderTarget } = camera
     const { caches, attributes, defaultTexture, _UBOs, defines, includes } = this
 
-    camera.update()
-
     this.setViewport(surface, renderTarget)
+    camera.update()
 
     if (renderTarget) {
       const { clearColor, clearDepth, clearStencil } = renderTarget
@@ -188,6 +233,7 @@ export class WebGLRenderer {
         new ClearParams(0)
       )
     }
+
     this.updateUBO(context, camera.getData())
     this.updateUBO(context, this.lights.ambientLight.getData())
     this.updateUBO(context, this.lights.directionalLights.getData())
@@ -216,6 +262,12 @@ export class WebGLRenderer {
     const { canvas, context } = surface
 
     if (target) {
+      if (target instanceof ImageRenderTarget) {
+        const buffer = this.caches.getFrameBuffer(context, target)
+        context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
+      } else {
+        context.bindFramebuffer(context.FRAMEBUFFER, null)
+      }
       context.enable(context.SCISSOR_TEST)
       const { offset, size } = target.viewport
       if (target.scissor) {
@@ -226,6 +278,7 @@ export class WebGLRenderer {
       }
       context.viewport(offset.x, offset.y, size.x, size.y)
     } else {
+      context.bindFramebuffer(context.FRAMEBUFFER, null)
       context.disable(context.SCISSOR_TEST)
       context.viewport(0, 0, canvas.width, canvas.height)
     }
