@@ -10,7 +10,6 @@ import { Texture } from "../texture/index.js"
 import { Mesh } from "../mesh/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
-import { ClearParams } from "../utils/index.js"
 import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
 import { ImageFrameBuffer as FrameBuffer } from "../core/framebuffer.js"
@@ -182,30 +181,30 @@ export class WebGLRenderer {
   /**
    * @private
    * @param {WebGLCanvasSurface} surface
-   * @param {ClearParams<Color>} clearColor
-   * @param {ClearParams} clearDepth
-   * @param {ClearParams} clearStencil
+   * @param {Color | undefined} clearColor
+   * @param {number | undefined} clearDepth
+   * @param {number | undefined} clearStencil
    */
   clear(surface, clearColor, clearDepth, clearStencil) {
     const { context } = surface
     let bit = 0
     context.stencilMask(0xFF);
 
-    if (clearColor.enabled) {
-      const { r, g, b, a } = clearColor.value
+    if (clearColor) {
+      const { r, g, b, a } = clearColor
       bit |= context.COLOR_BUFFER_BIT
       context.colorMask(true, true, true, true)
       context.clearColor(r, g, b, a)
     }
-    if (clearDepth.enabled) {
+    if (clearDepth !== undefined) {
       bit |= context.DEPTH_BUFFER_BIT
       context.depthMask(true)
-      context.clearDepth(clearDepth.value)
+      context.clearDepth(clearDepth)
     }
-    if (clearStencil.enabled) {
+    if (clearStencil !== undefined) {
       bit |= context.STENCIL_BUFFER_BIT
       context.stencilMask(0xFF)
-      context.clearStencil(clearStencil.value)
+      context.clearStencil(clearStencil)
     }
     context.clear(bit)
   }
@@ -228,9 +227,9 @@ export class WebGLRenderer {
     } else {
       this.clear(
         surface,
-        new ClearParams(new Color(0, 0, 0, 1)),
-        new ClearParams(1),
-        new ClearParams(0)
+        Color.BLACK,
+        1,
+        0
       )
     }
 

@@ -65,7 +65,7 @@ const skyBox = new SkyBox({
 })
 
 //set up the cameras
-renderTarget.clearColor.value = Color.CYAN.clone()
+renderTarget.clearColor = Color.CYAN.clone()
 camera1.target = renderTarget
 camera1.transform.position.z = 5
 camera2.transform.position.z = 5
