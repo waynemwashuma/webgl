@@ -1,11 +1,9 @@
-import { PrimitiveTopology, TextureFormat, TextureType } from "../../constant.js";
-import { Attribute, Shader, VertexLayout, WebGLRenderPipeline } from "../../core/index.js";
-import { UBOs } from "../../core/ubo.js";
-import { updateTextureData, createTexture } from "../../function.js";
+import { PrimitiveTopology, TextureFormat } from "../../constant.js";
+import { Shader, VertexLayout } from "../../core/index.js";
 import { Material } from "../../material/index.js";
 import { Affine3 } from "../../math/index.js";
 import { Mesh } from "../../mesh/index.js";
-import { Caches } from "../../renderer/renderer.js";
+import { WebGLRenderer } from "../../renderer/renderer.js";
 import { skeletonFragment, skeletonVertex } from "../../shader/index.js";
 import { Texture } from "../../texture/index.js";
 import { Bone3D } from "../bone.js";
@@ -40,19 +38,16 @@ export class SkeletonHelper extends MeshMaterial3D {
 
   /**
    * @param {WebGL2RenderingContext} gl
-   * @param {import("../../renderer/index.js").Caches} caches
-   * @param {ReadonlyMap<string,Attribute>} attributes 
-   * @param {Texture} _defaultTexture
-   * @param {ReadonlyMap<string,string>} includes
-   * @param {ReadonlyMap<string,string>} globalDefines
+   * @param {WebGLRenderer} renderer
    */
-  renderGL(gl, caches, attributes, _defaultTexture, includes, globalDefines) {
+  renderGL(gl, renderer) {
+    const { caches } = renderer
     if (!this.skinnedMesh.skin) {
       console.warn("The provided object does not have a skin")
       return
     }
     const { bones, boneTexture } = this.skinnedMesh.skin
-    const pipeline = getRenderPipeline(gl, caches, attributes, includes, globalDefines)
+    const pipeline = getRenderPipeline(gl, renderer)
     const transformsInfo = pipeline.uniforms.get("transforms")
     const modelInfo = pipeline.uniforms.get("model")
     const parentInfo = pipeline.uniforms.get("parent_index")
@@ -94,9 +89,10 @@ export class SkeletonHelper extends MeshMaterial3D {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {Caches} caches
+ * @param {WebGLRenderer} renderer
  */
-function getRenderPipeline(gl, caches, attributes, includes, globalDefines) {
+function getRenderPipeline(gl, renderer) {
+  const { caches, attributes, includes, defines: globalDefines } = renderer
   if (pipelineid) {
     const pipeline = caches.getRenderPipeline(pipelineid)
 
