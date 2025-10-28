@@ -3,10 +3,6 @@ import {createSampler} from '../function.js'
 
 /**@import {SamplerSettings} from '../function.js'*/
 export class Sampler {
-  /**
-   * @type {WebGLSampler}
-   */
-  _sampler
   magnificationFilter
   minificationFilter
   mipmapFilter
@@ -42,13 +38,6 @@ export class Sampler {
     this.lod = lod
     this.compare = compare
     this.compareMode = compareMode
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} gl
-   */
-  init(gl){
-    this._sampler = createSampler(gl,this)
   }
 
   static default(){
