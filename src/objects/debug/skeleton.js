@@ -45,15 +45,15 @@ export class SkeletonHelper extends MeshMaterial3D {
    * @param {ReadonlyMap<string,Attribute>} attributes 
    * @param {Texture} _defaultTexture
    * @param {ReadonlyMap<string,string>} includes
-   * @param {ReadonlyMap<string,string>} _globalDefines
+   * @param {ReadonlyMap<string,string>} globalDefines
    */
-  renderGL(gl, caches, ubos, attributes, _defaultTexture, includes, _globalDefines) {
+  renderGL(gl, caches, ubos, attributes, _defaultTexture, includes, globalDefines) {
     if (!this.skinnedMesh.skin) {
       console.warn("The provided object does not have a skin")
       return
     }
-    const {bones,boneTexture } = this.skinnedMesh.skin
-    const pipeline = getRenderPipeline(gl, pipelineid, caches, ubos, attributes, includes)
+    const { bones, boneTexture } = this.skinnedMesh.skin
+    const pipeline = getRenderPipeline(gl, caches, ubos, attributes, includes, globalDefines)
     const transformsInfo = pipeline.uniforms.get("transforms")
     const modelInfo = pipeline.uniforms.get("model")
     const parentInfo = pipeline.uniforms.get("parent_index")
@@ -67,8 +67,8 @@ export class SkeletonHelper extends MeshMaterial3D {
       throw "uniforms are not set up correctly in shader"
     }
 
-    updateDataTexture(boneTexture, bones.map((bone)=>bone.transform.world))
-    
+    updateDataTexture(boneTexture, bones.map((bone) => bone.transform.world))
+
     const transformsTexture = caches.getTexture(gl, boneTexture)
 
     gl.activeTexture(gl.TEXTURE0 + transformsInfo.texture_unit)
@@ -95,12 +95,11 @@ export class SkeletonHelper extends MeshMaterial3D {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {number | undefined} id
  * @param {Caches} caches
  */
-function getRenderPipeline(gl, id, caches, ubos, attributes, includes) {
-  if (id) {
-    const pipeline = caches.renderpipelines[id]
+function getRenderPipeline(gl, caches, ubos, attributes, includes, globalDefines) {
+  if (pipelineid) {
+    const pipeline = caches.getRenderPipeline(pipelineid)
 
     if (pipeline) {
       return pipeline
@@ -129,12 +128,13 @@ function getRenderPipeline(gl, id, caches, ubos, attributes, includes) {
     }
   }
 
-  descriptor.vertex.defines.set("MAX_DIRECTIONAL_LIGHTS", "1")
-  const newRenderPipeline = new WebGLRenderPipeline(gl, ubos, attributes, includes, descriptor)
-  const newId = caches.renderpipelines.length
+  for (const [name, value] of globalDefines) {
+    descriptor.vertex.defines.set(name, value)
+    descriptor.fragment?.source?.defines?.set(name, value)
+  }
+  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, ubos, attributes, includes)
 
   pipelineid = newId
-  caches.renderpipelines[id] = newRenderPipeline
   return newRenderPipeline
 }
 
