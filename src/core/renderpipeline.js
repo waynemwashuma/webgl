@@ -1,5 +1,6 @@
 import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology, TextureFormat } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
+import { Mesh } from "../mesh/mesh.js";
 import { Caches } from "../renderer/index.js";
 import { Attribute } from "./attribute/attribute.js";
 import { Shader } from "./shader.js";
@@ -181,7 +182,7 @@ export class WebGLRenderPipeline {
  * @typedef WebGLRenderPipelineDescriptor
  * @property {Shader} vertex
  * @property {{ source: Shader, targets:RenderTargetDescriptor[]}} [fragment]
- * @property {VertexLayout} vertexLayout
+ * @property {MeshVertexLayout} vertexLayout
  * @property {PrimitiveTopology} topology
  * @property {CullFace} [cullFace]
  * @property {boolean} [depthWrite]
@@ -200,11 +201,49 @@ export class WebGLRenderPipeline {
  * @property {BlendParams} alpha
  */
 
-export class VertexLayout {
+export class VertexBufferLayout {
   /**
    * @type {readonly Attribute[]}
    */
   attributes = []
+
+  /**
+   * @param {Attribute[]} attributes
+   */
+  constructor(attributes) {
+    this.attributes = attributes
+  }
+}
+
+export class MeshVertexLayout {
+  /**
+   * @type {readonly VertexBufferLayout[]}
+   */
+  layouts =  []
+
+  /**
+   * @param {VertexBufferLayout[]} layouts
+   */
+  constructor(layouts){
+    this.layouts = layouts
+  }
+  /**
+   * @param {Mesh} mesh
+   * @param {ReadonlyMap<string, Attribute>} attributes
+   * @returns {MeshVertexLayout}
+   */
+  static fromMesh(mesh, attributes) {
+    const result = []
+    for (const name of mesh.attributes.keys()) {
+      const attribute = attributes.get(name)
+      if(!attribute){
+        throw `The attribute "${name}" is not available in the attribute map`
+      }
+      result.push(new VertexBufferLayout([attribute]))
+    }
+    
+    return new MeshVertexLayout(result)
+  }
 }
 
 /**

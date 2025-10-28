@@ -1,7 +1,9 @@
 /**@import { PipelineKey } from '../material/index.js' */
 /**@import { Caches, WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { Attribute, VertexLayout, Shader, Uniform } from "../core/index.js"
+
+import { MeshVertexLayout } from '../core/index.js' 
+import { Attribute, VertexBufferLayout, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import {
   GlDataType,
@@ -161,9 +163,12 @@ export class MeshMaterial3D extends Object3D {
     const materialData = material.getData()
     const { indices } = geometry
     const gpuMesh = meshes.get(geometry)
+
+    // TODO: Cache this on `gpuMesh`
+    const meshLayout = MeshVertexLayout.fromMesh(geometry, attributes)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
     const pipelineKey = material.getPipelineKey(meshBits)
-    const pipeline = getRenderPipeline(gl, material, pipelineKey, renderer)
+    const pipeline = getRenderPipeline(gl, renderer, material, pipelineKey, meshLayout)
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
@@ -239,8 +244,9 @@ function mapToIndicesType(indices) {
  * @param {RawMaterial} material
  * @param {PipelineKey} key
  * @param {WebGLRenderer} renderer
+ * @param {MeshVertexLayout} layout
  */
-function getRenderPipeline(gl, material, key, renderer) {
+function getRenderPipeline(gl, renderer, material, key, layout) {
   const { caches, attributes, includes, defines: globalDefines } = renderer
   return caches.getMaterialRenderPipeline(gl, material, key, attributes, () => {
     /**
@@ -249,7 +255,7 @@ function getRenderPipeline(gl, material, key, renderer) {
     const descriptor = {
       topology: topologyFromPipelineKey(key),
       // TODO: Actually implement this to use the mesh
-      vertexLayout: new VertexLayout(),
+      vertexLayout: layout,
       vertex: new Shader({
         source: material.vertex()
       }),
