@@ -173,8 +173,22 @@ export class Caches {
 }
 
 export class WebGLRenderer {
+  /**
+   * @readonly
+   * @type {WebGLDeviceLimits}
+   */
   limits
+
+  /**
+   * @readonly
+   * @type {Caches}
+   */
   caches = new Caches()
+
+  /**
+   * @readonly
+   * @type {Lights}
+   */
   lights = new Lights()
 
   /**
@@ -200,19 +214,14 @@ export class WebGLRenderer {
    * @type {Map<string, string>}
    */
   defines = new Map()
-  dpr = 0
-  culling = true
-  depthTest = true
-  alphaBlending = true
 
   constructor() {
     const dummy = new OffscreenCanvas(100, 100)
     const context = dummy.getContext('webgl2')
-    const attributes = new Map()
-    this.dpr = devicePixelRatio
-    this.limits = new WebGLDeviceLimits(context)
 
-    attributes
+
+    this.limits = new WebGLDeviceLimits(context)
+    this.attributes = new Map()
       .set(Attribute.Position.name, Attribute.Position)
       .set(Attribute.UV.name, Attribute.UV)
       .set(Attribute.UVB.name, Attribute.UVB)
@@ -221,8 +230,6 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-
-    this.attributes = attributes
     this.defaultTexture = createDefaultTexture()
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
