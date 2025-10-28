@@ -1,5 +1,4 @@
-import { CompareFunction, TextureCompareMode, TextureFilter, TextureWrap } from '../constant.js'
-import {createSampler} from '../function.js'
+import { CompareFunction, TextureFilter, TextureWrap } from '../constant.js'
 
 /**@import {SamplerSettings} from '../function.js'*/
 export class Sampler {
@@ -11,7 +10,6 @@ export class Sampler {
   wrapR
   anisotropy
   lod
-  compareMode
   compare
   /**
    * @param {Partial<SamplerSettings>} settings 
@@ -25,7 +23,6 @@ export class Sampler {
     wrapR = Sampler.defaultSettings.wrapR,
     lod = Sampler.defaultSettings.lod,
     anisotropy = Sampler.defaultSettings.anisotropy,
-    compareMode = Sampler.defaultSettings.compareMode,
     compare = Sampler.defaultSettings.compare
   } = Sampler.defaultSettings) {
     this.minificationFilter = minificationFilter
@@ -37,7 +34,6 @@ export class Sampler {
     this.anisotropy = anisotropy
     this.lod = lod
     this.compare = compare
-    this.compareMode = compareMode
   }
 
   static default(){
@@ -46,7 +42,10 @@ export class Sampler {
 
   /**
    * @readonly
-   * @type {Readonly<Required<SamplerSettings>>}
+   * @type {Readonly<
+   *   Required<Omit<SamplerSettings,'compare'>>
+   *   > & {compare:CompareFunction | undefined}
+   * }
    */
   static defaultSettings = {
     magnificationFilter: TextureFilter.Linear,
@@ -57,7 +56,6 @@ export class Sampler {
     wrapR: TextureWrap.Clamp,
     lod: { min: 0, max: 12 },
     anisotropy: 1,
-    compareMode: TextureCompareMode.None,
-    compare: CompareFunction.Lequal
+    compare: undefined
   }
 }

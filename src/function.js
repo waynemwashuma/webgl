@@ -2,7 +2,6 @@ import { Mesh } from "./mesh/index.js"
 import {
   CompareFunction,
   TextureFormat,
-  TextureCompareMode,
   TextureFilter,
   TextureType,
   TextureWrap,
@@ -45,62 +44,6 @@ export function createshader(gl, src, type) {
   return shader
 }
 
-/**
- * 
- * @param {WebGL2RenderingContext} gl 
- * @param {SamplerSettings} settings
- */
-export function createSampler(gl, settings) {
-  const sampler = gl.createSampler()
-
-  updateSampler(gl, sampler, settings)
-
-  return sampler
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {WebGLSampler} sampler
- * @param {SamplerSettings} settings
- */
-function updateSampler(gl, sampler, settings) {
-  const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
-
-  gl.samplerParameteri(sampler, gl.TEXTURE_MAG_FILTER, settings.magnificationFilter)
-  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_S, settings.wrapS)
-  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_T, settings.wrapT)
-  gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_R, settings.wrapR)
-  gl.samplerParameteri(sampler, gl.TEXTURE_MIN_LOD, settings.lod.min)
-  gl.samplerParameteri(sampler, gl.TEXTURE_MAX_LOD, settings.lod.max)
-
-  if (settings.minificationFilter === TextureFilter.Linear) {
-    if (settings.mipmapFilter === TextureFilter.Linear) {
-      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    }
-    if (settings.mipmapFilter === TextureFilter.Nearest) {
-      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-    }
-  }
-
-  if (settings.minificationFilter === TextureFilter.Nearest) {
-    if (settings.mipmapFilter === TextureFilter.Linear) {
-      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-    }
-    if (settings.mipmapFilter === TextureFilter.Nearest) {
-      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
-    }
-  }
-  if (anisotropyExtenstion) {
-    gl.samplerParameterf(sampler, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, settings.anisotropy)
-  }
-
-  if (settings.compareMode = TextureCompareMode.CompareRefToTexture) {
-    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_FUNC, settings.compare)
-  } else {
-    gl.samplerParameteri(sampler, gl.TEXTURE_COMPARE_MODE, gl.NONE);
-  }
-}
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {Texture} texture
@@ -161,7 +104,7 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
   }
 
-  if (sampler.compareMode === TextureCompareMode.CompareRefToTexture) {
+  if (sampler.compare !== undefined) {
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_FUNC, sampler.compare)
   } else {
@@ -811,7 +754,6 @@ function formatGlsl(code) {
  * @property {TextureWrap} [wrapR]
  * @property {SamplerLODSettings} [lod]
  * @property {number} [anisotropy]
- * @property {TextureCompareMode} [compareMode]
  * @property {CompareFunction} [compare]
  */
 
