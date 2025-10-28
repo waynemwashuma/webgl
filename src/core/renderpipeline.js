@@ -96,10 +96,9 @@ export class WebGLRenderPipeline {
   /**
    * @param {WebGL2RenderingContext} context
    * @param {ReadonlyMap<string,Attribute>} attributes
-   * @param {ReadonlyMap<string,string>} includes
    * @param {WebGLRenderPipelineDescriptor} descriptor
    */
-  constructor(context, attributes, includes, {
+  constructor(context, attributes, {
     vertex,
     fragment,
     topology,
@@ -111,8 +110,8 @@ export class WebGLRenderPipeline {
   }) {
     const programInfo = createProgramFromSrc(
       context,
-      vertex.compile(includes),
-      fragment.source.compile(includes),
+      vertex.compile(),
+      fragment.source.compile(),
       attributes
     )
     this.program = programInfo.program

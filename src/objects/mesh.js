@@ -242,7 +242,7 @@ function mapToIndicesType(indices) {
  */
 function getRenderPipeline(gl, material, key, renderer) {
   const { caches, attributes, includes, defines: globalDefines } = renderer
-  return caches.getMaterialRenderPipeline(gl, material, key, attributes, includes, () => {
+  return caches.getMaterialRenderPipeline(gl, material, key, attributes, () => {
     /**
      * @type {WebGLRenderPipelineDescriptor}
      */
@@ -272,6 +272,11 @@ function getRenderPipeline(gl, material, key, renderer) {
     for (const [name, value] of globalDefines) {
       descriptor.vertex.defines.set(name, value)
       descriptor.fragment?.source?.defines?.set(name, value)
+    }
+
+    for (const [name, value] of includes) {
+      descriptor.vertex.includes.set(name, value)
+      descriptor.fragment?.source?.includes?.set(name, value)
     }
 
     material.specialize(descriptor)

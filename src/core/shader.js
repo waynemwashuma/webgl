@@ -1,30 +1,32 @@
 export class Shader {
-  
+
   /**
    * @readonly
    * @type {string}
    */
   source
-  
+
   /**
    * @typedef {Map<string,string>}
    */
-  defines
+  defines = new Map()
 
   /**
-   * 
+   * @type {Map<string,string>}
+   */
+  includes = new Map()
+  /**
    * @param {ShaderModuleDescriptor} descriptor 
    */
-  constructor({ source, defines = new Map() }) {
+  constructor({ source }) {
     this.source = source
-    this.defines = defines
   }
 
   /**
-   * @param {ReadonlyMap<string,string>} includes
+   * @returns {string}
    */
-  compile(includes) {
-    const {source, defines } = this
+  compile() {
+    const { source, defines, includes } = this
     return preprocessShader(source, includes, defines)
   }
 }
@@ -35,6 +37,8 @@ export class Shader {
  * @property {Map<string,string>} [defines]
  */
 
+// TODO: Maybe add error as a return type when something unexpected happens
+// e.g when an include in the shader does not exist.
 /**
  * @param {string} source
  * @param {ReadonlyMap<string,string>} includes 
