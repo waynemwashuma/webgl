@@ -41,19 +41,18 @@ export class SkeletonHelper extends MeshMaterial3D {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {import("../../renderer/index.js").Caches} caches
-   * @param {UBOs} ubos
    * @param {ReadonlyMap<string,Attribute>} attributes 
    * @param {Texture} _defaultTexture
    * @param {ReadonlyMap<string,string>} includes
    * @param {ReadonlyMap<string,string>} globalDefines
    */
-  renderGL(gl, caches, ubos, attributes, _defaultTexture, includes, globalDefines) {
+  renderGL(gl, caches, attributes, _defaultTexture, includes, globalDefines) {
     if (!this.skinnedMesh.skin) {
       console.warn("The provided object does not have a skin")
       return
     }
     const { bones, boneTexture } = this.skinnedMesh.skin
-    const pipeline = getRenderPipeline(gl, caches, ubos, attributes, includes, globalDefines)
+    const pipeline = getRenderPipeline(gl, caches, attributes, includes, globalDefines)
     const transformsInfo = pipeline.uniforms.get("transforms")
     const modelInfo = pipeline.uniforms.get("model")
     const parentInfo = pipeline.uniforms.get("parent_index")
@@ -97,7 +96,7 @@ export class SkeletonHelper extends MeshMaterial3D {
  * @param {WebGL2RenderingContext} gl
  * @param {Caches} caches
  */
-function getRenderPipeline(gl, caches, ubos, attributes, includes, globalDefines) {
+function getRenderPipeline(gl, caches, attributes, includes, globalDefines) {
   if (pipelineid) {
     const pipeline = caches.getRenderPipeline(pipelineid)
 
@@ -132,7 +131,7 @@ function getRenderPipeline(gl, caches, ubos, attributes, includes, globalDefines
     descriptor.vertex.defines.set(name, value)
     descriptor.fragment?.source?.defines?.set(name, value)
   }
-  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, ubos, attributes, includes)
+  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, attributes, includes)
 
   pipelineid = newId
   return newRenderPipeline

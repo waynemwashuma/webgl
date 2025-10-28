@@ -1,5 +1,6 @@
 import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology, TextureFormat } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
+import { Caches } from "../renderer/index.js";
 import { Attribute } from "./attribute/attribute.js";
 import { Shader } from "./shader.js";
 import { UBOs } from "./ubo.js";
@@ -29,7 +30,7 @@ export class BlendParams {
     this.destination = destination
   }
 
-  clone(){
+  clone() {
     return new BlendParams(
       this.operation,
       this.source,
@@ -95,11 +96,10 @@ export class WebGLRenderPipeline {
   /**
    * @param {WebGL2RenderingContext} context
    * @param {ReadonlyMap<string,Attribute>} attributes
-   * @param {UBOs} ubos
    * @param {ReadonlyMap<string,string>} includes
    * @param {WebGLRenderPipelineDescriptor} descriptor
    */
-  constructor(context, ubos, attributes, includes, {
+  constructor(context, attributes, includes, {
     vertex,
     fragment,
     topology,
@@ -125,13 +125,6 @@ export class WebGLRenderPipeline {
     this.depthWrite = depthWrite
     this.frontFace = frontFace
     this.targets = fragment.targets || []
-
-    for (const [name, uboLayout] of this.uniformBlocks) {
-      const ubo = ubos.getorSet(context, name, uboLayout)
-      const index = context.getUniformBlockIndex(this.program, name)
-
-      context.uniformBlockBinding(this.program, index, ubo.point)
-    }
   }
 
   /**

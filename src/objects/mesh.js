@@ -150,13 +150,12 @@ export class MeshMaterial3D extends Object3D {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {import("../renderer/index.js").Caches} caches
-   * @param {UBOs} ubos
    * @param {ReadonlyMap<string,Attribute>} attributes 
    * @param {Texture} defaultTexture
    * @param {ReadonlyMap<string,string>} includes
    * @param {ReadonlyMap<string,string>} globalDefines
    */
-  renderGL(gl, caches, ubos, attributes, defaultTexture, includes, globalDefines) {
+  renderGL(gl, caches, attributes, defaultTexture, includes, globalDefines) {
     const { meshes } = caches
     const { material, geometry, transform } = this
     const name = material.constructor.name
@@ -167,11 +166,11 @@ export class MeshMaterial3D extends Object3D {
     const gpuMesh = meshes.get(geometry)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
     const pipelineKey = material.getPipelineKey(meshBits)
-    const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, ubos, attributes, includes, globalDefines)
+    const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, attributes, includes, globalDefines)
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
-    const ubo = ubos.get(blockName)
+    const ubo = caches.uniformBuffers.get(blockName)
 
     pipeline.use(gl)
 
@@ -243,13 +242,12 @@ function mapToIndicesType(indices) {
  * @param {RawMaterial} material
  * @param {PipelineKey} key
  * @param {import("../renderer/renderer.js").Caches} caches
- * @param {UBOs} ubos
  * @param {ReadonlyMap<string, Attribute>} attributes
  * @param {ReadonlyMap<string, string>} includes
  * @param {ReadonlyMap<string, string>} globalDefines
  */
-function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes, globalDefines) {
-  return caches.getMaterialRenderPipeline(gl, material, key, ubos, attributes, includes, () => {
+function getRenderPipeline(gl, material, key, caches, attributes, includes, globalDefines) {
+  return caches.getMaterialRenderPipeline(gl, material, key, attributes, includes, () => {
     /**
      * @type {WebGLRenderPipelineDescriptor}
      */
