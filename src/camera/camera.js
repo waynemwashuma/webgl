@@ -1,6 +1,6 @@
 import { Affine3, Matrix4, Transform3D } from "../math/index.js"
 import { Object3D } from "../objects/index.js"
-import { CanvasTarget } from "../rendertarget/index.js"
+import { RenderTarget } from "../rendertarget/index.js"
 import { PerspectiveProjection, Projection } from "./projection.js"
 
 export class Camera extends Object3D {
@@ -11,7 +11,7 @@ export class Camera extends Object3D {
 	far = 2000
 
 	/**
-	 * @type {CanvasTarget | undefined}
+	 * @type {RenderTarget | undefined}
 	 */
 	target
 	/**

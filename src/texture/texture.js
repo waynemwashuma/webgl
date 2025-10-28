@@ -10,7 +10,7 @@ export class Texture {
    */
   #changed
   /**
-   * @type {ArrayBuffer}
+   * @type {ArrayBuffer | undefined}
    */
   data
 
@@ -54,7 +54,7 @@ export class Texture {
    */
   type
   /**
-   * @param {TextureSettings & {data: ArrayBuffer, type:TextureType}} settings
+   * @param {TextureSettings & { data?: ArrayBuffer, type: TextureType }} settings
    */
   constructor(settings) {
     this.data = settings.data

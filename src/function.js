@@ -508,8 +508,8 @@ function updateTexture2D(gl, texture) {
 
   const { data, width, height } = texture
   const pixelSize = getTextureFormatSize(texture.format)
-  if (data.byteLength < width * height * pixelSize) {
-    return console.warn("Provided image data does not fit a " + "2d texture")
+  if (data && data.byteLength < width * height * pixelSize) {
+    return console.warn(`Provided image data does not fit a ${width}x${height} 2d texture`)
   }
   gl.texImage2D(
     texture.type,
@@ -520,7 +520,7 @@ function updateTexture2D(gl, texture) {
     border,
     format,
     dataType,
-    convertBufferToTypedArray(data, dataType)
+    data ? convertBufferToTypedArray(data, dataType) : null
   )
 }
 
@@ -531,17 +531,17 @@ function updateTexture2D(gl, texture) {
 function updateCubeMap(gl, texture) {
   const level = 0, border = 0
   const { internalFormat, format, dataType } = getWebGLTextureFormat(gl, texture.format)
-  const { data, width, height, depth } = texture
+  const { data, width, height } = texture
   const pixelSize = getTextureFormatSize(texture.format)
   const sliceSize = pixelSize * width * height
 
-  if (data.byteLength < sliceSize * 6) {
-    return console.warn("Provided image data does not fit a " + "cubemap texture")
+  if (data && data.byteLength < sliceSize * 6) {
+    return console.warn(`Provided image data does not fit a ${width}x${height} cubemap texture`)
   }
 
   for (let i = 0; i < 6; i++) {
     const offset = sliceSize * i
-    const src = convertBufferToTypedArray(data, dataType, offset, sliceSize)
+    const src = data ? convertBufferToTypedArray(data, dataType, offset, sliceSize) : null
 
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -753,6 +753,36 @@ export function convertBufferToTypedArray(
       return new Int8Array(buffer, offset, length / Int8Array.BYTES_PER_ELEMENT);
     default:
       throw new Error(`Unsupported GL data type: 0x${dataType.toString(16)}`);
+  }
+}
+
+/**
+ * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
+ * @param {number} format - A value from TextureFormat.
+ * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
+ */
+export function getFramebufferAttachment(format) {
+  const context = WebGL2RenderingContext;
+
+  switch (format) {
+    // --- Depth-only formats ---
+    case TextureFormat.Depth16Unorm:
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth32Float:
+      return context.DEPTH_ATTACHMENT;
+
+    // --- Stencil-only format ---
+    case TextureFormat.Stencil8:
+      return context.STENCIL_ATTACHMENT;
+
+    // --- Combined depth + stencil formats ---
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32FloatStencil8:
+      return context.DEPTH_STENCIL_ATTACHMENT;
+
+    // --- Everything else is a color attachment ---
+    default:
+      return context.COLOR_ATTACHMENT0;
   }
 }
 

@@ -187,7 +187,7 @@ export class MeshMaterial3D extends Object3D {
       this.skin.bindMatrix.copy(this.transform.world)
       this.skin.inverseBindMatrix.copy(this.skin.bindMatrix).invert()
       this.skin.updateTexture()
-      const texture = getWebglTexture(gl, this.skin.boneTexture, caches.textures)
+      const texture = caches.getTexture(gl, this.skin.boneTexture)
 
       gl.bindTexture(this.skin.boneTexture.type, texture)
     }
@@ -420,32 +420,11 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
     const textureInfo = uniforms.get(name)
 
     if (textureInfo && textureInfo.texture_unit !== undefined) {
-      const gpuTexture = getWebglTexture(gl, texture, caches.textures)
+      const gpuTexture = caches.getTexture(gl, texture)
 
       gl.activeTexture(gl.TEXTURE0 + textureInfo.texture_unit)
       gl.bindTexture(texture.type, gpuTexture)
       updateTextureSampler(gl, texture, sampler)
     }
   }
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- * @param {Map<Texture,WebGLTexture>} cache
- * @returns {WebGLTexture}
- */
-function getWebglTexture(gl, texture, cache) {
-  const tex = cache.get(texture)
-
-  if (tex) {
-    if (texture.changed) {
-      gl.bindTexture(texture.type, tex)
-      updateTextureData(gl, texture)
-    }
-    return tex
-  }
-  const newTex = createTexture(gl, texture)
-  cache.set(texture, newTex)
-  return newTex
 }
