@@ -46,7 +46,7 @@ export class RawMaterial {
   /**
    * @returns {bigint}
    */
-  getPipelineKey() {
+  getPipelineBits() {
     return 0n
   }
 
