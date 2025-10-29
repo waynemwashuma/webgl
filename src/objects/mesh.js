@@ -160,7 +160,6 @@ export class MeshMaterial3D extends Object3D {
     const blockName = material.constructor.name + 'Block'
 
     const materialData = material.getData()
-    const { indices } = geometry
     const gpuMesh = caches.getMesh(gl, geometry, attributes)
 
     // TODO: Cache this on `gpuMesh`
@@ -197,35 +196,16 @@ export class MeshMaterial3D extends Object3D {
     }
 
     //drawing
-    gl.bindVertexArray(gpuMesh)
-    if (indices) {
+    gl.bindVertexArray(gpuMesh.object)
+    if (gpuMesh.indexType !== undefined) {
       gl.drawElements(pipeline.topology,
-        indices.length,
-        mapToIndicesType(indices), 0
+        gpuMesh.count,
+        gpuMesh.indexType, 0
       )
-
     } else {
-      const position = geometry.attributes.get(Attribute.Position.name)
-      gl.drawArrays(pipeline.topology, 0, position.value.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT))
+      gl.drawArrays(pipeline.topology, 0, gpuMesh.count)
     }
-    gl.bindVertexArray(null)
   }
-}
-
-/**
- * @param {Uint8Array | Uint16Array | Uint32Array} indices
- */
-function mapToIndicesType(indices) {
-  if (indices instanceof Uint8Array) {
-    return GlDataType.UnsignedByte
-  }
-  if (indices instanceof Uint16Array) {
-    return GlDataType.UnsignedShort
-  }
-  if (indices instanceof Uint32Array) {
-    return GlDataType.UnsignedInt
-  }
-  throw "This is unreachable!"
 }
 
 /**

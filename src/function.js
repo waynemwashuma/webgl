@@ -26,6 +26,16 @@ export function createBuffer(context, type, size, usage = context.STATIC_DRAW) {
 }
 
 /**
+ * @param {WebGL2RenderingContext} context 
+ * @param {BufferType} type 
+ * @param {AllowSharedBufferSource} data 
+ * @param {BufferUsage} usage 
+ */
+export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
+  context.bufferData(type, data, usage)
+}
+
+/**
  * @param {WebGLRenderingContext} gl
  * @param {string} src
  * @param {number} type
@@ -200,34 +210,53 @@ export function createVAO(gl, attributeMap, geometry) {
 }
 
 /**
- * @param {WebGL2RenderingContext} gl
+ * @param {WebGL2RenderingContext} context
  * @param {ReadonlyMap<string, Attribute>} attributeMap
  * @param {Mesh} geometry
+ * @param {GPUMesh} gpuMesh
  */
-export function updateVAO(gl, attributeMap, geometry, gpuMesh) {
+export function updateVAO(context, attributeMap, geometry, gpuMesh) {
   const { indices, attributes } = geometry
+  let attrCount
 
-  // TODO: Delete the old buffers if present
-  if (indices != void 0) {
-    const buffer = gl.createBuffer()
+  // TODO: Delete the old buffers if present, probably leaking memory here
+  if (indices !== undefined) {
+    const buffer = createBuffer(context, BufferType.ElementArray, indices.byteLength)
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
-    gpuMesh.indexBuffer
+    updateBuffer(context, BufferType.ElementArray, indices, BufferUsage.Static)
+    gpuMesh.indexType = mapToIndicesType(geometry.indices)
+    gpuMesh.indexBuffer = buffer
   }
+
   for (const [name, data] of attributes) {
     const attribute = attributeMap.get(name)
+    const buffer = createBuffer(context, BufferType.Array, data.value.byteLength)
+    const count = data.value.byteLength / (attribute.size * getByteSize(attribute.type))
 
     if (!attribute) {
-      throw `The attribute "${name}" is not defined in the \`AttributeMap()\``
+      throw `The attribute "${name}" is not defined in the \`AttributeMap\``
     }
 
-    const buffer = gl.createBuffer()
+    updateBuffer(context, BufferType.Array, data.value)
+    context.bufferData(context.ARRAY_BUFFER, data.value, context.STATIC_DRAW)
+    setVertexAttribute(context, attribute.id, attribute.type, attribute.size)
+    gpuMesh.attributeBuffers.push(buffer)
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, data.value, gl.STATIC_DRAW)
-    gl.enableVertexAttribArray(attribute.id)
-    setVertexAttribute(gl, attribute.id, attribute.type, attribute.size)
+    if (attrCount) {
+      if (count < attrCount) {
+        attrCount = count
+      }
+    } else {
+      attrCount = count
+    }
+  }
+
+  if (indices) {
+    gpuMesh.count = indices.length
+  } else if (attrCount !== undefined) {
+    gpuMesh.count = attrCount
+  } else {
+    gpuMesh.count = 0
   }
 }
 
@@ -242,6 +271,7 @@ export function updateVAO(gl, attributeMap, geometry, gpuMesh) {
  * @param {boolean} [normalized = false] - Whether fixed-point values should be normalized.
  */
 function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, normalized = false) {
+  gl.enableVertexAttribArray(index)
   switch (type) {
     case GlDataType.Float:
       gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
@@ -259,6 +289,22 @@ function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, norma
     default:
       throw new Error(`Unsupported GlDataType: ${type}`);
   }
+}
+
+/**
+ * @param {Uint8Array | Uint16Array | Uint32Array} indices
+ */
+function mapToIndicesType(indices) {
+  if (indices instanceof Uint8Array) {
+    return GlDataType.UnsignedByte
+  }
+  if (indices instanceof Uint16Array) {
+    return GlDataType.UnsignedShort
+  }
+  if (indices instanceof Uint32Array) {
+    return GlDataType.UnsignedInt
+  }
+  throw "This is unreachable!"
 }
 
 /**
@@ -750,6 +796,30 @@ function formatGlsl(code) {
     .join("\n");
 }
 
+/**
+ * @param {GlDataType} glDataType
+ * @returns {number}
+ */
+function getByteSize(glDataType) {
+  switch (glDataType) {
+    case GlDataType.Float:
+      return 4
+    case GlDataType.UnsignedInt:
+      return 4
+    case GlDataType.Int:
+      return 4
+    case GlDataType.UnsignedShort:
+      return 2
+    case GlDataType.Short:
+      return 2
+    case GlDataType.UnsignedByte:
+      return 1
+    case GlDataType.Byte:
+      return 1
+    default:
+      return 0
+  }
+}
 /**
  * @typedef SamplerSettings
  * @property {TextureFilter} [minificationFilter]
