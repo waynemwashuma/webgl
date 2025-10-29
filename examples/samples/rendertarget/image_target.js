@@ -106,9 +106,6 @@ function updateView() {
   canvas.width = fullWidth
   canvas.height = fullHeight
 
-  renderTarget.viewport.offset.set(0, 0)
-  renderTarget.viewport.size.set(1024, 1024)
-
   if (
     camera1.projection instanceof PerspectiveProjection &&
     camera2.projection instanceof PerspectiveProjection

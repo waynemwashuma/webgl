@@ -53,6 +53,15 @@ const skyBox = new SkyBox({
   day,
   night:day
 })
+// set up render target viewports
+renderTarget1.viewport.offset.set(0, 0)
+renderTarget1.viewport.size.set(0.5, 0.5)
+renderTarget2.viewport.offset.set(0.5, 0)
+renderTarget2.viewport.size.set(0.5, 0.5)
+renderTarget3.viewport.offset.set(0, 0.5)
+renderTarget3.viewport.size.set(0.5, 0.5)
+renderTarget4.viewport.offset.set(0.5, 0.5)
+renderTarget4.viewport.size.set(0.5, 0.5)
 
 //set up the cameras
 camera1.target = renderTarget1
@@ -118,15 +127,6 @@ function updateView() {
   canvas.style.height = innerHeight + "px"
   canvas.width = fullWidth
   canvas.height = fullHeight
-
-  renderTarget1.viewport.offset.set(0, 0)
-  renderTarget1.viewport.size.set(halfFullWidth, halfFullHeight)
-  renderTarget2.viewport.offset.set(halfFullWidth, 0)
-  renderTarget2.viewport.size.set(halfFullWidth, halfFullHeight)
-  renderTarget3.viewport.offset.set(0, halfFullHeight)
-  renderTarget3.viewport.size.set(halfFullWidth, halfFullHeight)
-  renderTarget4.viewport.offset.set(halfFullWidth, halfFullHeight)
-  renderTarget4.viewport.size.set(halfFullWidth, halfFullHeight)
 
   if (
     camera1.projection instanceof PerspectiveProjection &&

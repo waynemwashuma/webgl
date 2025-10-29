@@ -74,6 +74,11 @@ objects.forEach((object, i) => {
   object.transform.position.x = startX + stepX * (i % number)
   object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
+// set up render targets
+renderTarget1.viewport.offset.set(0, 0)
+renderTarget1.viewport.size.set(0.5, 1)
+renderTarget2.viewport.offset.set(0.5, 0)
+renderTarget2.viewport.size.set(0.5, 1)
 
 //set up the cameras
 camera1.target = renderTarget1
@@ -112,10 +117,6 @@ function updateView() {
   canvas.style.height = innerHeight + "px"
   canvas.width = fullWidth
   canvas.height = fullHeight
-  renderTarget1.viewport.offset.set(0, 0)
-  renderTarget1.viewport.size.set(halfFullWidth, fullHeight)
-  renderTarget2.viewport.offset.set(halfFullWidth, 0)
-  renderTarget2.viewport.size.set(halfFullWidth, fullHeight)
 
   if (camera1.projection instanceof PerspectiveProjection) {
     camera1.projection.aspect = halfFullWidth / fullHeight

@@ -2,7 +2,7 @@ import { Vector2 } from "../math/index.js"
 
 export class ViewRectangle {
   offset = new Vector2()
-  size = new Vector2()
+  size = new Vector2(1, 1)
 
   /**
    * @param {ViewRectangle} other
@@ -47,7 +47,7 @@ export class ClearParams {
   /**
    * @param {T} value
    */
-  constructor(value){
+  constructor(value) {
     this.value = value
   }
 }
