@@ -1,4 +1,4 @@
-/**@import { PipelineKey } from '../material/index.js' */
+/**@import { Brand } from '../utils/index.js' */
 /**@import { Caches, WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 
@@ -162,7 +162,8 @@ export class MeshMaterial3D extends Object3D {
     const gpuMesh = caches.getMesh(gl, geometry, attributes)
     const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
-    const pipelineKey = material.getPipelineKey(meshBits)
+    const materialBits = material.getPipelineKey()
+    const pipelineKey = createPipelineKey(meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
       const { defines, includes } = renderer
       /**
@@ -253,7 +254,6 @@ export class MeshMaterial3D extends Object3D {
  */
 export const MeshKey = /**@type {const}*/({
   TopologyBits: 0b1111111n,
-  LastBit: 31n,
   None: 0n,
   Points: 1n << 0n,
   Lines: 1n << 1n,
@@ -337,3 +337,25 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
     }
   }
 }
+
+/**
+ * @enum {bigint}
+ */
+export const GeneralPipelineKeyShiftBits = /**@type {const}*/({
+  MeshBits: 0n,
+  MaterialBits: 31n
+})
+/**
+ * @param {bigint} meshBits
+ * @param {bigint} materialBits
+ */
+function createPipelineKey(meshBits, materialBits) {
+  return /**@type {PipelineKey}*/(
+    meshBits |
+    (materialBits << GeneralPipelineKeyShiftBits.MaterialBits)
+  )
+}
+
+/**
+ * @typedef {Brand<bigint,"PipelineKey">} PipelineKey
+ */

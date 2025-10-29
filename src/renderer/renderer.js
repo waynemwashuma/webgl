@@ -1,4 +1,4 @@
-/**@import {PipelineKey} from '../material/index.js' */
+/**@import {PipelineKey} from '../objects/index.js' */
 /**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"

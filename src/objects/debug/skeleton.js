@@ -7,7 +7,7 @@ import { WebGLRenderer } from "../../renderer/renderer.js";
 import { skeletonFragment, skeletonVertex } from "../../shader/index.js";
 import { Texture } from "../../texture/index.js";
 import { Bone3D } from "../bone.js";
-import { MeshMaterial3D } from "../index.js";
+import { MeshMaterial3D } from "../mesh.js";
 
 // TODO: Move these global state to corresponding plugin when the plugin system lands
 let pipelineid

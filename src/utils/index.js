@@ -49,3 +49,9 @@ export class Range {
 export function assert(test, message) {
   if (test === undefined || test === null) throw message
 }
+
+/**
+ * @template T
+ * @template {string} U
+ * @typedef {T & {__brand:U}} Brand
+ */
