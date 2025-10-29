@@ -3,7 +3,7 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 
 import { MeshVertexLayout } from '../core/index.js' 
-import { Attribute, VertexBufferLayout, Shader, Uniform } from "../core/index.js"
+import { Attribute, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import {
   GlDataType,
@@ -15,7 +15,7 @@ import {
 import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
-import { createVAO, updateTextureSampler } from "../function.js"
+import { updateTextureSampler } from "../function.js"
 import { Material, RawMaterial } from "../material/index.js"
 import { Bone3D } from "./bone.js";
 
@@ -155,14 +155,13 @@ export class MeshMaterial3D extends Object3D {
    */
   renderGL(gl, renderer) {
     const { caches, attributes, defaultTexture } = renderer
-    const { meshes } = caches
     const { material, geometry, transform } = this
     const name = material.constructor.name
     const blockName = material.constructor.name + 'Block'
 
     const materialData = material.getData()
     const { indices } = geometry
-    const gpuMesh = meshes.get(geometry)
+    const gpuMesh = caches.getMesh(gl, geometry, attributes)
 
     // TODO: Cache this on `gpuMesh`
     const meshLayout = MeshVertexLayout.fromMesh(geometry, attributes)
@@ -193,22 +192,12 @@ export class MeshMaterial3D extends Object3D {
       gl.bindTexture(this.skin.boneTexture.type, texture)
     }
 
-    if (gpuMesh) {
-      gl.bindVertexArray(gpuMesh)
-
-      // TODO: Implement autoupdate when mesh changes and
-      // delete the old VAO and its buffers.
-    } else {
-      const newMesh = createVAO(gl, attributes, geometry)
-      meshes.set(geometry, newMesh)
-      gl.bindVertexArray(newMesh)
-    }
-
     if (modelInfo) {
       gl.uniformMatrix4fv(modelInfo.location, false, modeldata)
     }
 
     //drawing
+    gl.bindVertexArray(gpuMesh)
     if (indices) {
       gl.drawElements(pipeline.topology,
         indices.length,

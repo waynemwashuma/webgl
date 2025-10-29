@@ -1,5 +1,5 @@
 /**@import {PipelineKey} from '../material/index.js' */
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { MeshVertexLayout, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
@@ -15,7 +15,7 @@ import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
 import { ImageFrameBuffer as FrameBuffer } from "../core/framebuffer.js"
-import { createTexture, updateTextureData } from "../function.js"
+import { createTexture, createVAO, updateTextureData } from "../function.js"
 
 export class DirectionalLights {
   /**
@@ -49,7 +49,6 @@ export class Lights {
 }
 
 export class Caches {
-
   uniformBuffers = new UBOs()
   /**
    * @type {Map<Mesh, WebGLVertexArrayObject>}
@@ -74,6 +73,11 @@ export class Caches {
   renderTargets = new Map()
 
   /**
+   * @type {MeshVertexLayout[]}
+   */
+  meshLayouts = []
+
+  /**
    * @param {WebGL2RenderingContext} context
    * @param {ImageRenderTarget} target
    * @returns {FrameBuffer}
@@ -89,6 +93,23 @@ export class Caches {
 
     this.renderTargets.set(target, newTarget)
     return newTarget
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {Mesh} mesh
+   * @param {ReadonlyMap<string, Attribute>} attributes
+   */
+  getMesh(context, mesh, attributes) {
+    const gpuMesh = this.meshes.get(mesh)
+    if (gpuMesh) {
+      return gpuMesh
+    }
+
+    const newMesh = createVAO(context, attributes, mesh)
+    this.meshes.set(mesh, newMesh)
+
+    return newMesh
   }
 
   /**
