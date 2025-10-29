@@ -37,3 +37,15 @@ export class Range {
     return new Range().copy(this)
   }
 }
+
+/**
+ * Throws an error if the supplied test is null or undefined.
+ *
+ * @template T
+ * @param {T} test
+ * @param {string} message
+ * @returns {asserts test is NonNullable<T>}
+ */
+export function assert(test, message) {
+  if (test === undefined || test === null) throw message
+}

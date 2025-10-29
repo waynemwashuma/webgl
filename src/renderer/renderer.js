@@ -1,10 +1,10 @@
 /**@import {PipelineKey} from '../material/index.js' */
-/**@import { GPUMesh, MeshVertexLayout, WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
-import { Attribute, UBOs, WebGLDeviceLimits, WebGLRenderPipeline } from "../core/index.js"
+import { Attribute, UBOs, WebGLDeviceLimits, WebGLRenderPipeline, MeshVertexLayout } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
@@ -106,10 +106,32 @@ export class Caches {
       return gpuMesh
     }
 
-    const newMesh = createVAO(context, attributes, mesh)
+    const [layout, layoutId] = this.getLayout(mesh,attributes)
+    const newMesh = createVAO(context, layout, mesh, layoutId)
+
     this.meshes.set(mesh, newMesh)
 
     return newMesh
+  }
+
+  /**
+   * @private
+   * @param {Mesh} mesh
+   * @returns {[MeshVertexLayout, number]}
+   */
+  getLayout(mesh, attributes) {
+    for (let i = 0; i < this.meshLayouts.length; i++) {
+      const layout = this.meshLayouts[i]
+      if (layout.compatibleWithMesh(mesh)) {
+        return [layout, i]
+      }
+    }
+    const layout = MeshVertexLayout.fromMesh(mesh, attributes)
+    const newId = this.meshLayouts.length
+
+    this.meshLayouts.push(layout)
+
+    return [layout, newId]
   }
 
   /**
@@ -186,6 +208,13 @@ export class Caches {
    */
   getRenderPipeline(id) {
     return this.renderpipelines[id]
+  }
+
+  /**
+   * @param {number} id
+   */
+  getMeshVertexLayout(id){
+    return this.meshLayouts[id]
   }
 }
 

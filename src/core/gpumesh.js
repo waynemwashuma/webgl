@@ -28,11 +28,18 @@ export class GPUMesh {
   count
 
   /**
-   * @param {WebGLVertexArrayObject} object 
+   * @type {number}
+   */
+  layoutHash
+
+  /**
+   * @param {WebGLVertexArrayObject} object
+   * @param {number} layoutHash
    * @param {number} count
    */
-  constructor(object, count = 0){
+  constructor(object, layoutHash, count = 0) {
     this.object = object
     this.count = count
+    this.layoutHash = layoutHash
   }
 }
