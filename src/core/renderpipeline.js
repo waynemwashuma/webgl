@@ -1,10 +1,8 @@
 import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology, TextureFormat } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
-import { Mesh } from "../mesh/mesh.js";
-import { Caches } from "../renderer/index.js";
+import { Mesh } from "../mesh/index.js";
 import { Attribute } from "./attribute/attribute.js";
 import { Shader } from "./shader.js";
-import { UBOs } from "./ubo.js";
 
 export class BlendParams {
   /**
@@ -96,10 +94,9 @@ export class BlendParams {
 export class WebGLRenderPipeline {
   /**
    * @param {WebGL2RenderingContext} context
-   * @param {ReadonlyMap<string,Attribute>} attributes
    * @param {WebGLRenderPipelineDescriptor} descriptor
    */
-  constructor(context, attributes, {
+  constructor(context, {
     vertex,
     fragment,
     topology,
@@ -113,7 +110,7 @@ export class WebGLRenderPipeline {
       context,
       vertex.compile(),
       fragment.source.compile(),
-      attributes
+      vertexLayout
     )
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
@@ -213,18 +210,25 @@ export class VertexBufferLayout {
   constructor(attributes) {
     this.attributes = attributes
   }
+
+  /**
+   * @returns {ArrayIterator<Attribute>}
+   */
+  *[Symbol.iterator]() {
+    return this.attributes[Symbol.iterator]()
+  }
 }
 
 export class MeshVertexLayout {
   /**
    * @type {readonly VertexBufferLayout[]}
    */
-  layouts =  []
+  layouts = []
 
   /**
    * @param {VertexBufferLayout[]} layouts
    */
-  constructor(layouts){
+  constructor(layouts) {
     this.layouts = layouts
   }
   /**
@@ -236,13 +240,20 @@ export class MeshVertexLayout {
     const result = []
     for (const name of mesh.attributes.keys()) {
       const attribute = attributes.get(name)
-      if(!attribute){
+      if (!attribute) {
         throw `The attribute "${name}" is not available in the attribute map`
       }
       result.push(new VertexBufferLayout([attribute]))
     }
-    
+
     return new MeshVertexLayout(result)
+  }
+
+  /**
+   * @returns {ArrayIterator<VertexBufferLayout>}
+   */
+  *[Symbol.iterator] () {
+    return this.layouts[Symbol.iterator]()
   }
 }
 

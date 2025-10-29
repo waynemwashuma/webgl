@@ -247,8 +247,8 @@ function mapToIndicesType(indices) {
  * @param {MeshVertexLayout} layout
  */
 function getRenderPipeline(gl, renderer, material, key, layout) {
-  const { caches, attributes, includes, defines: globalDefines } = renderer
-  return caches.getMaterialRenderPipeline(gl, material, key, attributes, () => {
+  const { caches, includes, defines: globalDefines } = renderer
+  return caches.getMaterialRenderPipeline(gl, material, key, () => {
     /**
      * @type {WebGLRenderPipelineDescriptor}
      */

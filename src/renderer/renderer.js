@@ -115,10 +115,9 @@ export class Caches {
    * @param {WebGL2RenderingContext} context
    * @param {RawMaterial} material
    * @param {PipelineKey} key
-   * @param {ReadonlyMap<string, Attribute>} attributes
    * @param {()=>WebGLRenderPipelineDescriptor} compute
    */
-  getMaterialRenderPipeline(context, material, key, attributes, compute) {
+  getMaterialRenderPipeline(context, material, key, compute) {
     const name = material.constructor.name
     let materialCache = this.materials.get(name)
 
@@ -135,7 +134,7 @@ export class Caches {
       return this.renderpipelines[id]
     }
     const descriptor = compute()
-    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor, attributes)
+    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor)
 
     materialCache.set(key, newId)
     return newRenderPipeline
@@ -144,12 +143,11 @@ export class Caches {
   /**
    * @param {WebGL2RenderingContext} context
    * @param {WebGLRenderPipelineDescriptor} descriptor
-   * @param {ReadonlyMap<string, Attribute>} attributes
    * @returns {[WebGLRenderPipeline, number]}
    */
-  createRenderPipeline(context, descriptor, attributes) {
+  createRenderPipeline(context, descriptor) {
     const id = this.renderpipelines.length
-    const pipeline = new WebGLRenderPipeline(context, attributes, descriptor)
+    const pipeline = new WebGLRenderPipeline(context, descriptor)
 
     for (const [name, uboLayout] of pipeline.uniformBlocks) {
       const ubo = this.uniformBuffers.getorSet(context, name, uboLayout)
