@@ -2,7 +2,6 @@
 /**@import { Caches, WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 
-import { MeshVertexLayout } from '../core/index.js' 
 import { Attribute, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import {
@@ -164,7 +163,48 @@ export class MeshMaterial3D extends Object3D {
     const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
     const pipelineKey = material.getPipelineKey(meshBits)
-    const pipeline = getRenderPipeline(gl, renderer, material, pipelineKey, meshLayout)
+    const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
+      const { defines, includes } = renderer
+      /**
+       * @type {WebGLRenderPipelineDescriptor}
+       */
+      const descriptor = {
+        topology: geometry.topology,
+        // TODO: Actually implement this to use the mesh
+        vertexLayout: meshLayout,
+        vertex: new Shader({
+          source: material.vertex()
+        }),
+        fragment: {
+          source: new Shader({
+            source: material.fragment()
+          }),
+          targets: [{
+            format: TextureFormat.RGBA8Unorm,
+            blend: material instanceof Material ? material.blend : undefined
+          }]
+        }
+      }
+
+      if (pipelineKey & MeshKey.Skinned) {
+        descriptor.vertex.defines.set("SKINNED", "")
+        descriptor.fragment?.source?.defines?.set("SKINNED", "")
+      }
+
+      for (const [name, value] of defines) {
+        descriptor.vertex.defines.set(name, value)
+        descriptor.fragment?.source?.defines?.set(name, value)
+      }
+
+      for (const [name, value] of includes) {
+        descriptor.vertex.includes.set(name, value)
+        descriptor.fragment?.source?.includes?.set(name, value)
+      }
+
+      material.specialize(descriptor)
+
+      return descriptor
+    })
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
@@ -206,58 +246,6 @@ export class MeshMaterial3D extends Object3D {
   }
 }
 
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {RawMaterial} material
- * @param {PipelineKey} key
- * @param {WebGLRenderer} renderer
- * @param {MeshVertexLayout} layout
- */
-function getRenderPipeline(gl, renderer, material, key, layout) {
-  const { caches, includes, defines: globalDefines } = renderer
-  return caches.getMaterialRenderPipeline(gl, material, key, () => {
-    /**
-     * @type {WebGLRenderPipelineDescriptor}
-     */
-    const descriptor = {
-      topology: topologyFromPipelineKey(key),
-      // TODO: Actually implement this to use the mesh
-      vertexLayout: layout,
-      vertex: new Shader({
-        source: material.vertex()
-      }),
-      fragment: {
-        source: new Shader({
-          source: material.fragment()
-        }),
-        targets: [{
-          format: TextureFormat.RGBA8Unorm,
-          blend: material instanceof Material ? material.blend : undefined
-        }]
-      }
-    }
-
-    if (key & MeshKey.Skinned) {
-      descriptor.vertex.defines.set("SKINNED", "")
-      descriptor.fragment?.source?.defines?.set("SKINNED", "")
-    }
-
-    for (const [name, value] of globalDefines) {
-      descriptor.vertex.defines.set(name, value)
-      descriptor.fragment?.source?.defines?.set(name, value)
-    }
-
-    for (const [name, value] of includes) {
-      descriptor.vertex.includes.set(name, value)
-      descriptor.fragment?.source?.includes?.set(name, value)
-    }
-
-    material.specialize(descriptor)
-
-    return descriptor
-  })
-}
-
 // Reserved for the first 32 bits
 // Note: Should we reserve it for this many bits?
 /**
@@ -276,35 +264,6 @@ export const MeshKey = /**@type {const}*/({
   TriangleFan: 1n << 6n,
   Skinned: 1n << 7n
 })
-
-/**
- * @param {PipelineKey} key 
- */
-export function topologyFromPipelineKey(key) {
-  if (key & MeshKey.Points) {
-    return PrimitiveTopology.Points
-  }
-  if (key & MeshKey.Lines) {
-    return PrimitiveTopology.Lines
-  }
-  if (key & MeshKey.LineLoop) {
-    return PrimitiveTopology.LineLoop
-  }
-  if (key & MeshKey.LineStrip) {
-    return PrimitiveTopology.LineStrip
-  }
-  if (key & MeshKey.Triangles) {
-    return PrimitiveTopology.Triangles
-  }
-  if (key & MeshKey.TriangleStrip) {
-    return PrimitiveTopology.TriangleStrip
-  }
-  if (key & MeshKey.TriangleFan) {
-    return PrimitiveTopology.TriangleFan
-  }
-
-  return PrimitiveTopology.Triangles
-}
 
 /**
  * @param {Mesh} mesh 
