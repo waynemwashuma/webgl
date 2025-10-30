@@ -1,5 +1,5 @@
 import { Mesh } from "./mesh.js"
-import { Attribute, AttributeData } from "../core/index.js"
+import { Attribute, AttributeData } from "./attribute/index.js"
 
 // This is a holy mess... better come up with better methods to use this
 

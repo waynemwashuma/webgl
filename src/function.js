@@ -1,16 +1,10 @@
-import { Mesh } from "./mesh/index.js"
 import {
-  TextureFormat,
-  TextureFilter,
-  TextureType,
-  UniformType,
   GlDataType,
   BufferUsage,
   BufferType
 } from "./constant.js"
-import { GPUMesh, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
-import { Sampler, Texture } from "./texture/index.js"
 import { assert } from "./utils/index.js"
+import { getTextureFormatSize, Sampler, Texture, TextureFilter, TextureFormat, TextureType } from "./texture/index.js"
 /**
  * @param {WebGL2RenderingContext} context
  * @param {BufferType} type
@@ -35,28 +29,36 @@ export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
 }
 
 /**
- * @param {WebGL2RenderingContext} gl
- * @param {string} src
- * @param {number} type
+ * Converts an ArrayBuffer to a corresponding TypedArray based on `GlDataType`.
+ *
+ * @param {ArrayBuffer} buffer - The buffer to convert.
+ * @param {GlDataType} dataType - One of the values from GlDataType.
+ * @throws {Error} If `dataType` is unknown.
  */
-export function createshader(gl, src, type) {
-  let shader = gl.createShader(type)
-
-  assert(shader,"No shader created")
-
-  gl.shaderSource(shader, src)
-  gl.compileShader(shader)
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.log(`Shader could not compile: 
-    ${formatGlsl(src)}
-    ========================================
-    ${gl.getShaderInfoLog(shader)}
-    `);
-    gl.deleteShader(shader)
-    return null
+export function convertBufferToTypedArray(
+  buffer,
+  dataType,
+  offset = 0,
+  length = buffer.byteLength
+) {
+  switch (dataType) {
+    case GlDataType.Float:
+      return new Float32Array(buffer, offset, length / Float32Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedInt:
+      return new Uint32Array(buffer, offset, length / Uint32Array.BYTES_PER_ELEMENT);
+    case GlDataType.Int:
+      return new Int32Array(buffer, offset, length / Int32Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedShort:
+      return new Uint16Array(buffer, offset, length / Uint16Array.BYTES_PER_ELEMENT);
+    case GlDataType.Short:
+      return new Int16Array(buffer, offset, length / Int16Array.BYTES_PER_ELEMENT);
+    case GlDataType.UnsignedByte:
+      return new Uint8Array(buffer, offset, length / Uint8Array.BYTES_PER_ELEMENT);
+    case GlDataType.Byte:
+      return new Int8Array(buffer, offset, length / Int8Array.BYTES_PER_ELEMENT);
+    default:
+      throw new Error(`Unsupported GL data type: 0x${dataType.toString(16)}`);
   }
-  return shader
 }
 
 /**
@@ -73,6 +75,33 @@ export function createTexture(gl, texture) {
   gl.bindTexture(texture.type, null)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
   return webglTexture
+}
+
+/**
+ * @param {WebGL2RenderingContext} gl 
+ * @param {Texture} texture 
+ */
+export function updateTextureData(gl, texture) {
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
+
+  const form = getWebGLTextureFormat(gl, texture.format)
+
+  assert(form,"The given texture fromat is not supported")
+
+  switch (texture.type) {
+    case TextureType.Texture2D:
+      updateTexture2D(gl, texture, form)
+      break;
+    case TextureType.TextureCubeMap:
+      updateCubeMap(gl, texture, form)
+      break
+    default:
+      break;
+  }
+  if (texture.generateMipmaps) {
+    gl.generateMipmap(texture.type)
+  }
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
 }
 
 /**
@@ -125,391 +154,6 @@ export function updateTextureSampler(gl, texture, sampler) {
   } else {
     gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.NONE);
   }
-}
-
-/**
- * 
- * @param {WebGL2RenderingContext} gl 
- * @param {Texture} texture 
- */
-export function updateTextureData(gl, texture) {
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
-
-  const form = getWebGLTextureFormat(gl, texture.format)
-
-  assert(form,"The given texture fromat is not supported")
-
-  switch (texture.type) {
-    case TextureType.Texture2D:
-      updateTexture2D(gl, texture, form)
-      break;
-    case TextureType.TextureCubeMap:
-      updateCubeMap(gl, texture, form)
-      break
-    default:
-      break;
-  }
-  if (texture.generateMipmaps) {
-    gl.generateMipmap(texture.type)
-  }
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {WebGLShader} vshader 
- * @param {WebGLShader} fshader
- * @param {MeshVertexLayout} vertexLayout
- * 
- */
-export function createProgram(gl, vshader, fshader, vertexLayout) {
-  let program = gl.createProgram()
-  gl.attachShader(program, vshader)
-  gl.attachShader(program, fshader)
-
-  for (const layout of vertexLayout.layouts) {
-    for (const attribute of layout.attributes) {
-      gl.bindAttribLocation(program, attribute.id, attribute.name)
-    }
-  }
-  gl.linkProgram(program)
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.log(`Program could not be linked: 
-    ========================================
-    ${gl.getProgramInfoLog(program)}
-    `);
-    gl.deleteProgram(program)
-    return null
-  }
-  gl.validateProgram(program)
-  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-    console.log(`Program could not be validated: 
-    ========================================
-    ${gl.getProgramInfoLog(program)}
-    `);
-    gl.deleteProgram(program)
-    return null
-  }
-
-  gl.useProgram(program)
-  gl.detachShader(program, vshader)
-  gl.detachShader(program, fshader)
-  gl.deleteShader(vshader)
-  gl.deleteShader(fshader)
-  return {
-    program,
-    uniforms: getActiveUniforms(gl, program),
-    uniformBlocks: getActiveUniformBlocks(gl, program)
-  }
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {MeshVertexLayout} layout
- * @param {Mesh} geometry
- * @param {number} layoutHash
- */
-export function createVAO(gl, layout, geometry, layoutHash) {
-  const vao = new GPUMesh(gl.createVertexArray(), layoutHash)
-  gl.bindVertexArray(vao.object)
-
-  updateVAO(gl, layout, geometry, vao)
-  return vao
-}
-
-/**
- * @param {WebGL2RenderingContext} context
- * @param {MeshVertexLayout} layout
- * @param {Mesh} mesh
- * @param {GPUMesh} gpuMesh
- */
-export function updateVAO(context, layout, mesh, gpuMesh) {
-  const { indices, attributes } = mesh
-  let attrCount
-
-  // TODO: Delete the old buffers if present, probably leaking memory here
-  if (indices !== undefined) {
-    const buffer = createBuffer(context, BufferType.ElementArray, indices.byteLength)
-
-    updateBuffer(context, BufferType.ElementArray, indices, BufferUsage.Static)
-    gpuMesh.indexType = mapToIndicesType(indices)
-    gpuMesh.indexBuffer = buffer
-  }
-
-  for (const vertexLayout of layout.layouts) {
-    const attribute = vertexLayout.attributes[0]
-
-    assert(attribute,"The mesh vertex layout is incorrectly set up for the provided mesh.")
-
-    const data = attributes.get(attribute.name)
-
-    assert(data,`The provided mesh does not have the vertex attribute ${attribute.name}`)
-
-    // This only works for separate buffers for each vertex attribute.
-    const buffer = createBuffer(context, BufferType.Array, data.value.byteLength)
-    const count = data.value.byteLength / (attribute.size * getByteSize(attribute.type))
-    
-    updateBuffer(context, BufferType.Array, data.value)
-    context.bufferData(context.ARRAY_BUFFER, data.value, context.STATIC_DRAW)
-    setVertexAttribute(context, attribute.id, attribute.type, attribute.size)
-    gpuMesh.attributeBuffers.push(buffer)
-
-    if (attrCount) {
-      if (count < attrCount) {
-        attrCount = count
-      }
-    } else {
-      attrCount = count
-    }
-  }
-
-  if (indices) {
-    gpuMesh.count = indices.length
-  } else if (attrCount !== undefined) {
-    gpuMesh.count = attrCount
-  } else {
-    gpuMesh.count = 0
-  }
-}
-
-/**
- *
- * @param {WebGL2RenderingContext} gl - The WebGL2 context.
- * @param {number} index - The attribute location.
- * @param {GlDataType} type - One of the values from GlDataType.
- * @param {number} size - Number of components per attribute (1-4).
- * @param {number} [stride = 0] - Byte stride between attributes.
- * @param {number} [offset = 0] - Byte offset of the first attribute.
- * @param {boolean} [normalized = false] - Whether fixed-point values should be normalized.
- */
-function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, normalized = false) {
-  gl.enableVertexAttribArray(index)
-  switch (type) {
-    case GlDataType.Float:
-      gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
-      break;
-
-    case GlDataType.Byte:
-    case GlDataType.UnsignedByte:
-    case GlDataType.Short:
-    case GlDataType.UnsignedShort:
-    case GlDataType.Int:
-    case GlDataType.UnsignedInt:
-      gl.vertexAttribIPointer(index, size, type, stride, offset);
-      break;
-
-    default:
-      throw new Error(`Unsupported GlDataType: ${type}`);
-  }
-}
-
-/**
- * @param {Uint8Array | Uint16Array | Uint32Array} indices
- */
-function mapToIndicesType(indices) {
-  if (indices instanceof Uint8Array) {
-    return GlDataType.UnsignedByte
-  }
-  if (indices instanceof Uint16Array) {
-    return GlDataType.UnsignedShort
-  }
-  if (indices instanceof Uint32Array) {
-    return GlDataType.UnsignedInt
-  }
-  throw "This is unreachable!"
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {string} vshader
- * @param {string} fshader
- * @param {MeshVertexLayout} vertexLayout
- */
-export function createProgramFromSrc(gl, vshader, fshader, vertexLayout) {
-  let v = createshader(gl, vshader, gl.VERTEX_SHADER)
-  let f = createshader(gl, fshader, gl.FRAGMENT_SHADER)
-  if (f == null || v == null) {
-    gl.deleteShader(v)
-    gl.deleteShader(f)
-    return null
-  }
-  let program = createProgram(gl, v, f, vertexLayout)
-
-  return program
-}
-
-/**
- * @param {{ type: any; }} uniform
- */
-export function sizeofUniform(uniform) {
-  const type = uniform.type
-  switch (type) {
-    case UniformType.Int:
-    case UniformType.Float:
-    case UniformType.Bool:
-    case UniformType.Sampler2D:
-      return 1
-    case UniformType.Mat4:
-      return 16
-    case UniformType.Mat3:
-      return 9
-    case UniformType.Vec2:
-      return 2
-    case UniformType.Vec3:
-      return 3 //Special Case
-    case UniformType.Vec4:
-    case UniformType.Mat2:
-      return 4
-    default:
-      return 0
-  }
-}
-/**
- * @param {{ constructor: { name: string; }; }} uniform
- */
-export function typeOfUniform(uniform) {
-  if (uniform === void 0) return -1
-  let name = uniform.constructor.name.toLowerCase()
-  let type = typeof uniform
-
-  if (type == "boolean")
-    return UniformType.Bool
-  if (type == "number")
-    return UniformType.Float
-  if (type == "object") {
-    if (name === "vector2")
-      return UniformType.Vec2
-    if (name === "vector3")
-      return UniformType.Vec3
-    if (name === "vector4" || name === "color" || name == "quaternion")
-      return UniformType.Vec4
-    if (name === "matrix2")
-      return UniformType.Mat2
-    if (name === "matrix3")
-      return UniformType.Mat3
-    if (name === "matrix4")
-      return UniformType.Mat4
-    if (name === "texture")
-      return UniformType.Sampler2D
-  }
-  throw "Unsupported type of uniform value  \'" + name + "\'";
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {WebGLProgram} program
- * @param {number} index
- */
-function getUBOLayout(gl, program, index) {
-  const size = gl.getActiveUniformBlockParameter(
-    program,
-    index,
-    gl.UNIFORM_BLOCK_DATA_SIZE
-  )
-  const uniformIndices = gl.getActiveUniformBlockParameter(
-    program,
-    index,
-    gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES
-  )
-  const offsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
-  const strides = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_ARRAY_STRIDE);
-  const fields = new Map()
-
-  uniformIndices.forEach((/** @type {number} */ index, /** @type {string | number} */ i) => {
-    const info = gl.getActiveUniform(program, index)
-
-    if(!info){
-      return
-    }
-    return fields.set(info.name, {
-      type: info.type,
-      size: info.size,
-      offset: offsets[i],
-      stride: strides[i]
-    })
-  });
-  return new UBOLayout("", size, fields)
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {WebGLProgram} program
- * @returns {Map<string,Uniform>}
- */
-function getActiveUniforms(gl, program) {
-  let texture2d = 0, cubemap = 0, texture2dArray = 0, texture3d = 0
-  const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-  const map = new Map()
-  for (let i = 0; i < numUniforms; i++) {
-    const info = gl.getActiveUniform(program, i)
-
-    if(!info)continue
-    
-    const location = gl.getUniformLocation(program, info.name)
-    const [blockIndex] = gl.getActiveUniforms(
-      program,
-      [i],
-      gl.UNIFORM_BLOCK_INDEX
-    )
-    if (blockIndex !== -1 || !location) continue
-    const uniform = new Uniform(
-      location,
-      info.type,
-      info.size
-    )
-
-    switch (info.type) {
-      case UniformType.Sampler2D:
-      case UniformType.ISampler2D:
-      case UniformType.USampler2D:
-      case UniformType.Sampler2DShadow:
-        uniform.texture_unit = texture2d
-        texture2d += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
-      case UniformType.Sampler2DArray:
-      case UniformType.ISampler2DArray:
-      case UniformType.USampler2DArray:
-      case UniformType.Sampler2DArrayShadow:
-        uniform.texture_unit = texture2dArray
-        texture2dArray += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
-      case UniformType.SamplerCube:
-      case UniformType.ISamplerCube:
-      case UniformType.USamplerCube:
-      case UniformType.SamplerCubeShadow:
-        uniform.texture_unit = cubemap
-        cubemap += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
-      case UniformType.Sampler3D:
-      case UniformType.ISampler3D:
-      case UniformType.USampler3D:
-        uniform.texture_unit = texture3d
-        texture3d += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
-    }
-    map.set(info.name, uniform)
-  }
-  return map
-}
-
-/**
- * @param {WebGL2RenderingContext} gl 
- * @param {WebGLProgram} program 
- * @returns {Map<string,UBOLayout>}
- */
-function getActiveUniformBlocks(gl, program) {
-  const results = new Map()
-  const numBlocks = gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS);
-
-  for (let i = 0; i < numBlocks; i++) {
-    const name = gl.getActiveUniformBlockName(program, i);
-    results.set(name, getUBOLayout(gl, program, i))
-  }
-  return results
 }
 
 /**
@@ -666,178 +310,5 @@ export function getWebGLTextureFormat(gl, format) {
 
     default:
       return undefined;
-  }
-}
-
-/**
- * Returns the size in bytes per texel for a given TextureFormat.
- * @param {TextureFormat} format
- * @returns {number}
- */
-export function getTextureFormatSize(format) {
-  switch (format) {
-    // 8-bit = 1 byte
-    case TextureFormat.R8Unorm:
-    case TextureFormat.R8Snorm:
-    case TextureFormat.R8Uint:
-    case TextureFormat.R8Sint:
-      return 1;
-
-    // 16-bit = 2 bytes
-    case TextureFormat.R16Uint:
-    case TextureFormat.R16Sint:
-    case TextureFormat.R16Float:
-    case TextureFormat.RG8Unorm:
-    case TextureFormat.RG8Snorm:
-    case TextureFormat.RG8Uint:
-    case TextureFormat.RG8Sint:
-      return 2;
-
-    // 32-bit = 4 bytes
-    case TextureFormat.R32Uint:
-    case TextureFormat.R32Sint:
-    case TextureFormat.R32Float:
-    case TextureFormat.RG16Uint:
-    case TextureFormat.RG16Sint:
-    case TextureFormat.RG16Float:
-    case TextureFormat.RGBA8Unorm:
-    case TextureFormat.RGBA8UnormSRGB:
-    case TextureFormat.RGBA8Snorm:
-    case TextureFormat.RGBA8Uint:
-    case TextureFormat.RGBA8Sint:
-      return 4;
-
-    // 64-bit = 8 bytes
-    case TextureFormat.RG32Uint:
-    case TextureFormat.RG32Sint:
-    case TextureFormat.RG32Float:
-    case TextureFormat.RGBA16Uint:
-    case TextureFormat.RGBA16Sint:
-    case TextureFormat.RGBA16Float:
-      return 8;
-
-    // 128-bit = 16 bytes
-    case TextureFormat.RGBA32Uint:
-    case TextureFormat.RGBA32Sint:
-    case TextureFormat.RGBA32Float:
-      return 16;
-
-    // Depth/stencil formats — size varies and is implementation-specific
-    case TextureFormat.Stencil8:
-      return 1;
-    case TextureFormat.Depth16Unorm:
-      return 2;
-    case TextureFormat.Depth24Plus:
-    case TextureFormat.Depth24PlusStencil8:
-      return 4; // Typically 3 or 4 bytes — assume 4
-    case TextureFormat.Depth32Float:
-      return 4;
-    case TextureFormat.Depth32FloatStencil8:
-      return 5; // 4 (depth) + 1 (stencil) — approximate
-
-    default:
-      throw new Error(`Unknown or unsupported texture format: ${format}`);
-  }
-}
-
-/**
- * Converts an ArrayBuffer to a corresponding TypedArray based on `GlDataType`.
- *
- * @param {ArrayBuffer} buffer - The buffer to convert.
- * @param {GlDataType} dataType - One of the values from GlDataType.
- * @throws {Error} If `dataType` is unknown.
- */
-export function convertBufferToTypedArray(
-  buffer,
-  dataType,
-  offset = 0,
-  length = buffer.byteLength) {
-  switch (dataType) {
-    case GlDataType.Float:
-      return new Float32Array(buffer, offset, length / Float32Array.BYTES_PER_ELEMENT);
-    case GlDataType.UnsignedInt:
-      return new Uint32Array(buffer, offset, length / Uint32Array.BYTES_PER_ELEMENT);
-    case GlDataType.Int:
-      return new Int32Array(buffer, offset, length / Int32Array.BYTES_PER_ELEMENT);
-    case GlDataType.UnsignedShort:
-      return new Uint16Array(buffer, offset, length / Uint16Array.BYTES_PER_ELEMENT);
-    case GlDataType.Short:
-      return new Int16Array(buffer, offset, length / Int16Array.BYTES_PER_ELEMENT);
-    case GlDataType.UnsignedByte:
-      return new Uint8Array(buffer, offset, length / Uint8Array.BYTES_PER_ELEMENT);
-    case GlDataType.Byte:
-      return new Int8Array(buffer, offset, length / Int8Array.BYTES_PER_ELEMENT);
-    default:
-      throw new Error(`Unsupported GL data type: 0x${dataType.toString(16)}`);
-  }
-}
-
-/**
- * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
- * @param {number} format - A value from TextureFormat.
- * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
- */
-export function getFramebufferAttachment(format) {
-  const context = WebGL2RenderingContext;
-
-  switch (format) {
-    // --- Depth-only formats ---
-    case TextureFormat.Depth16Unorm:
-    case TextureFormat.Depth24Plus:
-    case TextureFormat.Depth32Float:
-      return context.DEPTH_ATTACHMENT;
-
-    // --- Stencil-only format ---
-    case TextureFormat.Stencil8:
-      return context.STENCIL_ATTACHMENT;
-
-    // --- Combined depth + stencil formats ---
-    case TextureFormat.Depth24PlusStencil8:
-    case TextureFormat.Depth32FloatStencil8:
-      return context.DEPTH_STENCIL_ATTACHMENT;
-
-    // --- Everything else is a color attachment ---
-    default:
-      return context.COLOR_ATTACHMENT0;
-  }
-}
-
-
-/**
- * @param {string} code
- */
-function formatGlsl(code) {
-  const normalized = code.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const lines = normalized.split("\n")
-
-  return lines.map((ln, idx) => {
-    const num = (idx + 1).toString()
-    return `${num}: ${ln}`;
-  })
-    .join("\n");
-}
-
-/**
- * @param {GlDataType} glDataType
- * @returns {number}
- */
-function getByteSize(glDataType) {
-  switch (glDataType) {
-    case GlDataType.Float:
-      return 4
-    case GlDataType.UnsignedInt:
-      return 4
-    case GlDataType.Int:
-      return 4
-    case GlDataType.UnsignedShort:
-      return 2
-    case GlDataType.Short:
-      return 2
-    case GlDataType.UnsignedByte:
-      return 1
-    case GlDataType.Byte:
-      return 1
-    default:
-      return 0
   }
 }

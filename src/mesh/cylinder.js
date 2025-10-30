@@ -1,5 +1,5 @@
 import { Mesh } from "./mesh.js"
-import { Attribute, AttributeData } from "../core/index.js"
+import { Attribute, AttributeData } from "./attribute/index.js"
 
 export class CylinderGeometry extends Mesh {
   constructor(radius = 1, height = 1, numSegments = 15) {

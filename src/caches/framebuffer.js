@@ -1,7 +1,7 @@
-import { getFramebufferAttachment } from "../function.js"
-import { ImageRenderTarget } from "../rendertarget/image.js"
-import { Texture } from "../texture/index.js"
-import { Caches } from "./cache.js"
+/** @import { Caches } from "./cache.js" */
+/** @import { Texture } from "../texture/index.js"*/
+import { TextureFormat } from "../texture/index.js"
+import { ImageRenderTarget } from "../rendertarget/index.js"
 
 export class ImageFrameBuffer {
   /**
@@ -88,5 +88,35 @@ export class ImageFrameBuffer {
     if(this.depthBuffer && this.depthImage){
       //TODO: blit depth buffer into depth image
     }
+  }
+}
+
+/**
+ * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
+ * @param {number} format - A value from TextureFormat.
+ * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
+ */
+export function getFramebufferAttachment(format) {
+  const context = WebGL2RenderingContext;
+
+  switch (format) {
+    // --- Depth-only formats ---
+    case TextureFormat.Depth16Unorm:
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth32Float:
+      return context.DEPTH_ATTACHMENT;
+
+    // --- Stencil-only format ---
+    case TextureFormat.Stencil8:
+      return context.STENCIL_ATTACHMENT;
+
+    // --- Combined depth + stencil formats ---
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32FloatStencil8:
+      return context.DEPTH_STENCIL_ATTACHMENT;
+
+    // --- Everything else is a color attachment ---
+    default:
+      return context.COLOR_ATTACHMENT0;
   }
 }

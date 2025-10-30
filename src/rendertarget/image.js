@@ -1,5 +1,4 @@
-import { TextureFormat } from "../constant.js";
-import { Texture } from "../texture/index.js";
+/** @import { Texture, TextureFormat } from "../texture/index.js" */
 import { RenderTarget } from "./rendertarget.js";
 
 export class ImageRenderTarget extends RenderTarget {

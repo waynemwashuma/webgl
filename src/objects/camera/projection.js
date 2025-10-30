@@ -1,4 +1,4 @@
-import { Matrix4 } from '../math/index.js'
+import { Matrix4 } from '../../math/index.js'
 
 export class Projection {
 

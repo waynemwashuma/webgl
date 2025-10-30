@@ -1,7 +1,7 @@
-import { UBOLayout } from "./layouts/UBOLayout.js"
+import { UniformBufferLayout } from "../core/layouts/uniformbuffer.js"
 
 
-export class UBOBlockPointAllocator {
+export class UniformBufferPointAllocator {
   number = 0
 
   reserve() {
@@ -12,23 +12,23 @@ export class UBOBlockPointAllocator {
   }
 }
 
-export class UBOs {
+export class UniformBuffers {
   /**
-   * @type {Map<string,UBO>}
+   * @type {Map<string,UniformBuffer>}
    */
   list = new Map()
 
-  allocator = new UBOBlockPointAllocator()
+  allocator = new UniformBufferPointAllocator()
 
   /**
    * @param {WebGL2RenderingContext} gl 
    * @param {string} name 
-   * @param {UBOLayout} layout
-   * @returns {UBO} 
+   * @param {UniformBufferLayout} layout
+   * @returns {UniformBuffer} 
    */
   set(gl, name, layout) {
     const index = this.allocator.reserve()
-    const ubo = new UBO(gl, index, layout.size)
+    const ubo = new UniformBuffer(gl, index, layout.size)
     this.list.set(name, ubo)
 
     return ubo
@@ -44,8 +44,8 @@ export class UBOs {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {string} name
-   * @param {UBOLayout} layout
-   * @returns {UBO}
+   * @param {UniformBufferLayout} layout
+   * @returns {UniformBuffer}
    */
   getorSet(gl, name, layout) {
     const ubo = this.get(name)
@@ -60,7 +60,7 @@ export class UBOs {
 /**
  * @param {WebGL2RenderingContext} gl
  */
-export class UBO {
+export class UniformBuffer {
   /**
    * @param {WebGL2RenderingContext} gl
    * @param {number} point

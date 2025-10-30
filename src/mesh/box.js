@@ -1,5 +1,5 @@
 import { Mesh } from "./mesh.js"
-import { AttributeData, Attribute } from "../core/index.js"
+import { AttributeData, Attribute } from "./attribute/index.js"
 
 
 export class BoxGeometry extends Mesh {

@@ -1,17 +1,17 @@
 /**@import { PipelineKey } from '../objects/index.js' */
-import { createVAO, updateTextureData, createTexture } from "../function.js"
+import { createTexture, updateTextureData } from "../function.js"
 import { RawMaterial } from "../material/index.js"
-import { Mesh } from "../mesh/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
-import { Attribute } from "./attribute/index.js"
+import { Attribute, Mesh } from "../mesh/index.js"
+import { MeshVertexLayout } from "../core/index.js"
 import { ImageFrameBuffer } from "./framebuffer.js"
 import { GPUMesh } from "./gpumesh.js"
-import { WebGLRenderPipeline, MeshVertexLayout } from "./renderpipeline.js"
-import { UBOs } from "./ubo.js"
+import { WebGLRenderPipeline } from "./renderpipeline.js"
+import { UniformBuffers } from "./uniformbuffers.js"
 
 export class Caches {
-  uniformBuffers = new UBOs()
+  uniformBuffers = new UniformBuffers()
   /**
    * @type {Map<Mesh, GPUMesh>}
    */
@@ -68,19 +68,17 @@ export class Caches {
       return gpuMesh
     }
 
-    const [layout, layoutId] = this.getLayout(mesh,attributes)
-    const newMesh = createVAO(context, layout, mesh, layoutId)
-
+    const [layout, layoutId] = this.getLayout(mesh, attributes)
+    const newMesh = new GPUMesh(context, mesh, layout, layoutId)
     this.meshes.set(mesh, newMesh)
 
     return newMesh
   }
 
   /**
-   * 
    * @param {Mesh} mesh
-   * @returns {[MeshVertexLayout, number]}
    * @param {ReadonlyMap<string, Attribute>} attributes
+   * @returns {[MeshVertexLayout, number]}
    */
   getLayout(mesh, attributes) {
     for (let i = 0; i < this.meshLayouts.length; i++) {
@@ -176,7 +174,7 @@ export class Caches {
   /**
    * @param {number} id
    */
-  getMeshVertexLayout(id){
+  getMeshVertexLayout(id) {
     return this.meshLayouts[id]
   }
 }

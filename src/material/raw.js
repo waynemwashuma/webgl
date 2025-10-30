@@ -1,4 +1,4 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 import { Sampler, Texture } from "../texture/index.js"
 
 /**

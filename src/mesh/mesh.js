@@ -1,5 +1,5 @@
-import { PrimitiveTopology } from "../constant.js"
-import { Attribute, AttributeData } from "../core/index.js"
+import { PrimitiveTopology } from "./constants.js"
+import { Attribute, AttributeData } from "./attribute/index.js"
 
 export class Mesh {
   /**

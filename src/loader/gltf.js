@@ -1,7 +1,5 @@
 /**@import { LoadSettings } from './loader.js' */
-
-import { Attribute, AttributeData } from '../core/index.js';
-import { Mesh } from '../mesh/index.js';
+import { Attribute, AttributeData, Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
@@ -187,7 +185,7 @@ class GLTF {
    * @param {any} data
    */
   static deserialize(data) {
-    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, animations, skins } = data
+    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, skins } = data
 
     if (
       !(asset instanceof Object) ||

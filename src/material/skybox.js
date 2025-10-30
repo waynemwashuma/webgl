@@ -1,4 +1,4 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { CullFace } from "../constant.js"

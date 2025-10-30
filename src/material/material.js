@@ -1,4 +1,4 @@
-/**@import {WebGLRenderPipelineDescriptor, BlendDescriptor } from '../core/index.js' */
+/**@import {WebGLRenderPipelineDescriptor, BlendDescriptor } from '../caches/index.js' */
 
 import {
   CullFace,

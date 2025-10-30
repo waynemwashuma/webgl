@@ -1,4 +1,4 @@
-import { UniformType } from "../constant.js"
+import { UniformType } from "../../constant.js"
 
 export class Uniform {
   location
