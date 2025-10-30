@@ -134,6 +134,19 @@ export class Texture {
     return new /**@type {new (...arg:any) => this}*/(this.constructor)({}).copy(this)
   }
 
+  static default(){
+    const width = 1
+    const height = 1
+    const pixel = new Uint8Array([255, 255, 255, 255])
+    const texture = new Texture({
+      width,
+      height,
+      data: pixel.buffer,
+      type: TextureType.Texture2D
+    })
+
+    return texture
+  }
   /**
    * @readonly
    * @type {Readonly<Required<TextureSettings>>}
