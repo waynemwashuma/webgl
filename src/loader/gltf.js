@@ -19,18 +19,21 @@ export class GLTFLoader extends Loader {
     super(Object3D)
   }
   /**
+   * @override
    * @param {ArrayBuffer[]} buffers
    * @param {Object3D} destination
    * @param {GLTFLoadSettings} settings
    */
   async parse(buffers, destination, settings) {
-    if (!buffers.length) {
+    const buffer = buffers[0]
+    const path = settings.paths[0]
+    if (!buffer || !path) {
       return
     }
 
     /**@type {Map<number, Object3D>} */
     const entityMap = new Map()
-    const gltf = await loadGLTF(buffers[0], settings.paths[0])
+    const gltf = await loadGLTF(buffer, path)
     const scene = gltf.scenes[gltf.scene]
 
     if (!scene) {
@@ -66,7 +69,7 @@ export class GLTFLoader extends Loader {
     })
 
     scene.nodes.forEach((node) => {
-      entityMap.get(node).update()
+      entityMap.get(node)?.update()
     });
 
     const skins = gltf.skins.map((skin) => {
@@ -74,11 +77,11 @@ export class GLTFLoader extends Loader {
     })
 
     entityMap.forEach((entity, index) => {
-      const node = gltf.nodes[index]
+      const node = /**@type {GLTFNode} */ (gltf.nodes[index])
       if (node.skin !== undefined) {
         entity.traverseBFS((mesh) => {
           if (mesh instanceof MeshMaterial3D) {
-            mesh.skin = skins[node.skin]
+            mesh.skin = skins[/**@type {number} */ (node.skin)]
           }
           return true
         })
@@ -86,12 +89,15 @@ export class GLTFLoader extends Loader {
     })
 
     const sceneEntities = scene.nodes.map((node) => {
-      return entityMap.get(node)
+      return /**@type {Object3D} */ (entityMap.get(node))
     })
 
     destination.add(...sceneEntities)
   }
 
+  /**
+   * @override
+   */
   default() {
     return new Object3D()
   }
@@ -137,7 +143,7 @@ class GLTF {
   /**
    * @type {number}
    */
-  scene
+  scene = 0
   /**
    * @type {GLTFScene[]}
    */
@@ -172,11 +178,16 @@ class GLTF {
   metaData
 
   /**
+   * @param {GLTFMetaData} meta
+   */
+  constructor(meta) {
+    this.metaData = meta
+  }
+  /**
    * @param {any} data
    */
   static deserialize(data) {
-    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, skins } = data
-    const gltf = new GLTF()
+    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, animations, skins } = data
 
     if (
       !(asset instanceof Object) ||
@@ -188,6 +199,7 @@ class GLTF {
     ) {
       throw new Error("Invalid gltf json")
     }
+    const gltf = new GLTF(GLTFMetaData.deserialize(asset))
 
     if (typeof scene === "number") {
       gltf.scene = scene
@@ -195,7 +207,6 @@ class GLTF {
       gltf.scene = 0
     }
 
-    gltf.metaData = GLTFMetaData.deserialize(asset)
     gltf.scenes = scenes.map((/**@type {any}*/d) => GLTFScene.deserialize(d))
     gltf.nodes = nodes.map((/**@type {any}*/d) => GLTFNode.deserialize(d))
     gltf.meshes = meshes.map((/**@type {any}*/d) => GLTFMesh.deserialize(d))
@@ -215,15 +226,15 @@ class GLTFScene {
   /**
    * @type {string}
    */
-  name
+  name = ''
   /**
    * @type {Record<string,any>}
    */
-  extensions
+  extensions = {}
   /**
    * @type {Record<string,any>}
    */
-  extras
+  extras = []
   /**
    * @type {number[]}
    */
@@ -264,15 +275,15 @@ class GLTFNode {
   /**
    * @type {string}
    */
-  name
+  name = ''
   /**
    * @type {Record<string,any>}
    */
-  extensions
+  extensions = {}
   /**
    * @type {Record<string,any>}
    */
-  extras
+  extras = []
   /**
    * @type {number | undefined}
    */
@@ -293,7 +304,7 @@ class GLTFNode {
   /**
    * @type {number[]}
    */
-  children
+  children = []
   /**
    * @type {TRSTransform | MatrixTransform | undefined}
    */
@@ -369,23 +380,23 @@ class GLTFMesh {
   /**
    * @type {string}
    */
-  name
+  name = ''
   /**
    * @type {Record<string,any>}
    */
-  extensions
+  extensions = {}
   /**
    * @type {Record<string,any>}
    */
-  extras
+  extras = []
   /**
    * @type {GLTFPrimitive[]}
    */
-  primitives
+  primitives = []
   /**
    * @type {number[]}
    */
-  weights
+  weights = []
   /**
    * @param {any} data
    */
@@ -440,12 +451,20 @@ class GLTFSkin {
   joints
 
   /**
-   * 
+   * @param {number[]} joints
+   * @param {number} inverseBindMatrices
+   */
+  constructor(joints, inverseBindMatrices) {
+    this.inverseBindMatrices = inverseBindMatrices
+    this.joints = joints
+  }
+
+  /**
+
    * @param {any} data 
    */
   static deserialize(data) {
     const { joints, inverseBindMatrices, skeleton } = data
-    const object = new GLTFSkin()
 
     if (
       !(joints instanceof Array) ||
@@ -453,8 +472,10 @@ class GLTFSkin {
     ) {
       throw 'Invalid skin'
     }
-    object.inverseBindMatrices = inverseBindMatrices
-    object.joints = joints.filter(e => typeof e === 'number')
+    const object = new GLTFSkin(
+      joints.filter(e => typeof e === 'number'),
+      inverseBindMatrices
+    )
 
     if (typeof skeleton === 'number') {
       object.skeleton = skeleton
@@ -467,15 +488,15 @@ class GLTFBufferView {
   /**
    * @type {string}
    */
-  name
+  name = ''
   /**
    * @type {Record<string,any>}
    */
-  extensions
+  extensions = {}
   /**
    * @type {Record<string,any>}
    */
-  extras
+  extras = []
   /**
    * @type {number}
    */
@@ -483,7 +504,7 @@ class GLTFBufferView {
   /**
    * @type {number}
    */
-  offset
+  offset = 0
   /**
    * @type {number}
    */
@@ -491,11 +512,21 @@ class GLTFBufferView {
   /**
    * @type {number}
    */
-  stride
+  stride = 0
   /**
    * @type {number | undefined}
    */
   target
+
+  /**
+   * @param {number} buffer
+   * @param {number} length
+   */
+  constructor(buffer, length) {
+    this.buffer = buffer
+    this.length = length
+  }
+
   /**
    * @param {any} data
    */
@@ -510,7 +541,6 @@ class GLTFBufferView {
       extensions,
       extras
     } = data
-    const struct = new GLTFBufferView()
 
     if (
       typeof buffer !== "number" ||
@@ -519,8 +549,7 @@ class GLTFBufferView {
       throw "Invalid buffer view provided"
     }
 
-    struct.buffer = buffer
-    struct.length = byteLength
+    const struct = new GLTFBufferView(buffer, byteLength)
 
     if (typeof byteOffset === "number") {
       struct.offset = byteOffset
@@ -561,27 +590,27 @@ class GLTFAccessor {
   /**
    * @type {string}
    */
-  name
+  name = ''
   /**
    * @type {Record<string,any>}
    */
-  extensions
+  extensions = {}
   /**
    * @type {Record<string,any>}
    */
-  extras
+  extras = {}
   /**
    * @type {boolean}
    */
-  normalized
+  normalized = false
   /**
    * @type {number}
    */
-  view
+  view = 0
   /**
    * @type {number}
    */
-  offset
+  offset = 0
   /**
    * @type {GLTFComponentType}
    */
@@ -602,6 +631,17 @@ class GLTFAccessor {
    * @type {number[] | undefined}
    */
   min
+
+  /**
+   * @param {number} type
+   * @param {number} componentType
+   * @param {number} count
+   */
+  constructor(type, componentType, count) {
+    this.type = type
+    this.componentType = componentType
+    this.count = count
+  }
   /**
    * @param {any} data
    */
@@ -620,7 +660,6 @@ class GLTFAccessor {
       extensions,
       extras
     } = data
-    const struct = new GLTFAccessor()
 
     if (
       typeof componentType !== "number" ||
@@ -629,10 +668,11 @@ class GLTFAccessor {
     ) {
       throw "Invalid accessor"
     }
-
-    struct.componentType = mapComponentType(componentType)
-    struct.count = count
-    struct.type = mapAccessorType(type)
+    const struct = new GLTFAccessor(
+      mapAccessorType(type),
+      mapComponentType(componentType),
+      count
+    )
 
     if (typeof bufferView === "number") {
       struct.view = bufferView
@@ -692,18 +732,24 @@ class GLTFMetaData {
    * @type {string | undefined}
    */
   generator
+
+  /**
+   * @param {string} version
+   */
+  constructor(version) {
+    this.version = version
+  }
   /**
    * @param {any} data
    */
   static deserialize(data) {
     const { version, generator } = data
-    const meta = new GLTFMetaData()
-    if (typeof version === "string") {
-      meta.version = version
-    } else {
+
+    if (typeof version !== "string") {
       throw "GLTF asset version is required"
     }
 
+    const meta = new GLTFMetaData(version)
     if (typeof generator === "string") {
       meta.generator = generator
     }
@@ -723,7 +769,7 @@ class GLTFPrimitive {
   /**
    * @type {GLTFPrimitiveMode}
    */
-  mode
+  mode = GLTFPrimitiveMode.Triangles
   /**
    * @param {any} data
    */
@@ -923,24 +969,33 @@ class TRSTransform {
 
 class MatrixTransform {
   /**
-   * @type {[number,number,number,number,number,number,number,number,number,number,number,number,number,number,number,number]}
+   * @type {MatrixArray}
    */
   value
 
   /**
+   * @param {MatrixArray} value
+   */
+  constructor(value){
+    this.value = value
+  }
+  /**
  * @param {any} data
  */
   static deserialize(data) {
-    const transform = new MatrixTransform()
 
     if (
       !(data instanceof Array)
     ) {
       throw "Invalid transform"
     }
+    const t = data.filter((data) => typeof data === "number")
 
-    //@ts-ignore
-    transform.value = data.filter((data) => typeof data === "number")
+    if(t.length !== 16){
+      throw "invalid matrix transform"
+    }
+    const transform = new MatrixTransform(/**@type {MatrixArray}*/(t))
+
     return transform
   }
 }
@@ -1003,7 +1058,7 @@ function mapToIndices(accessor, view) {
  * @param {string} name
  * @param {GLTFAccessor} accessor
  * @param {DataView} buffer
- * @returns {[string, DataView]}
+ * @returns {[string, DataView] | undefined}
  */
 function mapAccessorTypeToAttribute(name, accessor, buffer) {
   const { componentType: type } = accessor
@@ -1066,11 +1121,11 @@ function parseMeshObject(mesh, meshes, geometries) {
     throw "Invalid mesh index on node"
   }
   if (geometry.length === 1) {
-    return new MeshMaterial3D(geometry[0], new BasicMaterial())
+    return new MeshMaterial3D(/**@type {Mesh}*/(geometry[0]), new BasicMaterial())
   }
   const object = new Object3D()
   for (let i = 0; i < geometry.length; i++) {
-    const mesh = new MeshMaterial3D(geometry[i], new BasicMaterial())
+    const mesh = new MeshMaterial3D(/**@type {Mesh}*/(geometry[i]), new BasicMaterial())
     object.add(mesh)
   }
 
@@ -1084,7 +1139,7 @@ function parseMeshObject(mesh, meshes, geometries) {
 function parseGeometry(mesh, gltf) {
   const results = []
   for (let i = 0; i < mesh.primitives.length; i++) {
-    const primitive = mesh.primitives[i];
+    const primitive = /**@type {GLTFPrimitive} */ (mesh.primitives[i])
     const geometry = new Mesh()
     if (primitive.indices !== undefined) {
       const [dataView, accessor] = getAccessorData(
@@ -1167,9 +1222,10 @@ function convertToInverseBindPose(poseData) {
 }
 
 /**
- * @param {GLTFNode} node 
+ * @param {number} index
+ * @param {GLTFNode} node
  * @param {GLTF} gltf
- * @param {Mesh[][]} geometries 
+ * @param {Mesh[][]} geometries
  */
 function parseObject(index, node, gltf, geometries) {
   const { mesh, transform, name } = node
@@ -1199,6 +1255,7 @@ function parseObject(index, node, gltf, geometries) {
 /**
  * @param {number} index
  * @param {GLTF} gltf
+ * @returns {Bone3D | undefined}
  */
 function parseBone(index, gltf) {
   for (const skin of gltf.skins) {
@@ -1209,6 +1266,7 @@ function parseBone(index, gltf) {
       return bone
     }
   }
+  return undefined
 }
 
 /**
@@ -1242,13 +1300,15 @@ function transferTransform(object, transform) {
 function widenTypedArray(from, to) {
   const result = new to(from.length);
   for (let i = 0; i < from.length; i++) {
-    result[i] = from[i];
+    result[i] = /**@type {bigint | number}*/(from[i])
   }
   return result;
 }
 
 /**
-
  *@typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | BigInt64Array | BigUint64Array} TypedArray
-
  */
+
+ /**
+  * @typedef {[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]} MatrixArray
+  */

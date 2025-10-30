@@ -76,7 +76,7 @@ export class Loader {
 
     if (loads) {
       for (let i = 0; i < loads.length; i++) {
-        const [clone, postprocessor] = loads[i];
+        const [clone, postprocessor] = /**@type {[Asset, ((asset: Asset) => void) | undefined]} */ (loads[i]);
 
         clone.copy(cachedAsset)
         if (postprocessor) {
@@ -90,9 +90,10 @@ export class Loader {
   }
 
   /**
+   * @private
    * @param {string} url
    * @param {Asset} asset
-   * @param {(asset: Asset)=> void} postprocessor
+   * @param {((asset: Asset)=> void) | undefined} postprocessor
    */
   addToLoad(url, asset, postprocessor) {
     const assets = this.toLoad.get(url)

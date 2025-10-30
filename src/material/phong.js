@@ -36,14 +36,23 @@ export class PhongMaterial extends Material {
     this.specularShininess = specularShininess
   }
 
+  /**
+   * @override
+   */
   vertex() {
     return basicVertex
   }
 
+  /**
+   * @override
+   */
   fragment() {
     return phongFragment
   }
 
+  /**
+   * @override
+   */
   getData() {
     const {
       color,
@@ -60,6 +69,7 @@ export class PhongMaterial extends Material {
 
   /**
    * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
+   * @override
    */
   getTextures() {
     return [['mainTexture', 0, this.mainTexture, this.mainSampler]]

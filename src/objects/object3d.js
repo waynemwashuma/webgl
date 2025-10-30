@@ -24,7 +24,8 @@ export class Object3D {
     this.transform.updateMatrix(parent)
 
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].update(this.transform)
+      const child = /**@type {Object3D} */ (this.children[i])
+      child.update(this.transform)
     }
   }
 
@@ -41,7 +42,7 @@ export class Object3D {
    */
   remove(...children) {
     for (let i = 0; i < children.length; i++) {
-      const child = children[i];
+      const child = /**@type {Object3D}*/(children[i]);
 
       const index = this.children.indexOf(child)
       if (index === -1) return
@@ -58,7 +59,7 @@ export class Object3D {
     const queue = [this]
 
     while (queue.length) {
-      const object = queue.shift()
+      const object = /**@type {Object3D}*/ (queue.shift())
       const visible = func(object)
 
       if (!visible) continue
@@ -74,7 +75,9 @@ export class Object3D {
 
     if (!visible) return
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].traverseDFS(func);
+      const child = /**@type {Object3D}*/ (this.children[i])
+
+      child.traverseDFS(func);
     }
   }
 
@@ -89,7 +92,7 @@ export class Object3D {
       const childClone = child.clone(entityMap)
 
       if (entityMap) {
-        entityMap.set(child,childClone)
+        entityMap.set(child, childClone)
       }
 
       return childClone
@@ -105,7 +108,7 @@ export class Object3D {
    * @param {Map<Object3D, Object3D>} [entityMap]
    */
   clone(entityMap) {
-    return new /**@type {new (...arg:any) => this}*/(this.constructor)().copy(this,entityMap)
+    return new /**@type {new (...arg:any) => this}*/(this.constructor)().copy(this, entityMap)
   }
 }
 

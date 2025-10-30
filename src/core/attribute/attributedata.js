@@ -3,7 +3,7 @@ export class AttributeData {
    * @readonly
    * @type {DataView}
   */
-  value = null
+  value
   /**
    * @param {DataView} value
    */

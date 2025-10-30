@@ -1,20 +1,18 @@
 import { Mesh } from "./mesh/index.js"
 import {
-  CompareFunction,
   TextureFormat,
   TextureFilter,
   TextureType,
-  TextureWrap,
   UniformType,
   GlDataType,
   BufferUsage,
   BufferType
 } from "./constant.js"
-import { Attribute, GPUMesh, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
+import { GPUMesh, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
 import { assert } from "./utils/index.js"
 /**
- * @param {WebGLRenderingContext} context
+ * @param {WebGL2RenderingContext} context
  * @param {BufferType} type
  * @param {number} size
  * @param {BufferUsage} usage
@@ -37,12 +35,15 @@ export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
 }
 
 /**
- * @param {WebGLRenderingContext} gl
+ * @param {WebGL2RenderingContext} gl
  * @param {string} src
  * @param {number} type
  */
 export function createshader(gl, src, type) {
   let shader = gl.createShader(type)
+
+  assert(shader,"No shader created")
+
   gl.shaderSource(shader, src)
   gl.compileShader(shader)
 
@@ -134,12 +135,17 @@ export function updateTextureSampler(gl, texture, sampler) {
 export function updateTextureData(gl, texture) {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
 
+  const form = getWebGLTextureFormat(gl, texture.format)
+
+  assert(form,"The given texture fromat is not supported")
+
   switch (texture.type) {
     case TextureType.Texture2D:
-      updateTexture2D(gl, texture)
+      updateTexture2D(gl, texture, form)
       break;
     case TextureType.TextureCubeMap:
-      updateCubeMap(gl, texture)
+      updateCubeMap(gl, texture, form)
+      break
     default:
       break;
   }
@@ -410,7 +416,11 @@ function getUBOLayout(gl, program, index) {
   const fields = new Map()
 
   uniformIndices.forEach((/** @type {number} */ index, /** @type {string | number} */ i) => {
-    const info = gl.getActiveUniform(program, index);
+    const info = gl.getActiveUniform(program, index)
+
+    if(!info){
+      return
+    }
     return fields.set(info.name, {
       type: info.type,
       size: info.size,
@@ -432,13 +442,16 @@ function getActiveUniforms(gl, program) {
   const map = new Map()
   for (let i = 0; i < numUniforms; i++) {
     const info = gl.getActiveUniform(program, i)
+
+    if(!info)continue
+    
     const location = gl.getUniformLocation(program, info.name)
     const [blockIndex] = gl.getActiveUniforms(
       program,
       [i],
       gl.UNIFORM_BLOCK_INDEX
     )
-    if (blockIndex !== -1) continue
+    if (blockIndex !== -1 || !location) continue
     const uniform = new Uniform(
       location,
       info.type,
@@ -502,11 +515,12 @@ function getActiveUniformBlocks(gl, program) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {Texture} texture
+ * @param {{ internalFormat: any; format: any; dataType: any; }} form
  */
-function updateTexture2D(gl, texture) {
+function updateTexture2D(gl, texture, form) {
   const level = 0, border = 0
-  const { internalFormat, format, dataType } = getWebGLTextureFormat(gl, texture.format)
 
+  const { internalFormat, format, dataType } = form
   const { data, width, height } = texture
   const pixelSize = getTextureFormatSize(texture.format)
   if (data && data.byteLength < width * height * pixelSize) {
@@ -528,10 +542,11 @@ function updateTexture2D(gl, texture) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {Texture} texture
+ * @param {{ internalFormat: any; format: any; dataType: any; }} form
  */
-function updateCubeMap(gl, texture) {
+function updateCubeMap(gl, texture, form) {
   const level = 0, border = 0
-  const { internalFormat, format, dataType } = getWebGLTextureFormat(gl, texture.format)
+  const { internalFormat, format, dataType } = form
   const { data, width, height } = texture
   const pixelSize = getTextureFormatSize(texture.format)
   const sliceSize = pixelSize * width * height
@@ -561,7 +576,7 @@ function updateCubeMap(gl, texture) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {number} format
- * @returns {{ internalFormat: number, format: number, dataType: number } | null}
+ * @returns {{ internalFormat: number, format: number, dataType: number } | undefined}
  */
 export function getWebGLTextureFormat(gl, format) {
   switch (format) {
@@ -650,7 +665,7 @@ export function getWebGLTextureFormat(gl, format) {
       return { internalFormat: gl.DEPTH32F_STENCIL8, format: gl.DEPTH_STENCIL, dataType: gl.FLOAT_32_UNSIGNED_INT_24_8_REV };
 
     default:
-      return null;
+      return undefined;
   }
 }
 
@@ -826,21 +841,3 @@ function getByteSize(glDataType) {
       return 0
   }
 }
-/**
- * @typedef SamplerSettings
- * @property {TextureFilter} [minificationFilter]
- * @property {TextureFilter} [magnificationFilter]
- * @property {TextureFilter} [mipmapFilter]
- * @property {TextureWrap} [wrapS]
- * @property {TextureWrap} [wrapT]
- * @property {TextureWrap} [wrapR]
- * @property {SamplerLODSettings} [lod]
- * @property {number} [anisotropy]
- * @property {CompareFunction} [compare]
- */
-
-/**
- * @typedef SamplerLODSettings
- * @property {number} max
- * @property {number} min
- */

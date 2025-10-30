@@ -1,18 +1,45 @@
 import { CompareFunction, TextureFilter, TextureWrap } from '../constant.js'
-
-/**@import {SamplerSettings} from '../function.js'*/
 export class Sampler {
+  /**
+   * @type {TextureFilter}
+   */
+
   magnificationFilter
+  /**
+   * @type {TextureFilter}
+   */
   minificationFilter
+  /**
+   * @type {TextureFilter}
+   */
   mipmapFilter
+  
+  /**
+   * @type {TextureWrap}
+   */
   wrapS
+  /**
+   * @type {TextureWrap}
+   */
   wrapT
+  /**
+   * @type {TextureWrap}
+   */
   wrapR
+  /**
+   * @type {number}
+   */
   anisotropy
+  /**
+   * @type {SamplerLODSettings}
+   */
   lod
+  /**
+   * @type {CompareFunction | undefined}
+   */
   compare
   /**
-   * @param {Partial<SamplerSettings>} settings 
+   * @param {SamplerSettings} settings 
    */
   constructor({
     magnificationFilter = Sampler.defaultSettings.magnificationFilter,
@@ -59,3 +86,22 @@ export class Sampler {
     compare: undefined
   }
 }
+
+/**
+ * @typedef SamplerSettings
+ * @property {TextureFilter} [minificationFilter]
+ * @property {TextureFilter} [magnificationFilter]
+ * @property {TextureFilter} [mipmapFilter]
+ * @property {TextureWrap} [wrapS]
+ * @property {TextureWrap} [wrapT]
+ * @property {TextureWrap} [wrapR]
+ * @property {SamplerLODSettings} [lod]
+ * @property {number} [anisotropy]
+ * @property {CompareFunction} [compare]
+ */
+
+/**
+ * @typedef SamplerLODSettings
+ * @property {number} max
+ * @property {number} min
+ */

@@ -7,14 +7,16 @@ import {
   SkeletonHelper,
   MeshMaterial3D,
   WebGLCanvasSurface,
-  Bone3D
+  Bone3D,
+  Object3D
 } from 'webgllis';
 
+/**@type {Object3D[]} */
+const objects = []
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer()
 const camera = new Camera()
-const objects = []
 
 const loader = new GLTFLoader()
 loader.asyncLoad({

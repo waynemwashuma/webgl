@@ -1,5 +1,5 @@
 import { PrimitiveTopology, TextureFormat } from "../../constant.js";
-import { MeshVertexLayout, Shader, VertexBufferLayout } from "../../core/index.js";
+import { MeshVertexLayout, Shader } from "../../core/index.js";
 import { Material } from "../../material/index.js";
 import { Affine3 } from "../../math/index.js";
 import { Mesh } from "../../mesh/index.js";
@@ -10,6 +10,7 @@ import { Bone3D } from "../bone.js";
 import { MeshMaterial3D } from "../mesh.js";
 
 // TODO: Move these global state to corresponding plugin when the plugin system lands
+/**@type {number | undefined} */
 let pipelineid
 
 // This needs to extend `MeshMaterial3D` as currently no support for a plugin system in the renderer
@@ -37,6 +38,7 @@ export class SkeletonHelper extends MeshMaterial3D {
   }
 
   /**
+   * @override
    * @param {WebGL2RenderingContext} gl
    * @param {WebGLRenderer} renderer
    */
@@ -56,21 +58,23 @@ export class SkeletonHelper extends MeshMaterial3D {
     pipeline.use(gl)
 
     if (
-      !transformsInfo ||
-      !parentInfo || !childInfo) {
-      throw "uniforms are not set up correctly in shader"
+      !transformsInfo || transformsInfo.texture_unit === undefined ||
+      !modelInfo || !parentInfo || !childInfo) {
+      console.warn("uniforms are not set up correctly in shader")
+      return
     }
 
     updateDataTexture(boneTexture, bones.map((bone) => bone.transform.world))
 
     const transformsTexture = caches.getTexture(gl, boneTexture)
 
+
     gl.activeTexture(gl.TEXTURE0 + transformsInfo.texture_unit)
     gl.bindTexture(boneTexture.type, transformsTexture)
-    
+
     gl.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(this.skinnedMesh.transform.world)])
     gl.bindVertexArray(null)
-    
+
     this.rootBone.traverseBFS((parent) => {
       if (parent instanceof Bone3D) {
         for (let i = 0; i < parent.children.length; i++) {
@@ -149,7 +153,7 @@ function updateDataTexture(texture, items) {
 
   for (let i = 0; i < items.length; i++) {
     const offset = i * 16
-    const world = items[i]
+    const world = /**@type {Affine3} */(items[i])
 
     data[offset + 0] = world.a
     data[offset + 1] = world.b

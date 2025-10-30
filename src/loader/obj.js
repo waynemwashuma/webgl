@@ -10,32 +10,47 @@ import { arrayBufferToText } from './utils.js';
  */
 export class OBJLoader extends Loader {
 
-  constructor(){
+  constructor() {
     super(Object3D)
   }
 
   /**
+   * @override
    * @param {ArrayBuffer[]} buffers
-   * @param {Object3D} destination 
-   * @param {ObjLoadSettings} settings
+   * @param {Object3D} destination
+   * @param {ObjLoadSettings} _settings
    */
-  async parse(buffers,destination,settings) {
-    if(!buffers.length){
+  async parse(buffers, destination, _settings) {
+    const buffer = buffers[0]
+    if (!buffer) {
       return
     }
-    const raw = arrayBufferToText(buffers[0])
+    const raw = arrayBufferToText(buffer)
     const { attributes } = await loadOBJ(raw)
     const geometry = new Mesh()
     const root = new MeshMaterial3D(geometry, new BasicMaterial())
-    
-    geometry.setAttribute(Attribute.Position.name,new AttributeData(attributes.get(Attribute.Position.name)))
-    geometry.setAttribute(Attribute.Normal.name,new AttributeData(attributes.get(Attribute.Normal.name)))
-    geometry.setAttribute(Attribute.UV.name,new AttributeData(attributes.get(Attribute.UV.name)))
+    const position = attributes.get(Attribute.Position.name)
+    const normals = attributes.get(Attribute.Normal.name)
+    const uvs = attributes.get(Attribute.UV.name)
 
+    if (position) {
+      geometry.setAttribute(Attribute.Position.name, new AttributeData(position))
+    }
+
+    if (normals) {
+      geometry.setAttribute(Attribute.Position.name, new AttributeData(normals))
+    }
+
+    if (uvs) {
+      geometry.setAttribute(Attribute.Position.name, new AttributeData(uvs))
+    }
     destination.add(root)
   }
 
-  default(){
+  /**
+   * @override
+   */
+  default() {
     return new Object3D()
   }
 }
@@ -73,11 +88,14 @@ async function loadOBJ(data) {
         break;
       case "f": { // face
         const face = data.map(ref => {
-          const [v, vt, vn] = ref.split("/").map(x => x ? parseInt(x) : null);
+          const [v, vt, vn] = ref
+            .split("/")
+            .map(x => x ? parseInt(x) : undefined);
+
           return {
-            v: v !== null ? v - 1 : null,   // OBJ is 1-based → shift to 0-based
-            vt: vt !== null ? vt - 1 : null,
-            vn: vn !== null ? vn - 1 : null
+            v: v !== undefined ? v - 1 : undefined,   // OBJ is 1-based → shift to 0-based
+            vt: vt !== undefined ? vt - 1 : undefined,
+            vn: vn !== undefined ? vn - 1 : undefined
           };
         });
         faces.push(face);
@@ -127,7 +145,7 @@ function buildBuffers(data) {
   // Also, position should be required.
   return {
     attributes: new Map([
-      [Attribute.Position.name,new DataView(new Float32Array(positions).buffer)],
+      [Attribute.Position.name, new DataView(new Float32Array(positions).buffer)],
       [Attribute.UV.name, new DataView(new Float32Array(uvs).buffer)],
       [Attribute.Normal.name, new DataView(new Float32Array(normals).buffer)]
     ]),

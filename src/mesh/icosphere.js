@@ -1,6 +1,8 @@
 import { Mesh } from "./mesh.js"
 import { Attribute, AttributeData } from "../core/index.js"
 
+// This is a holy mess... better come up with better methods to use this
+
 export class IcosphereGeometry extends Mesh {
   constructor(radius = 1, numSegments = 1) {
     super()
@@ -21,11 +23,10 @@ export class IcosphereGeometry extends Mesh {
 }
 
 /**
- * @param {number} radius
- * @param {number} subdivisions
+ * @param {number} _radius
+ * @param {number} _subdivisions
  */
-function createIcoSphere(radius, subdivisions) {
-  const goldenRatio = (1 + Math.sqrt(5)) / 2;
+function createIcoSphere(_radius, _subdivisions) {
 
   /**
    * @type {any[]}
@@ -45,7 +46,9 @@ function createIcoSphere(radius, subdivisions) {
    * @param {number[]} vec
    */
   function normalize(vec) {
+    // @ts-ignore
     const length = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+    // @ts-ignore
     return [vec[0] / length, vec[1] / length, vec[2] / length];
   }
 
@@ -54,11 +57,19 @@ function createIcoSphere(radius, subdivisions) {
    */
   function addVertex(vec) {
     vertices.push(vec[0], vec[1], vec[2]);
+    // @ts-ignore
+
     const length = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+    // @ts-ignore
+
     normals.push(vec[0] / length, vec[1] / length, vec[2] / length);
 
     // Calculate UVs based on the spherical coordinates
+    // @ts-ignore
+
     const phi = Math.atan2(vec[2], vec[0]);
+    // @ts-ignore
+
     const theta = Math.asin(vec[1] / length);
     uvs.push(1 - (phi + Math.PI) / (2 * Math.PI), (theta + Math.PI / 2) / Math.PI);
   }
@@ -118,8 +129,14 @@ function createIcoSphere(radius, subdivisions) {
   const middlePointIndexCache = {};
   for (let i = 0; i < faces.length; i++) {
     const face = faces[i];
+    // @ts-ignore
+
     const a = verticesData[face[0]];
+    // @ts-ignore
+
     const b = verticesData[face[1]];
+    // @ts-ignore
+
     const c = verticesData[face[2]];
 
     const p0 = getMiddlePoint(a, b);

@@ -35,14 +35,23 @@ export class BasicMaterial extends Material {
     this.mainSampler = mainSampler
   }
 
+  /**
+   * @override
+   */
   vertex() {
     return basicVertex
   }
 
+  /**
+   * @override
+   */
   fragment() {
     return basicFragment
   }
 
+  /**
+   * @override
+   */
   getData() {
     const { color } = this
 
@@ -50,6 +59,7 @@ export class BasicMaterial extends Material {
   }
 
   /**
+   * @override
    * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
    */
   getTextures() {
@@ -60,6 +70,6 @@ export class BasicMaterial extends Material {
 /**
  * @typedef BasicMaterialOptions
  * @property {Color} [color]
- * @property {Texture} [mainTexture]
- * @property {Sampler} [mainSampler]
+ * @property {Texture | undefined} [mainTexture]
+ * @property {Sampler | undefined} [mainSampler]
  */

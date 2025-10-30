@@ -1,5 +1,4 @@
-/** @import { SamplerSettings } from '../function.js' */
-
+/**@import {SamplerSettings} from './sampler.js' */
 import { TextureFormat, TextureType } from "../constant.js"
 import { Sampler } from "./sampler.js"
 
@@ -8,7 +7,7 @@ export class Texture {
   /**
    * @type {boolean}
    */
-  #changed
+  #changed = false
   /**
    * @type {ArrayBuffer | undefined}
    */
@@ -56,10 +55,26 @@ export class Texture {
   /**
    * @param {TextureSettings & { data?: ArrayBuffer, type: TextureType }} settings
    */
-  constructor(settings) {
-    this.data = settings.data
-    this.type = settings.type
-    this.apply(settings)
+  constructor({
+    data,
+    type,
+    format = Texture.defaultSettings.format,
+    sampler = Texture.defaultSettings.sampler,
+    generateMipmaps = Texture.defaultSettings.generateMipmaps,
+    flipY = Texture.defaultSettings.flipY,
+    width = Texture.defaultSettings.width,
+    height = Texture.defaultSettings.height,
+    depth = Texture.defaultSettings.depth,
+  }) {
+    this.data = data
+    this.type = type
+    this.width = width
+    this.height = height
+    this.depth = depth
+    this.flipY = flipY
+    this.format = format
+    this.defaultSampler = new Sampler(sampler)
+    this.generateMipmaps = generateMipmaps
   }
 
   /**
@@ -67,13 +82,13 @@ export class Texture {
    * @returns {boolean}
    * This is an internal property, do not use!
    */
-  get changed(){
+  get changed() {
     const previous = this.#changed
     this.#changed = false
     return previous
   }
 
-  update(){
+  update() {
     // TODO: Actually implement this on properties when they change
     this.#changed = true
   }
@@ -101,8 +116,8 @@ export class Texture {
   /**
    * @param {this} other
    */
-  copy(other){
-    this.data = other.data.slice()
+  copy(other) {
+    this.data = other.data ? other.data.slice() : undefined
     this.format = other.format
     this.width = other.width
     this.height = other.height
@@ -137,7 +152,7 @@ export class Texture {
 /**
  * @typedef TextureSettings
  * @property {boolean} [generateMipmaps=true]
- * @property {Required<SamplerSettings>} [sampler]
+ * @property {SamplerSettings} [sampler]
  * @property {TextureFormat} [format]
  * @property {boolean} [flipY]
  * @property {number} [width]

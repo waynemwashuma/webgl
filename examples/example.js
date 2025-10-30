@@ -9,6 +9,7 @@ function init() {
   if(!name || name === '') {
     const warning = "No example selected."
     document.body.append(document.createTextNode(warning))
+    return
   }
   
   const demo = recursiveSelect(
@@ -19,10 +20,11 @@ function init() {
   if(!demo) {
     const warning = "The example selected does not exist."
     document.body.append(document.createTextNode(warning))
+    return
   }
 
   const script = document.createElement('script')
-
+  
   script.type = 'module'
   script.src = demo
   document.head.append(script)
@@ -35,6 +37,11 @@ function init() {
  */
 function recursiveSelect(items,map){
   const name = items.shift()
+
+  if(!name){
+    return undefined
+  }
+  
   const item = map[name]
 
   if(item instanceof URL) {

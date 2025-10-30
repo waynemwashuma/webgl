@@ -4,8 +4,6 @@ import { RenderTarget } from "../rendertarget/index.js"
 import { PerspectiveProjection, Projection } from "./projection.js"
 
 export class Camera extends Object3D {
-	transform = new Transform3D()
-	
 	near = 0.1
 	
 	far = 2000
@@ -20,8 +18,12 @@ export class Camera extends Object3D {
 	projection = new PerspectiveProjection()
 	view = new Matrix4()
 	
-	update() {
-		this.transform.updateMatrix()
+	/**
+	 * @override
+	 * @param {Transform3D} [parent]
+	 */
+	update(parent) {
+		super.update(parent)
 		const inverseTransform = Affine3.toMatrix4(
 			Affine3.invert(this.transform.world)
 		)

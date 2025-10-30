@@ -3,6 +3,7 @@
 import { TextureFormat, TextureType } from '../constant.js';
 import { getTextureFormatSize } from '../function.js';
 import { Texture } from '../texture/index.js';
+import { assert } from '../utils/index.js';
 import { Loader, OnAssetLoadedStrategy } from './loader.js';
 
 /**
@@ -16,11 +17,11 @@ export class TextureLoader extends Loader {
   }
 
   /**
+   * @override
    * @param {ArrayBuffer[]} buffers
-   * @param {Texture} destination 
-   * @param {TextureLoadSettings} settings
+   * @param {Texture} destination
    */
-  async parse(buffers, destination, settings) {
+  async parse(buffers, destination) {
     let width = 0, height = 0
     const data = buffers.map(async (buffer) => {
       const blob = await new Blob([buffer])
@@ -28,6 +29,7 @@ export class TextureLoader extends Loader {
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
       const ctx = canvas.getContext('2d')
 
+      assert(ctx, "Could not sreate context to load image.")
       ctx.drawImage(bitmap, 0, 0)
       width = bitmap.width
       height = bitmap.height
@@ -57,6 +59,7 @@ export class TextureLoader extends Loader {
   }
 
   /**
+   * @override
    * @param {TextureLoadSettings} settings
    */
   default(settings) {
