@@ -261,15 +261,6 @@ export const CompareFunction = /** @type {const} */({
 
 /**
  * @enum {number}
- * Texture comparison modes for depth samplers
- */
-export const TextureCompareMode = /** @type {const} */({
-  None: 0x0000,                  // gl.NONE — comparison disabled
-  CompareRefToTexture: 0x884E    // gl.COMPARE_REF_TO_TEXTURE — depth comparison enabled
-})
-
-/**
- * @enum {number}
  * Stencil and depth buffer operations.
  */
 export const StencilOp = /** @type {const} */({
