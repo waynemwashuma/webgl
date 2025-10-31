@@ -159,13 +159,14 @@ export class MeshMaterial3D extends Object3D {
 
     const materialData = material.getData()
     const gpuMesh = caches.getMesh(gl, geometry, attributes)
-    const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
     const materialBits = material.getPipelineBits()
-    const pipelineKey = createPipelineKey(meshBits, materialBits)
+    const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
-      assert(meshLayout, "Mesh layout not available")
+      const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
+
+      assert(meshLayout, "Mesh layout not available")
       /**
        * @type {WebGLRenderPipelineDescriptor}
        */
@@ -325,7 +326,7 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
   const textures = material.getTextures()
 
   for (let i = 0; i < textures.length; i++) {
-    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] = 
+    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] =
     /**@type {[string, number, Texture | undefined, Sampler | undefined]}*/(textures[i])
     const textureInfo = uniforms.get(name)
 
@@ -343,16 +344,20 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
  * @enum {bigint}
  */
 export const GeneralPipelineKeyShiftBits = /**@type {const}*/({
-  MeshBits: 0n,
-  MaterialBits: 31n
+  LayoutHashBits:0n,
+  MeshBits: 15n,
+  MaterialBits: 47n
 })
 /**
+ * @param {number} layoutHash
  * @param {bigint} meshBits
  * @param {bigint} materialBits
  */
-function createPipelineKey(meshBits, materialBits) {
+function createPipelineKey(layoutHash, meshBits, materialBits) {
+  const layoutHashBits = BigInt(layoutHash)
   return /**@type {PipelineKey}*/(
-    meshBits |
+    layoutHashBits << GeneralPipelineKeyShiftBits.LayoutHashBits |
+    meshBits << GeneralPipelineKeyShiftBits.MeshBits|
     (materialBits << GeneralPipelineKeyShiftBits.MaterialBits)
   )
 }
