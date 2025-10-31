@@ -70,7 +70,6 @@ export function createTexture(gl, texture) {
 
   gl.bindTexture(texture.type, webglTexture)
   updateTextureData(gl, texture)
-  updateTextureSampler(gl, texture, texture.defaultSampler)
 
   gl.bindTexture(texture.type, null)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
