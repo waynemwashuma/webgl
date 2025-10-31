@@ -1,5 +1,5 @@
 import { Color } from "../math/index.js";
-import { ViewRectangle, Range, ClearParams } from "../utils/index.js";
+import { ViewRectangle, Range } from "../utils/index.js";
 
 /**
  * @abstract
@@ -7,17 +7,17 @@ import { ViewRectangle, Range, ClearParams } from "../utils/index.js";
 export class RenderTarget {
 
   /**
-   * @type {ClearParams<Color>}
+   * @type {Color | undefined}
    */
-  clearColor = new ClearParams(new Color(0, 0, 0, 1))
+  clearColor = new Color(0, 0, 0, 1)
   /**
-   * @type {ClearParams<number>}
+   * @type {number | undefined}
    */
-  clearDepth = new ClearParams(1)
+  clearDepth = 1
   /**
-   * @type {ClearParams<number>}
+   * @type {number | undefined}
    */
-  clearStencil = new ClearParams(0)
+  clearStencil = 0
   /**
    * @type {ViewRectangle}
    */
