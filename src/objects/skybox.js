@@ -4,7 +4,7 @@ import { SkyBoxMaterial } from "../material/skybox.js"
 import { Texture } from "../texture/index.js"
 
 /**
- * @extends {MeshMaterial3D<BoxGeometry,SkyBoxMaterial>}
+ * @extends {MeshMaterial3D<SkyBoxMaterial>}
  */
 export class SkyBox extends MeshMaterial3D {
   constructor(options = {}) {
