@@ -24,7 +24,9 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "tsc":"tsc -noEmit",
+    "build": "rollup --config rollup.config.js"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.13",
