@@ -105,14 +105,13 @@ export class Skin {
 }
 
 /**
- * @template {Mesh} [T = Mesh]
  * @template {RawMaterial} [U = RawMaterial]
  */
 export class MeshMaterial3D extends Object3D {
   /**
-   * @type {T}
+   * @type {Mesh}
    */
-  geometry
+  mesh
 
   /**
    * @type {U}
@@ -125,12 +124,12 @@ export class MeshMaterial3D extends Object3D {
   skin
 
   /**
-   * @param {T} geometry 
+   * @param {Mesh} mesh 
    * @param {U} material 
    */
-  constructor(geometry, material) {
+  constructor(mesh, material) {
     super()
-    this.geometry = geometry
+    this.mesh = mesh
     this.material = material
   }
 
@@ -141,7 +140,7 @@ export class MeshMaterial3D extends Object3D {
   clone(entityMap) {
     const newMesh = super.clone(entityMap)
 
-    newMesh.geometry = this.geometry
+    newMesh.mesh = this.mesh
     newMesh.material = this.material
     newMesh.skin = this.skin ? this.skin.clone() : undefined
 
@@ -154,7 +153,7 @@ export class MeshMaterial3D extends Object3D {
    */
   renderGL(gl, renderer) {
     const { caches, attributes, defaultTexture } = renderer
-    const { material, geometry, transform } = this
+    const { material, mesh: geometry, transform } = this
     const name = material.constructor.name
     const blockName = material.constructor.name + 'Block'
 
