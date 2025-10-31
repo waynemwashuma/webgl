@@ -18,7 +18,7 @@ export class MeshVertexLayout {
    * @param {Mesh} mesh
    */
   compatibleWithMesh(mesh) {
-    for (const attributeName of mesh.attributes.keys()) {
+    for (const attributeName of mesh.attributes.data.keys()) {
       let found = false
       for (const layout of this.layouts) {
         found = layout.hasOnly([attributeName])
@@ -40,7 +40,7 @@ export class MeshVertexLayout {
    */
   static fromMesh(mesh, attributes) {
     const result = []
-    for (const name of mesh.attributes.keys()) {
+    for (const name of mesh.attributes.data.keys()) {
       const attribute = attributes.get(name)
       if (!attribute) {
         throw `The attribute "${name}" is not available in the attribute map`

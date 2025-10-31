@@ -1,24 +1,29 @@
 import { Mesh } from "./mesh.js"
 import { Attribute } from "./attribute/index.js"
+import { SeparateAttributeData } from "./attributedata/index.js";
 
 // This is a holy mess... better come up with better methods to use this
 
 export class IcosphereGeometry extends Mesh {
   constructor(radius = 1, numSegments = 1) {
-    super()
-
     const { indices, vertices, normals, uvs } = createIcoSphere(radius, numSegments);
-    
+    const attributes = new SeparateAttributeData()
+
+    attributes
+      .set(
+        Attribute.Position.name,
+        new DataView(new Float32Array(vertices).buffer)
+      )
+      .set(
+        Attribute.Normal.name,
+        new DataView(new Float32Array(normals).buffer)
+      )
+      .set(
+        Attribute.UV.name,
+        new DataView(new Float32Array(uvs).buffer)
+      )
+    super(attributes)
     this.indices = new Uint16Array(indices)
-    this.setAttribute(Attribute.Position.name,
-      new DataView(new Float32Array(vertices).buffer)
-    )
-    this.setAttribute(Attribute.Normal.name, 
-    new DataView(new Float32Array(normals).buffer)
-    )
-    this.setAttribute(Attribute.UV.name,
-      new DataView(new Float32Array(uvs).buffer)
-    )
   }
 }
 
@@ -40,6 +45,9 @@ function createIcoSphere(_radius, _subdivisions) {
    * @type {number[]}
    */
   const uvs = [];
+  /**
+   * @type {number[]}
+   */
   const indices = [];
 
   /**
@@ -86,43 +94,43 @@ function createIcoSphere(_radius, _subdivisions) {
   // Create 12 vertices of an icosahedron
   const t = (1 + Math.sqrt(5)) / 2;
   const verticesData = [
-        [-1, t, 0],
-        [1, t, 0],
-        [-1, -t, 0],
-        [1, -t, 0],
-        [0, -1, t],
-        [0, 1, t],
-        [0, -1, -t],
-        [0, 1, -t],
-        [t, 0, -1],
-        [t, 0, 1],
-        [-t, 0, -1],
-        [-t, 0, 1],
-    ];
+    [-1, t, 0],
+    [1, t, 0],
+    [-1, -t, 0],
+    [1, -t, 0],
+    [0, -1, t],
+    [0, 1, t],
+    [0, -1, -t],
+    [0, 1, -t],
+    [t, 0, -1],
+    [t, 0, 1],
+    [-t, 0, -1],
+    [-t, 0, 1],
+  ];
 
   // Create the 20 triangles of the icosphere
   const faces = [
-        [0, 11, 5],
-        [0, 5, 1],
-        [0, 1, 7],
-        [0, 7, 10],
-        [0, 10, 11],
-        [1, 5, 9],
-        [5, 11, 4],
-        [11, 10, 2],
-        [10, 7, 6],
-        [7, 1, 8],
-        [3, 9, 4],
-        [3, 4, 2],
-        [3, 2, 6],
-        [3, 6, 8],
-        [3, 8, 9],
-        [4, 9, 5],
-        [2, 4, 11],
-        [6, 2, 10],
-        [8, 6, 7],
-        [9, 8, 1],
-    ];
+    [0, 11, 5],
+    [0, 5, 1],
+    [0, 1, 7],
+    [0, 7, 10],
+    [0, 10, 11],
+    [1, 5, 9],
+    [5, 11, 4],
+    [11, 10, 2],
+    [10, 7, 6],
+    [7, 1, 8],
+    [3, 9, 4],
+    [3, 4, 2],
+    [3, 2, 6],
+    [3, 6, 8],
+    [3, 8, 9],
+    [4, 9, 5],
+    [2, 4, 11],
+    [6, 2, 10],
+    [8, 6, 7],
+    [9, 8, 1],
+  ];
 
   // Subdivide the triangles to create a more spherical shape
   /**@type {Record<string,any>} */
