@@ -8,7 +8,7 @@ import { Mesh, Attribute, PrimitiveTopology } from "../mesh/index.js"
 import { Sampler, Texture, TextureFormat, TextureType } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
-import { Material, RawMaterial } from "../material/index.js"
+import { RawMaterial } from "../material/index.js"
 import { assert } from '../utils/index.js'
 import { Bone3D } from "./bone.js";
 import { updateTextureSampler } from "../function.js"
@@ -183,8 +183,7 @@ export class MeshMaterial3D extends Object3D {
             source: material.fragment()
           }),
           targets: [{
-            format: TextureFormat.RGBA8Unorm,
-            blend: material instanceof Material ? material.blend : undefined
+            format: TextureFormat.RGBA8Unorm
           }]
         }
       }

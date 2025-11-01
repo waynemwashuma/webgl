@@ -1,10 +1,9 @@
-/**@import {WebGLRenderPipelineDescriptor, BlendDescriptor } from '../caches/index.js' */
+/**@import {WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 
 import {
   CullFace,
   FrontFaceDirection
 } from "../constant.js"
-import { Color } from "../math/index.js"
 import { RawMaterial } from "./raw.js"
 
 export class Material extends RawMaterial {
@@ -24,14 +23,6 @@ export class Material extends RawMaterial {
    * @type {boolean}
    */
   depthWrite = true
-  /**
-   * @type {BlendDescriptor | undefined}
-   */
-  blend
-  /**
-   * @type {Color}
-   */
-  blendColor = new Color()
 
   /**
    * @override
@@ -98,17 +89,7 @@ export class Material extends RawMaterial {
    * @param {WebGLRenderPipelineDescriptor} descriptor 
    */
   specialize(descriptor) {
-    const { blend } = this
     // TODO: Incorporate blending to the pipeline key
-
-    if (blend) {
-      descriptor.fragment?.targets?.forEach((target) => {
-        target.blend = {
-          color: blend.color.clone(),
-          alpha: blend.alpha.clone(),
-        }
-      })
-    }
 
     descriptor.cullFace = this.cullFace
     descriptor.frontFace = this.frontFace
@@ -128,7 +109,7 @@ export const MaterialKey = /**@type {const}*/({
   CullFaceBoth: 3n << 0n,
   FrontFaceCW: 1n << 2n,
   DepthWrite: 1n << 3n,
-  DepthTest: 1n << 4n,
+  DepthTest: 1n << 4n
 })
 
 /**
