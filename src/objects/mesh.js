@@ -163,6 +163,7 @@ export class MeshMaterial3D extends Object3D {
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
+      const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
 
@@ -188,7 +189,7 @@ export class MeshMaterial3D extends Object3D {
         }
       }
 
-      if (pipelineKey & MeshKey.Skinned) {
+      if (meshBits & MeshKey.Skinned) {
         descriptor.vertex.defines.set("SKINNED", "")
         descriptor.fragment?.source?.defines?.set("SKINNED", "")
       }
@@ -222,13 +223,13 @@ export class MeshMaterial3D extends Object3D {
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && this.skin) {
       gl.activeTexture(gl.TEXTURE0 + boneMatricesInfo.texture_unit)
-
       this.skin.bindMatrix.copy(this.transform.world)
       this.skin.inverseBindMatrix.copy(this.skin.bindMatrix).invert()
       this.skin.updateTexture()
       const texture = caches.getTexture(gl, this.skin.boneTexture)
 
       gl.bindTexture(this.skin.boneTexture.type, texture)
+      gl.texParameteri(this.skin.boneTexture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     }
 
     if (modelInfo) {
@@ -344,7 +345,7 @@ function uploadTextures(gl, material, uniforms, caches, defaults) {
  * @enum {bigint}
  */
 export const GeneralPipelineKeyShiftBits = /**@type {const}*/({
-  LayoutHashBits:0n,
+  LayoutHashBits: 0n,
   MeshBits: 15n,
   MaterialBits: 47n
 })
@@ -357,7 +358,7 @@ function createPipelineKey(layoutHash, meshBits, materialBits) {
   const layoutHashBits = BigInt(layoutHash)
   return /**@type {PipelineKey}*/(
     layoutHashBits << GeneralPipelineKeyShiftBits.LayoutHashBits |
-    meshBits << GeneralPipelineKeyShiftBits.MeshBits|
+    meshBits << GeneralPipelineKeyShiftBits.MeshBits |
     (materialBits << GeneralPipelineKeyShiftBits.MaterialBits)
   )
 }
