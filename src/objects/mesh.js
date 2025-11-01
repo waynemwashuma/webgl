@@ -13,7 +13,7 @@ import {
 import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
-import { createTexture, createVAO, updateTextureData, updateTextureSampler } from "../function.js"
+import { createVAO, updateTextureSampler } from "../function.js"
 import { Material, RawMaterial } from "../material/index.js"
 import { Bone3D } from "./bone.js";
 
@@ -249,63 +249,42 @@ function mapToIndicesType(indices) {
  * @param {ReadonlyMap<string, string>} globalDefines
  */
 function getRenderPipeline(gl, material, key, caches, ubos, attributes, includes, globalDefines) {
-  let materialCache = caches.materials.get(material.constructor.name)
-
-  if (!materialCache) {
-    const newCache = new Map()
-
-    materialCache = newCache
-    caches.materials.set(material.constructor.name, newCache)
-  }
-
-  const id = materialCache.get(key)
-
-  let newId
-  if (id !== undefined && caches.renderpipelines[id]) {
-    return caches.renderpipelines[id]
-  } else {
-    newId = caches.renderpipelines.length
-    materialCache.set(key, newId)
-  }
-
-  let blend
-  if (material instanceof Material) {
-    blend = material.blend
-  }
-
-  /**
-   * @type {WebGLRenderPipelineDescriptor}
-   */
-  const descriptor = {
-    topology: topologyFromPipelineKey(key),
-    // TODO: Actually implement this to use the mesh
-    vertexLayout: new VertexLayout(),
-    vertex: new Shader({
-      source: material.vertex()
-    }),
-    fragment: {
-      source: new Shader({
-        source: material.fragment()
+  return caches.getMaterialRenderPipeline(gl, material, key, ubos, attributes, includes, () => {
+    /**
+     * @type {WebGLRenderPipelineDescriptor}
+     */
+    const descriptor = {
+      topology: topologyFromPipelineKey(key),
+      // TODO: Actually implement this to use the mesh
+      vertexLayout: new VertexLayout(),
+      vertex: new Shader({
+        source: material.vertex()
       }),
-      targets: [{
-        format: TextureFormat.RGBA8Unorm
-      }]
+      fragment: {
+        source: new Shader({
+          source: material.fragment()
+        }),
+        targets: [{
+          format: TextureFormat.RGBA8Unorm,
+          blend: material instanceof Material ? material.blend : undefined
+        }]
+      }
     }
-  }
 
-  if (key & MeshKey.Skinned) {
-    descriptor.vertex.defines.set("SKINNED", "")
-    descriptor.fragment?.source?.defines?.set("SKINNED", "")
-  }
-  for (const [name, value] of globalDefines) {
-    descriptor.vertex.defines.set(name, value)
-    descriptor.fragment.source.defines.set(name, value)
-  }
-  material.specialize(descriptor)
-  const newRenderPipeline = new WebGLRenderPipeline(gl, ubos, attributes, includes, descriptor)
+    if (key & MeshKey.Skinned) {
+      descriptor.vertex.defines.set("SKINNED", "")
+      descriptor.fragment?.source?.defines?.set("SKINNED", "")
+    }
 
-  caches.renderpipelines[newId] = newRenderPipeline
-  return newRenderPipeline
+    for (const [name, value] of globalDefines) {
+      descriptor.vertex.defines.set(name, value)
+      descriptor.fragment?.source?.defines?.set(name, value)
+    }
+
+    material.specialize(descriptor)
+
+    return descriptor
+  })
 }
 
 // Reserved for the first 32 bits

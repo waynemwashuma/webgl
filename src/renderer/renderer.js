@@ -1,4 +1,6 @@
 /**@import {PipelineKey} from '../material/index.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+import { Material, RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
@@ -105,6 +107,62 @@ export class Caches {
     const newTex = createTexture(context, texture)
     this.textures.set(texture, newTex)
     return newTex
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {RawMaterial} material
+   * @param {PipelineKey} key
+   * @param {UBOs} ubos
+   * @param {ReadonlyMap<string, Attribute>} attributes
+   * @param {ReadonlyMap<string, string>} includes
+   * @param {()=>WebGLRenderPipelineDescriptor} compute
+   */
+  getMaterialRenderPipeline(context, material, key, ubos, attributes, includes, compute) {
+    const name = material.constructor.name
+    let materialCache = this.materials.get(name)
+
+    if (!materialCache) {
+      const newCache = new Map()
+
+      materialCache = newCache
+      this.materials.set(name, newCache)
+    }
+
+    const id = materialCache.get(key)
+
+    if (id !== undefined && this.renderpipelines[id]) {
+      return this.renderpipelines[id]
+    }
+    const descriptor = compute()
+    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor, ubos, attributes, includes)
+
+    materialCache.set(key, newId)
+    return newRenderPipeline
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderPipelineDescriptor} descriptor
+   * @param {UBOs} ubos
+   * @param {ReadonlyMap<string, Attribute>} attributes
+   * @param {ReadonlyMap<string, string>} includes
+   * @returns {[WebGLRenderPipeline, number]}
+   */
+  createRenderPipeline(context, descriptor, ubos, attributes, includes) {
+    const id = this.renderpipelines.length
+    const pipeline = new WebGLRenderPipeline(context, ubos, attributes, includes, descriptor)
+    
+    this.renderpipelines[id] = pipeline
+    return [pipeline, id]
+  }
+
+  /**
+   * @param {number} id 
+   * @returns {WebGLRenderPipeline | undefined}
+   */
+  getRenderPipeline(id) {
+    return this.renderpipelines[id]
   }
 }
 
@@ -271,7 +329,7 @@ export class WebGLRenderer {
 
       context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
       context.enable(context.SCISSOR_TEST)
-      this.setViewportScissor(context, target.viewport, target.scissor,target.width, target.height)
+      this.setViewportScissor(context, target.viewport, target.scissor, target.width, target.height)
     } else if (target instanceof CanvasTarget) {
       context.bindFramebuffer(context.FRAMEBUFFER, null)
       context.enable(context.SCISSOR_TEST)
@@ -286,23 +344,23 @@ export class WebGLRenderer {
       const { offset, size } = scissors
       context.scissor(
         offset.x * width,
-        offset.y * height, 
-        size.x * width, 
+        offset.y * height,
+        size.x * width,
         size.y * height
       )
     } else {
       context.scissor(
         offset.x * width,
-        offset.y * height, 
-        size.x * width, 
+        offset.y * height,
+        size.x * width,
         size.y * height
       )
     }
 
     context.viewport(
       offset.x * width,
-      offset.y * height, 
-      size.x * width, 
+      offset.y * height,
+      size.x * width,
       size.y * height
     )
   }
