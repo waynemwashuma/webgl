@@ -49,6 +49,8 @@ export class Lights {
 }
 
 export class Caches {
+
+  uniformBuffers = new UBOs()
   /**
    * @type {Map<Mesh, WebGLVertexArrayObject>}
    */
@@ -113,12 +115,11 @@ export class Caches {
    * @param {WebGL2RenderingContext} context
    * @param {RawMaterial} material
    * @param {PipelineKey} key
-   * @param {UBOs} ubos
    * @param {ReadonlyMap<string, Attribute>} attributes
    * @param {ReadonlyMap<string, string>} includes
    * @param {()=>WebGLRenderPipelineDescriptor} compute
    */
-  getMaterialRenderPipeline(context, material, key, ubos, attributes, includes, compute) {
+  getMaterialRenderPipeline(context, material, key, attributes, includes, compute) {
     const name = material.constructor.name
     let materialCache = this.materials.get(name)
 
@@ -135,7 +136,7 @@ export class Caches {
       return this.renderpipelines[id]
     }
     const descriptor = compute()
-    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor, ubos, attributes, includes)
+    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor, attributes, includes)
 
     materialCache.set(key, newId)
     return newRenderPipeline
@@ -144,15 +145,20 @@ export class Caches {
   /**
    * @param {WebGL2RenderingContext} context
    * @param {WebGLRenderPipelineDescriptor} descriptor
-   * @param {UBOs} ubos
    * @param {ReadonlyMap<string, Attribute>} attributes
    * @param {ReadonlyMap<string, string>} includes
    * @returns {[WebGLRenderPipeline, number]}
    */
-  createRenderPipeline(context, descriptor, ubos, attributes, includes) {
+  createRenderPipeline(context, descriptor, attributes, includes) {
     const id = this.renderpipelines.length
-    const pipeline = new WebGLRenderPipeline(context, ubos, attributes, includes, descriptor)
-    
+    const pipeline = new WebGLRenderPipeline(context, attributes, includes, descriptor)
+
+    for (const [name, uboLayout] of pipeline.uniformBlocks) {
+      const ubo = this.uniformBuffers.getorSet(context, name, uboLayout)
+      const index = context.getUniformBlockIndex(pipeline.program, name)
+
+      context.uniformBlockBinding(pipeline.program, index, ubo.point)
+    }
     this.renderpipelines[id] = pipeline
     return [pipeline, id]
   }
@@ -169,7 +175,6 @@ export class Caches {
 export class WebGLRenderer {
   limits
   caches = new Caches()
-  _UBOs = new UBOs()
   lights = new Lights()
 
   /**
@@ -229,7 +234,7 @@ export class WebGLRenderer {
    */
   updateUBO(context, dataForm) {
     const { data, name } = dataForm
-    const ubo = this._UBOs.get(name)
+    const ubo = this.caches.uniformBuffers.get(name)
 
     if (!ubo) return
 
@@ -274,7 +279,7 @@ export class WebGLRenderer {
   render(objects, surface, camera) {
     const { context } = surface
     const { target: renderTarget } = camera
-    const { caches, attributes, defaultTexture, _UBOs, defines, includes } = this
+    const { caches, attributes, defaultTexture, defines, includes } = this
 
     this.setViewport(surface, renderTarget)
     camera.update()
@@ -304,7 +309,7 @@ export class WebGLRenderer {
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof MeshMaterial3D) {
-          child.renderGL(context, caches, _UBOs, attributes, defaultTexture, includes, defines)
+          child.renderGL(context, caches, attributes, defaultTexture, includes, defines)
         }
         return true
       })
