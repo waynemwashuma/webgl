@@ -48,6 +48,28 @@ export class SeparateAttributeData {
   }
 
   /**
+   * @param {SeparateAttributeData} other
+   */
+  merge(other) {
+    const newAttributes = new SeparateAttributeData()
+
+    for (const [id, data] of this.data) {
+      const otherData = other.get(id)
+
+      if (!otherData) {
+        continue
+      }
+
+      const newData = new ArrayBuffer(otherData.byteLength + data.byteLength)
+
+      copyBuffer(data.buffer, newData, 0, data.byteLength)
+      copyBuffer(otherData.buffer, newData, data.byteLength, otherData.byteLength)
+
+      newAttributes.set(id, new DataView(newData))
+    }
+    return newAttributes
+  }
+  /**
    * @param {Affine3} affine
    */
   transform(affine) {
