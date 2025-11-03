@@ -213,6 +213,15 @@ export class Affine3 {
   }
 
   /**
+   * Transforms the given vector.
+   *
+   * @param {Vector3} vector
+   */
+  transformWithoutTranslation(vector) {
+    return Affine3.transformWithoutTranslation(this, vector, vector)
+  }
+
+  /**
    * Inverts the affine.
    *
    * @returns {this}
@@ -595,27 +604,27 @@ export class Affine3 {
     const ty = 2 * (qz * x - qx * z)
     const tz = 2 * (qx * y - qy * x)
     const matrixA = new Matrix3(
-      affine.a, 
-      affine.d, 
+      affine.a,
+      affine.d,
       affine.f,
-      affine.b, 
-      affine.e, 
+      affine.b,
+      affine.e,
       affine.h,
-      affine.c, 
-      affine.f, 
+      affine.c,
+      affine.f,
       affine.i
     )
 
-     
+
     const matrixB = new Matrix3(
-      2 * (q00 + q11) - 1, 
-      2 * (q12 - q03), 
+      2 * (q00 + q11) - 1,
+      2 * (q12 - q03),
       2 * (q13 + q02),
-      2 * (q12 + q03), 
-      2 * (q00 + q22) - 1, 
+      2 * (q12 + q03),
+      2 * (q00 + q22) - 1,
       2 * (q23 + q01),
-      2 * (q13 + q02), 
-      2 * (q12 + q03), 
+      2 * (q13 + q02),
+      2 * (q12 + q03),
       2 * (q00 + q33) - 1
     )
 
@@ -747,6 +756,22 @@ export class Affine3 {
 
   /**
    * @param {Affine3} affine
+   * @param {Vector3} vector
+   * @param {Vector3} out
+   */
+  static transformWithoutTranslation(affine, vector, out = new Vector3()) {
+    const { a, b, c, d, e, f, g, h, i, x, y, z } = affine
+    const { x: vx, y: vy, z: vz } = vector
+
+    out.x = a * vx + d * vy + g * vz
+    out.y = b * vx + e * vy + h * vz
+    out.z = c * vx + f * vy + i * vz
+
+    return out
+  }
+
+  /**
+   * @param {Affine3} affine
    * @param {Matrix4} out
    * @returns {Matrix4}
    */
@@ -799,7 +824,7 @@ export class Affine3 {
    *
    * @yields {number}
    */
-  * [Symbol.iterator]() {
+  *[Symbol.iterator]() {
     yield this.a
     yield this.b
     yield this.c
