@@ -173,7 +173,6 @@ export class MeshMaterial3D extends Object3D {
        */
       const descriptor = {
         topology: mesh.topology,
-        // TODO: Actually implement this to use the mesh
         vertexLayout: meshLayout,
         vertex: new Shader({
           source: material.vertex()
