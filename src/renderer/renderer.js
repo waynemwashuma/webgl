@@ -1,6 +1,6 @@
 /**@import {PipelineKey} from '../material/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { Material, RawMaterial } from '../material/index.js'
+import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
@@ -286,7 +286,6 @@ export class WebGLRenderer {
   render(objects, surface, camera) {
     const { context } = surface
     const { target: renderTarget } = camera
-    const { caches, attributes, defaultTexture, defines, includes } = this
 
     this.setViewport(surface, renderTarget)
     camera.update()
@@ -316,7 +315,7 @@ export class WebGLRenderer {
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof MeshMaterial3D) {
-          child.renderGL(context, caches, attributes, defaultTexture, includes, defines)
+          child.renderGL(context, this)
         }
         return true
       })

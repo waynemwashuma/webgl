@@ -1,7 +1,7 @@
 /**@import { PipelineKey } from '../material/index.js' */
-/**@import { Caches } from '../renderer/index.js' */
+/**@import { Caches, WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { Attribute, UBOs, VertexLayout, WebGLRenderPipeline, Shader, Uniform } from "../core/index.js"
+import { Attribute, VertexLayout, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import {
   GlDataType,
@@ -149,13 +149,10 @@ export class MeshMaterial3D extends Object3D {
 
   /**
    * @param {WebGL2RenderingContext} gl
-   * @param {import("../renderer/index.js").Caches} caches
-   * @param {ReadonlyMap<string,Attribute>} attributes 
-   * @param {Texture} defaultTexture
-   * @param {ReadonlyMap<string,string>} includes
-   * @param {ReadonlyMap<string,string>} globalDefines
+   * @param {WebGLRenderer} renderer
    */
-  renderGL(gl, caches, attributes, defaultTexture, includes, globalDefines) {
+  renderGL(gl, renderer) {
+    const { caches, attributes, defaultTexture } = renderer
     const { meshes } = caches
     const { material, geometry, transform } = this
     const name = material.constructor.name
@@ -166,7 +163,7 @@ export class MeshMaterial3D extends Object3D {
     const gpuMesh = meshes.get(geometry)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
     const pipelineKey = material.getPipelineKey(meshBits)
-    const pipeline = getRenderPipeline(gl, material, pipelineKey, caches, attributes, includes, globalDefines)
+    const pipeline = getRenderPipeline(gl, material, pipelineKey, renderer)
     const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
@@ -241,12 +238,10 @@ function mapToIndicesType(indices) {
  * @param {WebGL2RenderingContext} gl
  * @param {RawMaterial} material
  * @param {PipelineKey} key
- * @param {import("../renderer/renderer.js").Caches} caches
- * @param {ReadonlyMap<string, Attribute>} attributes
- * @param {ReadonlyMap<string, string>} includes
- * @param {ReadonlyMap<string, string>} globalDefines
+ * @param {WebGLRenderer} renderer
  */
-function getRenderPipeline(gl, material, key, caches, attributes, includes, globalDefines) {
+function getRenderPipeline(gl, material, key, renderer) {
+  const { caches, attributes, includes, defines: globalDefines } = renderer
   return caches.getMaterialRenderPipeline(gl, material, key, attributes, includes, () => {
     /**
      * @type {WebGLRenderPipelineDescriptor}
