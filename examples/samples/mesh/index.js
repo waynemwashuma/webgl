@@ -13,7 +13,7 @@ export default {
   "cuboid": cuboid,
   "circle": circle,
   "cylinder": cylinder,
-  "topology": meshTopology,
   "geometries": geometries,
+  "topology": meshTopology,
   "skinning": skinning,
 }

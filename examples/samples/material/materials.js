@@ -3,15 +3,15 @@ import {
   BasicMaterial,
   LambertMaterial,
   PhongMaterial,
-  BoxGeometry,
-  UVSphereGeometry,
   Quaternion,
   DirectionalLight,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  CuboidMeshBuilder,
+  UVSphereMeshBuilder
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -31,8 +31,8 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const mesh1 = new BoxGeometry(1, 1)
-const mesh2 = new UVSphereGeometry(0.7)
+const mesh1 = new CuboidMeshBuilder().build()
+const mesh2 = new UVSphereMeshBuilder().build()
 const materials = [
   new BasicMaterial({
     mainTexture: texture

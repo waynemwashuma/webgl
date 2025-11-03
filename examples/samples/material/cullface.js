@@ -1,14 +1,14 @@
 import {
   MeshMaterial3D,
   BasicMaterial,
-  QuadGeometry,
   Quaternion,
   CullFace,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  PlaneMeshBuilder
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -20,7 +20,7 @@ const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"]
 })
-const mesh = new QuadGeometry(1, 1)
+const mesh = new PlaneMeshBuilder().build()
 
 /**@type {[BasicMaterial,BasicMaterial,BasicMaterial,BasicMaterial]} */
 const materials = [

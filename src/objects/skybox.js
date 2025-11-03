@@ -1,4 +1,4 @@
-import { BoxGeometry } from "../mesh/index.js"
+import { CuboidMeshBuilder } from "../mesh/index.js"
 import { MeshMaterial3D } from "./mesh.js"
 import { SkyBoxMaterial } from "../material/skybox.js"
 import { Texture } from "../texture/index.js"
@@ -8,7 +8,11 @@ import { Texture } from "../texture/index.js"
  */
 export class SkyBox extends MeshMaterial3D {
   constructor(options = {}) {
-    super(new BoxGeometry(10,10,10), new SkyBoxMaterial(options))
+    const cuboid = new CuboidMeshBuilder()
+    cuboid.width = 10
+    cuboid.height = 10
+    cuboid.depth = 10
+    super(cuboid.build(), new SkyBoxMaterial(options))
   }
 
   /**

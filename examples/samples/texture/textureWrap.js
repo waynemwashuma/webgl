@@ -1,6 +1,5 @@
 import {
   MeshMaterial3D,
-  QuadGeometry,
   TextureWrap,
   BasicMaterial,
   WebGLRenderer,
@@ -8,7 +7,8 @@ import {
   PerspectiveProjection,
   Camera,
   WebGLCanvasSurface,
-  Sampler
+  Sampler,
+  PlaneMeshBuilder
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -32,7 +32,7 @@ const sampler3 = new Sampler({
   wrapT: TextureWrap.MirrorRepeat
 })
 
-const mesh = new QuadGeometry(1, 1)
+const mesh = new PlaneMeshBuilder().build()
 const buffer = mesh.attributes.get('uv')
 
 if(buffer){

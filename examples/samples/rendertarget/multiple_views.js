@@ -1,7 +1,6 @@
 import {
   MeshMaterial3D,
   BasicMaterial,
-  BoxGeometry,
   Quaternion,
   WebGLRenderer,
   TextureLoader,
@@ -10,7 +9,8 @@ import {
   WebGLCanvasSurface,
   CanvasTarget,
   TextureType,
-  SkyBox
+  SkyBox,
+  CuboidMeshBuilder
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -46,7 +46,7 @@ const day = textureLoader.load({
   ],
   type: TextureType.TextureCubeMap
 })
-const object = new MeshMaterial3D(new BoxGeometry(), new BasicMaterial({
+const object = new MeshMaterial3D(new CuboidMeshBuilder().build(), new BasicMaterial({
   mainTexture: texture
 }))
 const skyBox = new SkyBox({
