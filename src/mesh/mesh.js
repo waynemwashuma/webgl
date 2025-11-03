@@ -1,6 +1,7 @@
 import { PrimitiveTopology } from "./constants.js"
 import { Attribute } from "./attribute/index.js"
 import { SeparateAttributeData } from "./attributedata/separate.js"
+import { Affine3 } from "../math/index.js"
 
 export class Mesh {
   /**
@@ -22,6 +23,14 @@ export class Mesh {
    */
   constructor(attributes) {
     this.attributes = attributes
+  }
+
+  /**
+   * @param {Affine3} affine
+   */
+  transform(affine) {
+    this.attributes.transform(affine)
+    return this
   }
 
   normalizeJointWeights() {
