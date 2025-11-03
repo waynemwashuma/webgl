@@ -57,8 +57,8 @@ export function assert(test, message) {
  */
 
 /**
- * @param {ArrayBuffer} source
- * @param {ArrayBuffer} destination
+ * @param {ArrayBufferLike} source
+ * @param {ArrayBufferLike} destination
  * @param {number | undefined} offset
  * @param {number | undefined} length
  */
