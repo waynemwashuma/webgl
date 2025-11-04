@@ -31,7 +31,7 @@ export class WireframeBuilder {
       const position = attributes.get(Attribute.Position.name)
 
       assert(position, "No position data found")
-      for (let i = 0; i < position.byteLength / 4 * Attribute.Position.type; i += 3) {
+      for (let i = 0; i < position.byteLength / (4 * 3); i += 3) {
         addEdge(edges, lineIndices, i, i + 1);
         addEdge(edges, lineIndices, i + 1, i + 2);
         addEdge(edges, lineIndices, i + 2, i);

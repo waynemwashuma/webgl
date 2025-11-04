@@ -48,7 +48,7 @@ export class Mesh {
       }
 
       // TODO: Remove this hardcoding and use the attribute map instead
-      const attributeCount = positions.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT)
+      const attributeCount = positions.byteLength / (3 * 4)
       const offset = this.indices.length
 
       const newIndices = new Uint16Array(this.indices.length + other.indices.length)

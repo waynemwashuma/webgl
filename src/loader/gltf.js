@@ -1,5 +1,5 @@
 /**@import { LoadSettings } from './loader.js' */
-import { Attribute, Mesh } from '../mesh/index.js';
+import { Attribute, Mesh, VertexFormat } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
@@ -828,6 +828,7 @@ export const GLTFComponentType = /**@type {const}*/({
   UnsignedByte: 0x1401,
   Short: 0x1402,
   UnsignedShort: 0x1403,
+  Int: 0x1404,
   UnsignedInt: 0x1405,
   Float: 0x1406
 })
@@ -975,7 +976,7 @@ class MatrixTransform {
   /**
    * @param {MatrixArray} value
    */
-  constructor(value){
+  constructor(value) {
     this.value = value
   }
   /**
@@ -990,7 +991,7 @@ class MatrixTransform {
     }
     const t = data.filter((data) => typeof data === "number")
 
-    if(t.length !== 16){
+    if (t.length !== 16) {
       throw "invalid matrix transform"
     }
     const transform = new MatrixTransform(/**@type {MatrixArray}*/(t))
@@ -1063,35 +1064,35 @@ function mapAccessorTypeToAttribute(name, accessor, buffer) {
   const { componentType: type } = accessor
   switch (name) {
     case GLTFAttributeName.Position:
-      if (type !== Attribute.Position.type)
+      if (type !== mapToGLTFComponentType(Attribute.Position.format))
         throw "Attribute types do not match"
       return [Attribute.Position.name, buffer]
     case GLTFAttributeName.TexCoord0:
-      if (type !== Attribute.UV.type)
+      if (type !== mapToGLTFComponentType(Attribute.UV.format))
         throw "Attribute types do not match"
       return [Attribute.UV.name, buffer]
     case GLTFAttributeName.TexCoord1:
-      if (type !== Attribute.UVB.type)
+      if (type !== mapToGLTFComponentType(Attribute.UVB.format))
         throw "Attribute types do not match"
       return [Attribute.UVB.name, buffer]
     case GLTFAttributeName.Normal:
-      if (type !== Attribute.Normal.type)
+      if (type !== mapToGLTFComponentType(Attribute.Normal.format))
         throw "Attribute types do not match"
       return [Attribute.Normal.name, buffer]
     case GLTFAttributeName.Tangent:
-      if (type !== Attribute.Tangent.type)
+      if (type !== mapToGLTFComponentType(Attribute.Tangent.format))
         throw "Attribute types do not match"
       return [Attribute.Tangent.name, buffer]
     case GLTFAttributeName.Color0:
-      if (type !== Attribute.Color.type)
+      if (type !== mapToGLTFComponentType(Attribute.Color.format))
         throw "Attribute types do not match"
       return [Attribute.Color.name, buffer]
     case GLTFAttributeName.Weights0:
-      if (type !== Attribute.JointWeight.type)
+      if (type !== mapToGLTFComponentType(Attribute.JointWeight.format))
         throw "Attribute types do not match"
       return [Attribute.JointWeight.name, buffer]
     case GLTFAttributeName.Joints0:
-      if (type === Attribute.JointIndex.type) {
+      if (type === mapToGLTFComponentType(Attribute.JointIndex.format)) {
         return [Attribute.JointIndex.name, buffer]
       } else if (type === GlDataType.UnsignedByte) {
         const newBuffer = widenTypedArray(
@@ -1307,9 +1308,74 @@ function widenTypedArray(from, to) {
 }
 
 /**
+ * @param {VertexFormat} vertexFormat
+ */
+function mapToGLTFComponentType(vertexFormat) {
+  switch (vertexFormat) {
+    case VertexFormat.Uint8:
+    case VertexFormat.Uint8x2:
+    case VertexFormat.Uint8x3:
+    case VertexFormat.Uint8x4:
+    case VertexFormat.Unorm8:
+    case VertexFormat.Unorm8x2:
+    case VertexFormat.Unorm8x3:
+    case VertexFormat.Unorm8x4:
+      return GLTFComponentType.UnsignedByte;
+    case VertexFormat.Snorm8:
+    case VertexFormat.Snorm8x2:
+    case VertexFormat.Snorm8x3:
+    case VertexFormat.Snorm8x4:
+    case VertexFormat.Sint8:
+    case VertexFormat.Sint8x2:
+    case VertexFormat.Sint8x3:
+    case VertexFormat.Sint8x4:
+      return GLTFComponentType.Byte;
+    case VertexFormat.Uint16:
+    case VertexFormat.Uint16x2:
+    case VertexFormat.Uint16x3:
+    case VertexFormat.Uint16x4:
+    case VertexFormat.Unorm16:
+    case VertexFormat.Unorm16x2:
+    case VertexFormat.Unorm16x3:
+    case VertexFormat.Unorm16x4:
+      return GLTFComponentType.UnsignedShort;
+    case VertexFormat.Snorm16:
+    case VertexFormat.Snorm16x2:
+    case VertexFormat.Snorm16x3:
+    case VertexFormat.Snorm16x4:
+    case VertexFormat.Sint16:
+    case VertexFormat.Sint16x2:
+    case VertexFormat.Sint16x3:
+    case VertexFormat.Sint16x4:
+      return GLTFComponentType.Short;
+    // 32-bit unsigned ints
+    case VertexFormat.Uint32:
+    case VertexFormat.Uint32x2:
+    case VertexFormat.Uint32x3:
+    case VertexFormat.Uint32x4:
+      return GLTFComponentType.UnsignedInt;
+
+    // 32-bit signed ints
+    case VertexFormat.Sint32:
+    case VertexFormat.Sint32x2:
+    case VertexFormat.Sint32x3:
+    case VertexFormat.Sint32x4:
+      return GLTFComponentType.Int;
+    case VertexFormat.Float32:
+    case VertexFormat.Float32x2:
+    case VertexFormat.Float32x3:
+    case VertexFormat.Float32x4:
+      return GLTFComponentType.Float
+    default:
+      throw new Error('Unsupported vertex format: ' + vertexFormat);
+  }
+}
+
+
+/**
  *@typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | BigInt64Array | BigUint64Array} TypedArray
  */
 
- /**
-  * @typedef {[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]} MatrixArray
-  */
+/**
+ * @typedef {[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]} MatrixArray
+ */
