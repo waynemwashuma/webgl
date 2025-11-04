@@ -1,7 +1,7 @@
 import { DirectionalLight } from "../light/index.js"
 import { WebGLDeviceLimits } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
-import { MeshMaterial3D, Object3D, Camera } from "../objects/index.js"
+import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
@@ -11,6 +11,7 @@ import { ImageRenderTarget } from "../rendertarget/image.js"
 import { assert, ViewRectangle } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
+import { Plugin } from "./plugin.js"
 
 export class DirectionalLights {
   /**
@@ -42,7 +43,6 @@ export class Lights {
   ambientLight = new AmbientLight()
   directionalLights = new DirectionalLights()
 }
-
 
 export class WebGLRenderer {
   /**
@@ -86,12 +86,21 @@ export class WebGLRenderer {
    */
   defines = new Map()
 
-  constructor() {
+  /**
+   * @readonly
+   * @type {readonly Plugin[]} 
+   */
+  plugins
+
+  /**
+   * @param {WebGLRendererOptions} options 
+   */
+  constructor({ plugins = [] } = {}) {
     const dummy = new OffscreenCanvas(100, 100)
     const context = dummy.getContext('webgl2')
 
     assert(context, "Webgl context creation failed")
-
+    this.plugins = plugins
     this.limits = new WebGLDeviceLimits(context)
     this.attributes = new Map()
       .set(Attribute.Position.name, Attribute.Position)
@@ -181,17 +190,19 @@ export class WebGLRenderer {
       this.lights.directionalLights.lights[i]?.update()
     }
 
-    for (let i = 0; i < objects.length; i++) {
-      const object = /**@type {Object3D} */ (objects[i])
-      object.update()
-      object.traverseDFS((child) => {
-        if (child instanceof MeshMaterial3D) {
-          child.renderGL(context, this)
-        }
-        return true
-      })
+    for (let i = 0; i < this.plugins.length; i++) {
+      const plugin = /**@type {Plugin} */(this.plugins[i]);
+      for (let i = 0; i < objects.length; i++) {
+        const object = /**@type {Object3D} */ (objects[i])
+        object.update()
+        object.traverseDFS((child) => {
+          plugin.renderObject3D(child, context, this)
+          return true
+        })
+      }
     }
   }
+
   /**
    * @private
    * @param {WebGLCanvasSurface} surface
@@ -254,6 +265,11 @@ export class WebGLRenderer {
     )
   }
 }
+
+/**
+ * @typedef WebGLRendererOptions
+ * @property {Plugin[]} [plugins]
+ */
 
 export class Defaults {
   texture2D = Texture.default()
