@@ -127,7 +127,11 @@ function getRenderPipeline(gl, renderer) {
     descriptor.vertex.defines.set(name, value)
     descriptor.fragment?.source?.defines?.set(name, value)
   }
-  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, attributes, includes)
+  for (const [name, value] of includes) {
+    descriptor.vertex.includes.set(name, value)
+    descriptor.fragment?.source?.includes?.set(name, value)
+  }
+  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, attributes)
 
   pipelineid = newId
   return newRenderPipeline
