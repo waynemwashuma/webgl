@@ -1,0 +1,155 @@
+/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+import { MeshVertexLayout, Shader } from "../core/index.js";
+import { Affine3 } from "../math/index.js";
+import { PrimitiveTopology } from "../mesh/index.js";
+import { Bone3D, Object3D, SkeletonHelper } from "../objects/index.js";
+import { Plugin, WebGLRenderer } from "../renderer/index.js";
+import { skeletonFragment, skeletonVertex } from "../shader/index.js";
+import { Texture, TextureFormat } from "../texture/index.js";
+
+export class SkeletonHelperPlugin extends Plugin {
+  /**
+   * @type {number | undefined}
+   */
+  pipelineId
+  /**
+   * @override
+   * @param {Object3D} object
+   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderer} renderer
+   */
+  renderObject3D(object, context, renderer) {
+    if (!(object instanceof SkeletonHelper) || !object.skinnedMesh.skin) {
+      return
+    }
+    const { caches } = renderer
+    const { bones, boneTexture } = object.skinnedMesh.skin
+    const pipeline = this.getRenderPipeline(context, renderer)
+    const transformsInfo = pipeline.uniforms.get("transforms")
+    const modelInfo = pipeline.uniforms.get("model")
+    const parentInfo = pipeline.uniforms.get("parent_index")
+    const childInfo = pipeline.uniforms.get("child_index")
+
+    pipeline.use(context)
+
+    if (
+      !transformsInfo || transformsInfo.texture_unit === undefined ||
+      !modelInfo || !parentInfo || !childInfo) {
+      console.warn("uniforms are not set up correctly in shader")
+      return
+    }
+
+    updateDataTexture(boneTexture, bones.map((bone) => bone.transform.world))
+
+    const transformsTexture = caches.getTexture(context, boneTexture)
+
+
+    context.activeTexture(context.TEXTURE0 + transformsInfo.texture_unit)
+    context.bindTexture(boneTexture.type, transformsTexture)
+
+    context.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(object.skinnedMesh.transform.world)])
+    context.bindVertexArray(null)
+
+    object.rootBone.traverseBFS((parent) => {
+      if (parent instanceof Bone3D) {
+        for (let i = 0; i < parent.children.length; i++) {
+          const child = parent.children[i]
+          if (child instanceof Bone3D) {
+            const childIndex = child.index
+            const parentIndex = parent.index
+            context.uniform1ui(parentInfo.location, parentIndex)
+            context.uniform1ui(childInfo.location, childIndex)
+            context.drawArrays(PrimitiveTopology.Lines, 0, 2)
+          }
+        }
+      }
+      return true
+    })
+  }
+
+  /**
+ * @param {WebGL2RenderingContext} context
+ * @param {WebGLRenderer} renderer
+ */
+  getRenderPipeline(context, renderer) {
+    const { caches, includes, defines: globalDefines } = renderer
+    if (this.pipelineId) {
+      const pipeline = caches.getRenderPipeline(this.pipelineId)
+
+      if (pipeline) {
+        return pipeline
+      }
+    }
+
+    /**
+     * @type {WebGLRenderPipelineDescriptor}
+     */
+    const descriptor = {
+      depthWrite: false,
+      depthTest: false,
+      topology: PrimitiveTopology.Lines,
+      vertexLayout: new MeshVertexLayout([]),
+      vertex: new Shader({
+        source: skeletonVertex
+      }),
+      fragment: {
+        source: new Shader({
+          source: skeletonFragment
+        }),
+        targets: [{
+          format: TextureFormat.RGBA8Unorm
+        }]
+      }
+    }
+
+    for (const [name, value] of globalDefines) {
+      descriptor.vertex.defines.set(name, value)
+      descriptor.fragment?.source?.defines?.set(name, value)
+    }
+    for (const [name, value] of includes) {
+      descriptor.vertex.includes.set(name, value)
+      descriptor.fragment?.source?.includes?.set(name, value)
+    }
+    const [newRenderPipeline, newId] = caches.createRenderPipeline(context, descriptor)
+
+    this.pipelineId = newId
+    return newRenderPipeline
+  }
+}
+
+// NOTE: This could be expanded to pack numbers, vectors, matrices and affines
+/**
+ * @param {Texture} texture
+ * @param {Affine3[]} items
+ */
+function updateDataTexture(texture, items) {
+  const data = new Float32Array(items.length * 16)
+
+  for (let i = 0; i < items.length; i++) {
+    const offset = i * 16
+    const world = /**@type {Affine3} */(items[i])
+
+    data[offset + 0] = world.a
+    data[offset + 1] = world.b
+    data[offset + 2] = world.c
+    data[offset + 3] = 0
+    data[offset + 4] = world.d
+    data[offset + 5] = world.e
+    data[offset + 6] = world.f
+    data[offset + 7] = 0
+    data[offset + 8] = world.g
+    data[offset + 9] = world.h
+    data[offset + 10] = world.i
+    data[offset + 11] = 0
+    data[offset + 12] = world.x
+    data[offset + 13] = world.y
+    data[offset + 14] = world.z
+    data[offset + 15] = 1
+  }
+
+  // TODO: Use the entire dimensions of the texture to pack values
+  texture.width = 4
+  texture.height = items.length
+  texture.data = data.buffer
+  texture.update()
+}
