@@ -14,6 +14,13 @@ import {
   MeshMaterialPlugin
 } from "webgllis"
 
+// performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.removeAttribute('style')
+stats.dom.classList.add('performance-monitor')
+
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderTarget1 = new CanvasTarget()
@@ -80,12 +87,15 @@ addEventListener('resize', updateView)
 requestAnimationFrame(update)
 
 function update() {
+  stats.begin()
   object.transform.orientation.multiply(
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
   )
 
   renderer.render([skyBox, object], surface, camera1)
   renderer.render([object], surface, camera2)
+  stats.end()
+  
   requestAnimationFrame(update)
 }
 
