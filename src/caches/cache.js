@@ -1,4 +1,4 @@
-/**@import { PipelineKey } from '../objects/index.js' */
+/**@import { PipelineKey } from '../plugins/index.js' */
 import { createTexture, updateTextureData } from "../function.js"
 import { RawMaterial } from "../material/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
@@ -118,7 +118,7 @@ export class Caches {
   /**
    * @param {WebGL2RenderingContext} context
    * @param {RawMaterial} material
-   * @param {import("../objects/mesh.js").PipelineKey} key
+   * @param {PipelineKey} key
    * @param {()=>import("./renderpipeline.js").WebGLRenderPipelineDescriptor} compute
    */
   getMaterialRenderPipeline(context, material, key, compute) {
