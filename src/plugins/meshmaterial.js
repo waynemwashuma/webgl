@@ -30,15 +30,12 @@ export class MeshMaterialPlugin extends Plugin {
     }
     const { caches, attributes, defaults } = renderer
     const { material, mesh, transform } = object
-    const name = material.constructor.name
     const blockName = material.constructor.name + 'Block'
-
-    const materialData = material.getData()
     const gpuMesh = caches.getMesh(context, mesh, attributes)
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipeline = this.getMaterialRenderPipeline(context,caches, material, pipelineKey, () => {
+    const pipeline = this.getMaterialRenderPipeline(context, caches, material, pipelineKey, () => {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
@@ -89,10 +86,10 @@ export class MeshMaterialPlugin extends Plugin {
 
     pipeline.use(context)
 
-    if (!ubo) {
-      return console.warn(`No material uniform buffer \`${blockName}\` set for ${name}`)
+    if (ubo) {
+      const materialData = material.getData()
+      ubo.update(context, materialData)
     }
-    ubo.update(context, materialData)
     uploadTextures(context, material, pipeline.uniforms, caches, defaults)
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && object.skin) {
@@ -129,7 +126,7 @@ export class MeshMaterialPlugin extends Plugin {
    * @param {PipelineKey} key
    * @param {() => WebGLRenderPipelineDescriptor} compute
    */
-  getMaterialRenderPipeline(context,caches, material, key, compute) {
+  getMaterialRenderPipeline(context, caches, material, key, compute) {
     const name = material.constructor.name
     let materialCache = this.materials.get(name)
 
@@ -144,7 +141,7 @@ export class MeshMaterialPlugin extends Plugin {
 
     if (id !== undefined) {
       const pipeline = caches.getRenderPipeline(id)
-      if(pipeline){
+      if (pipeline) {
         return pipeline
       }
     }
