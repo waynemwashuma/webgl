@@ -8,14 +8,21 @@ import {
   MeshMaterial3D,
   WebGLCanvasSurface,
   Bone3D,
-  Object3D
+  Object3D,
+  MeshMaterialPlugin,
+  SkeletonHelperPlugin
 } from 'webgllis';
 
 /**@type {Object3D[]} */
 const objects = []
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new MeshMaterialPlugin(),
+    new SkeletonHelperPlugin()
+  ]
+})
 const camera = new Camera()
 
 const loader = new GLTFLoader()

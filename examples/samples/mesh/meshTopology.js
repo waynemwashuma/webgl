@@ -7,12 +7,17 @@ import {
   Camera,
   WebGLCanvasSurface,
   PlaneMeshBuilder,
-  Mesh
+  Mesh,
+  MeshMaterialPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new MeshMaterialPlugin()
+  ]
+})
 const camera = new Camera()
 
 document.body.append(canvas)

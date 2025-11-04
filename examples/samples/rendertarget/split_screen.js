@@ -10,14 +10,19 @@ import {
   CanvasTarget,
   TextureType,
   SkyBox,
-  CuboidMeshBuilder
+  CuboidMeshBuilder,
+  MeshMaterialPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderTarget1 = new CanvasTarget()
 const renderTarget2 = new CanvasTarget()
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new MeshMaterialPlugin()
+  ]
+})
 
 const camera1 = new Camera()
 const camera2 = new Camera()
