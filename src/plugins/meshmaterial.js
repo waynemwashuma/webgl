@@ -14,6 +14,11 @@ import { Sampler, Texture, TextureFormat } from "../texture/index.js";
 
 export class MeshMaterialPlugin extends Plugin {
   /**
+   * @private
+   * @type {Map<string,Map<PipelineKey, number>>}
+   */
+  materials = new Map()
+  /**
    * @override
    * @param {Object3D} object
    * @param {WebGL2RenderingContext} context
@@ -33,7 +38,7 @@ export class MeshMaterialPlugin extends Plugin {
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipeline = caches.getMaterialRenderPipeline(context, material, pipelineKey, () => {
+    const pipeline = this.getMaterialRenderPipeline(context,caches, material, pipelineKey, () => {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
@@ -115,6 +120,39 @@ export class MeshMaterialPlugin extends Plugin {
     } else {
       context.drawArrays(pipeline.topology, 0, gpuMesh.count)
     }
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {Caches} caches
+   * @param {RawMaterial} material
+   * @param {PipelineKey} key
+   * @param {() => WebGLRenderPipelineDescriptor} compute
+   */
+  getMaterialRenderPipeline(context,caches, material, key, compute) {
+    const name = material.constructor.name
+    let materialCache = this.materials.get(name)
+
+    if (!materialCache) {
+      const newCache = new Map()
+
+      materialCache = newCache
+      this.materials.set(name, newCache)
+    }
+
+    const id = materialCache.get(key)
+
+    if (id !== undefined) {
+      const pipeline = caches.getRenderPipeline(id)
+      if(pipeline){
+        return pipeline
+      }
+    }
+    const descriptor = compute()
+    const [newRenderPipeline, newId] = caches.createRenderPipeline(context, descriptor)
+
+    materialCache.set(key, newId)
+    return newRenderPipeline
   }
 }
 
