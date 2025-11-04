@@ -12,7 +12,8 @@ import {
   WebGLCanvasSurface,
   CuboidMeshBuilder,
   UVSphereMeshBuilder,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  NormalMaterial
 } from "webgllis"
 
 // performance monitor
@@ -49,6 +50,7 @@ const materials = [
   new BasicMaterial({
     mainTexture: texture
   }),
+  new NormalMaterial(),
   new LambertMaterial({
     mainTexture: texture
   }),
@@ -69,7 +71,7 @@ objects.forEach((object, i) => {
   const stepY = 2
   const startX = -1.6
   const startY = 1.6
-  const number = 3
+  const number = materials.length
 
   object.transform.position.x = startX + stepX * (i % number)
   object.transform.position.y = startY - Math.floor(i / number) * stepY
