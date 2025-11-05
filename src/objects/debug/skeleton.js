@@ -1,5 +1,5 @@
 import { PrimitiveTopology, TextureFormat } from "../../constant.js";
-import { Shader, VertexLayout } from "../../core/index.js";
+import { MeshVertexLayout, Shader, VertexBufferLayout } from "../../core/index.js";
 import { Material } from "../../material/index.js";
 import { Affine3 } from "../../math/index.js";
 import { Mesh } from "../../mesh/index.js";
@@ -109,7 +109,7 @@ function getRenderPipeline(gl, renderer) {
     depthTest: false,
     topology: PrimitiveTopology.Lines,
     // TODO: Actually implement this to use the mesh
-    vertexLayout: new VertexLayout(),
+    vertexLayout: new MeshVertexLayout([]),
     vertex: new Shader({
       source: skeletonVertex
     }),
