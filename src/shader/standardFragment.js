@@ -14,6 +14,7 @@ export const standardFragment =
 
   struct PBRProperties {
     vec3 albedo;
+    vec3 emissive;
     float opacity;
     float metallic;
     float roughness; 
@@ -23,6 +24,8 @@ export const standardFragment =
     vec4 color;
     float metallic;
     float roughness;
+    vec3 emissive_color;
+    float emissive_intensity;
   };
 
   in vec3 v_position;
@@ -113,6 +116,7 @@ export const standardFragment =
     PBRProperties properties;
 
     properties.albedo = material.color.rgb;
+    properties.emissive = material.emissive_color;
     properties.opacity = material.color.a;
     properties.metallic = material.metallic;
     properties.roughness = material.roughness;
@@ -144,8 +148,9 @@ export const standardFragment =
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
 
+    vec3 emissive_exitance = pbr_properties.emissive * material.emissive_intensity;
     vec3 ambient_exitance = pbr_properties.albedo * ambient_light.color.rgb * ambient_light.intensity;
-    vec3 final_color = ambient_exitance + exitance;
+    vec3 final_color = emissive_exitance + ambient_exitance + exitance;
 
     // tonemapping output
     // this is temporary until a post processing step is introduced
