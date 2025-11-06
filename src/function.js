@@ -6,22 +6,25 @@ import {
   TextureType,
   TextureWrap,
   UniformType,
-  GlDataType
+  GlDataType,
+  BufferUsage,
+  BufferType
 } from "./constant.js"
-import { Attribute, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
+import { Attribute, GPUMesh, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
 /**
- * @param {WebGLRenderingContext} gl
+ * @param {WebGLRenderingContext} context
+ * @param {BufferType} type
  * @param {number} size
- * @param {GLenum} usage
+ * @param {BufferUsage} usage
  */
-export function createBuffer(gl, size, usage = gl.STATIC_DRAW) {
-  let buffer = gl.createBuffer()
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-  gl.bufferData(gl.ARRAY_BUFFER, size, usage)
-  gl.bindBuffer(gl.ARRAY_BUFFER, null)
+export function createBuffer(context, type, size, usage = context.STATIC_DRAW) {
+  const buffer = context.createBuffer()
+  context.bindBuffer(type, buffer)
+  context.bufferData(type, size, usage)
   return buffer
 }
+
 /**
  * @param {WebGLRenderingContext} gl
  * @param {string} src
@@ -189,11 +192,10 @@ export function createProgram(gl, vshader, fshader, vertexLayout) {
  * @param {Mesh} geometry
  */
 export function createVAO(gl, attributeMap, geometry) {
-  const vao = gl.createVertexArray()
-  gl.bindVertexArray(vao)
+  const vao = new GPUMesh(gl.createVertexArray())
+  gl.bindVertexArray(vao.object)
 
-  updateVAO(gl, attributeMap, geometry)
-
+  updateVAO(gl, attributeMap, geometry, vao)
   return vao
 }
 
@@ -202,14 +204,16 @@ export function createVAO(gl, attributeMap, geometry) {
  * @param {ReadonlyMap<string, Attribute>} attributeMap
  * @param {Mesh} geometry
  */
-export function updateVAO(gl, attributeMap, geometry) {
+export function updateVAO(gl, attributeMap, geometry, gpuMesh) {
   const { indices, attributes } = geometry
 
+  // TODO: Delete the old buffers if present
   if (indices != void 0) {
     const buffer = gl.createBuffer()
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
+    gpuMesh.indexBuffer
   }
   for (const [name, data] of attributes) {
     const attribute = attributeMap.get(name)

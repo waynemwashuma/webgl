@@ -317,3 +317,16 @@ export const RenderbufferFormat = /** @type {const} */({
   Depth24Stencil8: 0x88F0,  // gl.DEPTH24_STENCIL8
   Depth32fStencil8: 0x8CAD  // gl.DEPTH32F_STENCIL8
 })
+
+/**
+ * @enum {number}
+ */
+export const BufferType = /**@type {const}*/({
+  Array:0x8892,
+  ElementArray:0x8893,
+  CopyRead:0x8F36,
+  CopyWrite:0x8F37,
+  Uniform:0x8A11,
+  PixelPack:0x88EB,
+  PixelUnpack:0x88EC
+})
