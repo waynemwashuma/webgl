@@ -131,7 +131,7 @@ function getRenderPipeline(gl, renderer) {
     descriptor.vertex.includes.set(name, value)
     descriptor.fragment?.source?.includes?.set(name, value)
   }
-  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor, attributes)
+  const [newRenderPipeline, newId] = caches.createRenderPipeline(gl, descriptor)
 
   pipelineid = newId
   return newRenderPipeline

@@ -8,7 +8,7 @@ import {
   UniformType,
   GlDataType
 } from "./constant.js"
-import { Attribute, UBOLayout, Uniform } from "./core/index.js"
+import { Attribute, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
 /**
  * @param {WebGLRenderingContext} gl
@@ -138,17 +138,19 @@ export function updateTextureData(gl, texture) {
 /**
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLShader} vshader 
- * @param {WebGLShader} fshader 
- * @param {ReadonlyMap<string, Attribute>} attributes 
+ * @param {WebGLShader} fshader
+ * @param {MeshVertexLayout} vertexLayout
  * 
  */
-export function createProgram(gl, vshader, fshader, attributes) {
+export function createProgram(gl, vshader, fshader, vertexLayout) {
   let program = gl.createProgram()
   gl.attachShader(program, vshader)
   gl.attachShader(program, fshader)
 
-  for (const [name, attribute] of attributes) {
-    gl.bindAttribLocation(program, attribute.id, attribute.name)
+  for (const layout of vertexLayout) {
+    for (const attribute of layout) {
+      gl.bindAttribLocation(program, attribute.id, attribute.name)
+    }
   }
   gl.linkProgram(program)
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -259,9 +261,9 @@ function setVertexAttribute(gl, index, type, size, stride = 0, offset = 0, norma
  * @param {WebGL2RenderingContext} gl
  * @param {string} vshader
  * @param {string} fshader
- * @param {ReadonlyMap<string, Attribute>} attributes 
+ * @param {MeshVertexLayout} vertexLayout
  */
-export function createProgramFromSrc(gl, vshader, fshader, attributes) {
+export function createProgramFromSrc(gl, vshader, fshader, vertexLayout) {
   let v = createshader(gl, vshader, gl.VERTEX_SHADER)
   let f = createshader(gl, fshader, gl.FRAGMENT_SHADER)
   if (f == null || v == null) {
@@ -269,7 +271,7 @@ export function createProgramFromSrc(gl, vshader, fshader, attributes) {
     gl.deleteShader(f)
     return null
   }
-  let program = createProgram(gl, v, f, attributes)
+  let program = createProgram(gl, v, f, vertexLayout)
 
   return program
 }
