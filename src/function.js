@@ -12,13 +12,13 @@ import { Attribute, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js
 import { Sampler, Texture } from "./texture/index.js"
 /**
  * @param {WebGLRenderingContext} gl
- * @param {number} typedarray
+ * @param {number} size
+ * @param {GLenum} usage
  */
-export function createBuffer(gl, typedarray, isstatic = true) {
+export function createBuffer(gl, size, usage = gl.STATIC_DRAW) {
   let buffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-  gl.bufferData(gl.ARRAY_BUFFER, typedarray,
-    isstatic ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW)
+  gl.bufferData(gl.ARRAY_BUFFER, size, usage)
   gl.bindBuffer(gl.ARRAY_BUFFER, null)
   return buffer
 }
