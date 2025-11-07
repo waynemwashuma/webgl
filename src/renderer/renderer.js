@@ -1,5 +1,5 @@
 /**@import {PipelineKey} from '../material/index.js' */
-/**@import { MeshVertexLayout, WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { GPUMesh, MeshVertexLayout, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
@@ -51,7 +51,7 @@ export class Lights {
 export class Caches {
   uniformBuffers = new UBOs()
   /**
-   * @type {Map<Mesh, WebGLVertexArrayObject>}
+   * @type {Map<Mesh, GPUMesh>}
    */
   meshes = new Map()
   /**

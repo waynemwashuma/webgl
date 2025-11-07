@@ -67,8 +67,10 @@ export class SkeletonHelper extends MeshMaterial3D {
 
     gl.activeTexture(gl.TEXTURE0 + transformsInfo.texture_unit)
     gl.bindTexture(boneTexture.type, transformsTexture)
-
+    
     gl.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(this.skinnedMesh.transform.world)])
+    gl.bindVertexArray(null)
+    
     this.rootBone.traverseBFS((parent) => {
       if (parent instanceof Bone3D) {
         for (let i = 0; i < parent.children.length; i++) {
@@ -92,7 +94,7 @@ export class SkeletonHelper extends MeshMaterial3D {
  * @param {WebGLRenderer} renderer
  */
 function getRenderPipeline(gl, renderer) {
-  const { caches, attributes, includes, defines: globalDefines } = renderer
+  const { caches, includes, defines: globalDefines } = renderer
   if (pipelineid) {
     const pipeline = caches.getRenderPipeline(pipelineid)
 
