@@ -10,6 +10,7 @@ export class OrbitCameraControls {
   minElevation = -Math.PI / 2
   maxElevation = Math.PI / 2
   sensitivity = 0.02
+  moveSensitivity = 0.002
   camera
   /**
    * @type {Set<string>}
@@ -22,12 +23,10 @@ export class OrbitCameraControls {
    */
   constructor(camera) {
     this.camera = camera
-    addEventListener('keydown',keyPressed.bind(this))
-    addEventListener('keyup',keyReleased.bind(this))
-    addEventListener('mousedown',mouseDown.bind(this))
-    addEventListener('mouseup',mouseUp.bind(this))
-    addEventListener('mousemove',mousemove.bind(this))
-    addEventListener('contextmenu',(e)=>e.preventDefault())
+    addEventListener('mousedown', mouseDown.bind(this))
+    addEventListener('mouseup', mouseUp.bind(this))
+    addEventListener('mousemove', mousemove.bind(this))
+    addEventListener('contextmenu', (e) => e.preventDefault())
   }
 
   updateOrbit() {
@@ -57,31 +56,23 @@ export class OrbitCameraControls {
     const delta = this.mouseDelta
     const input = new Vector2()
 
-    if (this.keys.has('KeyW')) {
-      input.y -= 1
-    }
-    if (this.keys.has('KeyS')) {
-      input.y += 1
-    }
-    if (this.keys.has('KeyD')) {
-      input.x += 1
-    }
-    if (this.keys.has('KeyA')) {
-      input.x -= 1
-    }
-
     if (this.keys.has('mouseright')) {
+      const temp = Vector2.set(-this.moveSensitivity, -this.moveSensitivity)
+      input.add(temp.multiply(delta))
+    } else if (this.keys.has('mouseleft')) {
+
       this.azimuth += -delta.x * this.sensitivity
       this.elevation += delta.y * this.sensitivity
       this.elevation = clamp(this.elevation, this.minElevation, this.maxElevation)
     }
+
 
     Vector2.rotate(input, -this.azimuth, input)
     this.offset.x += input.x
     this.offset.z += input.y
   }
 
-  update(){
+  update() {
     this.updateInput()
     this.updateOrbit()
   }
@@ -89,25 +80,9 @@ export class OrbitCameraControls {
 
 /**
  * @this {OrbitCameraControls}
- * @param {KeyboardEvent} event
- */
-function keyPressed(event){
-  this.keys.add(event.key)
-}
-
-/**
- * @this {OrbitCameraControls}
- * @param {KeyboardEvent} event
- */
-function keyReleased(event){
-  this.keys.delete(event.key)
-}
-
-/**
- * @this {OrbitCameraControls}
  * @param {MouseEvent} event
  */
-function mouseDown(event){
+function mouseDown(event) {
   event.preventDefault()
   switch (event.button) {
     case 0:
@@ -139,8 +114,8 @@ function mouseUp(event) {
  * @this {OrbitCameraControls}
  * @param {MouseEvent} event
  */
-function mousemove(event){
+function mousemove(event) {
   this.mouseDelta.copy(this.mousePosition)
-  this.mousePosition.set(event.clientX,event.clientY)
+  this.mousePosition.set(event.clientX, event.clientY)
   this.mouseDelta.subtract(this.mousePosition).reverse()
 }
