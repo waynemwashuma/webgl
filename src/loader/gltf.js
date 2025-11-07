@@ -1019,8 +1019,10 @@ function getAccessorData(index, gltf) {
 
   if (!buffer) throw "Invalid access to buffer"
 
+  const byteLength = accessor.count * getComponentSize(accessor.componentType) * getElementSize(accessor.type)
+
   return [
-    new DataView(buffer, view.offset + accessor.offset, view.length),
+    new DataView(buffer, view.offset + accessor.offset, byteLength),
     accessor
   ]
 }
@@ -1105,6 +1107,56 @@ function mapAccessorTypeToAttribute(name, accessor, buffer) {
       }
     default:
       return undefined;
+  }
+}
+
+
+/**
+ * @param {GLTFComponentType} componentType
+ */
+function getComponentSize(componentType) {
+  switch (componentType) {
+    case GLTFComponentType.Byte:           // 0x1400
+      return 1;
+    case GLTFComponentType.UnsignedByte:   // 0x1401
+      return 1;
+    case GLTFComponentType.Short:          // 0x1402
+      return 2;
+    case GLTFComponentType.UnsignedShort:  // 0x1403
+      return 2;
+    case GLTFComponentType.Int:            // 0x1404
+      return 4;
+    case GLTFComponentType.UnsignedInt:    // 0x1405
+      return 4;
+    case GLTFComponentType.Float:          // 0x1406
+      return 4;
+    default:
+      return 0; // Return 0 if componentType is unknown
+  }
+}
+
+
+/**
+ * @param {GLTFAccessorType} type
+ */
+function getElementSize(type) {
+  switch (type) {
+    case GLTFAccessorType.Scalar:
+      return 1;
+    case GLTFAccessorType.Vec2:
+      return 2;
+    case GLTFAccessorType.Vec3:
+      return 3;
+    case GLTFAccessorType.Vec4:
+      return 4;
+    case GLTFAccessorType.Mat2:
+      return 4;
+    case GLTFAccessorType.Mat3:
+      return 9;
+    case GLTFAccessorType.Mat4:
+      return 16;
+    default:
+      return 0;;
   }
 }
 
