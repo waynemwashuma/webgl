@@ -44,7 +44,12 @@ export const standardFragment =
     DirectionalLights directional_lights;
   };
   uniform sampler2D mainTexture;
-  
+  uniform sampler2D normal_texture;
+  uniform sampler2D occlusion_texture;
+  uniform sampler2D roughness_texture;
+  uniform sampler2D metallic_texture;
+  uniform sampler2D emissive_texture;
+
   out vec4 fragment_color;
   
   vec3 quick_sRGB_to_linear(vec3 color) {
@@ -124,7 +129,16 @@ export const standardFragment =
     vec4 albedo_texture_color = texture(mainTexture,v_uv);
     properties.albedo *= quick_sRGB_to_linear(albedo_texture_color.rgb);
     properties.opacity *= albedo_texture_color.a;
+    
+    vec4 metallic_texture_color = texture(mainTexture,v_uv);
+    properties.metallic *= metallic_texture_color.b;
 
+    vec4 roughness_texture_color = texture(mainTexture,v_uv);
+    properties.roughness *= roughness_texture_color.g;
+
+    vec4 emissive_texture_color = texture(mainTexture,v_uv);
+    properties.emissive *= emissive_texture_color.rgb;
+    
     properties.metallic = clamp(properties.metallic, 0.0, 1.0);
     properties.roughness = clamp(properties.roughness, 0.05, 1.0);
 
