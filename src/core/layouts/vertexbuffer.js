@@ -14,6 +14,18 @@ export class VertexBufferLayout {
   }
 
   /**
+   * @param {Attribute} attribute
+   */
+  has(attribute){
+    for (let i = 0; i < this.attributes.length; i++) {
+      if(this.attributes[i]?.id === attribute.id){
+        return true
+      }
+      
+    }
+    return false
+  }
+  /**
    * @param {string[]} attributeIds
    * @returns {boolean}
    */
