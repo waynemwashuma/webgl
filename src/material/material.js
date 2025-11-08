@@ -67,7 +67,7 @@ export class Material extends RawMaterial {
   /**
    * @returns {bigint}
    */
-  getPipelineKey() {
+  getPipelineBits() {
     let materialKey = MaterialKey.None
     if (this.cullFace === CullFace.Front) {
       materialKey |= MaterialKey.CullFaceFront

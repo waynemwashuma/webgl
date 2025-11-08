@@ -162,7 +162,7 @@ export class MeshMaterial3D extends Object3D {
     const gpuMesh = caches.getMesh(gl, geometry, attributes)
     const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
     const meshBits = createPipelineBitsFromMesh(geometry, this)
-    const materialBits = material.getPipelineKey()
+    const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
       const { defines, includes } = renderer
