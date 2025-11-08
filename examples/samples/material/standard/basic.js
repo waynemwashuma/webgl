@@ -33,7 +33,9 @@ const cameraControls = new OrbitCameraControls(camera)
 const ambientLight = new AmbientLight()
 const directionalLight = new DirectionalLight()
 
-directionalLight.direction.set(0, -1, 1).normalize()
+directionalLight.transform.orientation
+  .rotateX(-Math.PI / 4)
+  .rotateZ(-Math.PI / 4)
 directionalLight.intensity = 10
 ambientLight.intensity = 0.3
 

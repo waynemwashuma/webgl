@@ -24,7 +24,7 @@ stats.dom.classList.add('performance-monitor')
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
-  plugins:[
+  plugins: [
     new LightPlugin(),
     new MeshMaterialPlugin(),
   ]
@@ -32,10 +32,12 @@ const renderer = new WebGLRenderer({
 
 // lighting
 const ambientLight = new AmbientLight()
-const directionaLight = new DirectionalLight()
+const directionalLight = new DirectionalLight()
 
-directionaLight.direction.set(1, -1, -1).normalize()
-directionaLight.intensity = 30
+directionalLight.transform.orientation
+  .rotateX(-Math.PI / 4)
+  .rotateZ(-Math.PI / 4)
+directionalLight.intensity = 30
 ambientLight.intensity = 0.15
 
 // camera and camera controls
@@ -82,7 +84,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([model, skyBox, ambientLight, directionaLight], surface, camera)
+  renderer.render([model, skyBox, ambientLight, directionalLight], surface, camera)
   cameraControls.update()
   stats.end()
   requestAnimationFrame(update)
