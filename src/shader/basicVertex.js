@@ -25,7 +25,9 @@ export const basicVertex =
   #endif
   
   out vec3 v_position;
-  out vec2 v_uv;
+  #ifdef VERTEX_UVS
+    out vec2 v_uv;
+  #endif
   #ifdef VERTEX_NORMALS
     out vec3 v_normal;
   #endif
@@ -55,7 +57,9 @@ export const basicVertex =
     #endif
     
     v_position = world_space_position;
-    v_uv = uv;
+    #ifdef VERTEX_UVS
+      v_uv = uv;
+    #endif
     #ifdef VERTEX_NORMALS
       v_normal = normal_matrix * normal;
     #endif

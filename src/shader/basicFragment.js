@@ -8,7 +8,9 @@ export const basicFragment =
     vec4 color;
   };
 
-  in vec2 v_uv;
+  #ifdef VERTEX_UVS
+    in vec2 v_uv;
+  #endif
   
   out vec4 fragment_color;
 
@@ -18,9 +20,13 @@ export const basicFragment =
   uniform sampler2D mainTexture;
   
   void main(){
-    vec3 sample_color = texture(mainTexture, v_uv).rgb;
+    vec3 base_color = material.color.rgb.rgb;
     float opacity = material.color.a;
-
-    fragment_color = vec4(tint(sample_color, material.color.rgb), opacity);
+    
+    #ifdef VERTEX_UVS
+      vec4 sample_color = texture(mainTexture, v_uv);
+      base_color *= sample_color.rgb;
+    #endif
+    fragment_color = vec4(base_color, opacity);
   }
 `

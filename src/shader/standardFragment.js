@@ -33,7 +33,9 @@ export const standardFragment =
   };
 
   in vec3 v_position;
-  in vec2 v_uv;
+  #ifdef VERTEX_UVS
+    in vec2 v_uv;
+  #endif
   #ifdef VERTEX_NORMALS
     in vec3 v_normal;
   #endif
@@ -135,22 +137,24 @@ export const standardFragment =
     properties.metallic = material.metallic;
     properties.roughness = material.roughness;
 
-    vec4 albedo_texture_color = texture(mainTexture,v_uv);
-    properties.albedo *= quick_sRGB_to_linear(albedo_texture_color.rgb);
-    properties.opacity *= albedo_texture_color.a;
-    
-    vec4 metallic_texture_color = texture(metallic_texture,v_uv);
-    properties.metallic *= metallic_texture_color.b;
+    #ifdef VERTEX_UVS
+      vec4 albedo_texture_color = texture(mainTexture,v_uv);
+      properties.albedo *= quick_sRGB_to_linear(albedo_texture_color.rgb);
+      properties.opacity *= albedo_texture_color.a;
 
-    vec4 roughness_texture_color = texture(roughness_texture,v_uv);
-    properties.roughness *= roughness_texture_color.g;
+      vec4 metallic_texture_color = texture(metallic_texture,v_uv);
+      properties.metallic *= metallic_texture_color.b;
+      
+      vec4 roughness_texture_color = texture(roughness_texture,v_uv);
+      properties.roughness *= roughness_texture_color.g;
+      
+      vec4 occlusion_texture_color = texture(occlusion_texture,v_uv);
+      properties.ambient_occlusion = mix(1.0,occlusion_texture_color.r, material.ambient_occlusion_strength);
+      
+      vec4 emissive_texture_color = texture(mainTexture,v_uv);
+      properties.emissive *= emissive_texture_color.rgb;  
+    #endif
 
-    vec4 occlusion_texture_color = texture(occlusion_texture,v_uv);
-    properties.ambient_occlusion = mix(1.0,occlusion_texture_color.r, material.ambient_occlusion_strength);
-
-    vec4 emissive_texture_color = texture(mainTexture,v_uv);
-    properties.emissive *= emissive_texture_color.rgb;
-    
     properties.metallic = clamp(properties.metallic, 0.0, 1.0);
     properties.roughness = clamp(properties.roughness, 0.05, 1.0);
 
@@ -160,11 +164,15 @@ export const standardFragment =
       #else
         #error "Mesh vertex normals are required for lighting."
       #endif
-      vec3 tangent = normalize(v_tangent);
-      vec3 bitangent = cross(normal, tangent);
-      mat3 tangent_space = mat3(tangent, bitangent, normal);
-      vec3 surface_normal = texture(normal_texture, v_uv).rgb * 2.0 - 1.0;
-      properties.normal = tangent_space * surface_normal;
+      #ifdef VERTEX_UVS
+        vec3 tangent = normalize(v_tangent);
+        vec3 bitangent = cross(normal, tangent);
+        mat3 tangent_space = mat3(tangent, bitangent, normal);
+        vec3 surface_normal = texture(normal_texture, v_uv).rgb * 2.0 - 1.0;
+        properties.normal = tangent_space * surface_normal;
+      #else
+        properties.normal = normal;
+      #endif
     #else
       #ifdef VERTEX_NORMALS
         properties.normal = v_normal;
