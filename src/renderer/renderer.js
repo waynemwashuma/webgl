@@ -111,6 +111,12 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
+    
+    for (let i = 0; i < plugins.length; i++) {
+      const plugin = /**@type {Plugin} */ (plugins[i]);
+      
+      plugin.init(context, this)
+    }
     this.includes
       .set("common", commonShaderLib)
       .set("math", mathShaderLib)
