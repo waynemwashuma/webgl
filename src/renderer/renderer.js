@@ -1,6 +1,4 @@
-import { DirectionalLight } from "../light/index.js"
 import { WebGLDeviceLimits } from "../core/index.js"
-import { AmbientLight } from "../light/index.js"
 import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
@@ -12,37 +10,6 @@ import { assert, ViewRectangle } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
-
-export class DirectionalLights {
-  /**
-   * @type {DirectionalLight[]}
-   */
-  lights = []
-  maxNumber = 10
-
-  /**
-   * @param {DirectionalLight} light
-   */
-  add(light) {
-    this.lights.push(light)
-  }
-  getData() {
-    const buffer = [
-      this.lights.length,
-      0, 0, 0,
-      ...this.lights.flatMap(light => light.pack())
-    ]
-
-    return {
-      name: "DirectionalLightBlock",
-      data: new Float32Array(buffer)
-    }
-  }
-}
-export class Lights {
-  ambientLight = new AmbientLight()
-  directionalLights = new DirectionalLights()
-}
 
 export class WebGLRenderer {
   /**
@@ -56,12 +23,6 @@ export class WebGLRenderer {
    * @type {Caches}
    */
   caches = new Caches()
-
-  /**
-   * @readonly
-   * @type {Lights}
-   */
-  lights = new Lights()
 
   /**
    * @readonly
@@ -120,7 +81,6 @@ export class WebGLRenderer {
     this.includes
       .set("common", commonShaderLib)
       .set("math", mathShaderLib)
-    this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
 
   /**
@@ -195,14 +155,8 @@ export class WebGLRenderer {
 
       plugin.preprocess(objects, surface.context, this)
     }
-    
-    this.updateUBO(context, camera.getData())
-    this.updateUBO(context, this.lights.ambientLight.getData())
-    this.updateUBO(context, this.lights.directionalLights.getData())
 
-    for (let i = 0; i < this.lights.directionalLights.lights.length; i++) {
-      this.lights.directionalLights.lights[i]?.update()
-    }
+    this.updateUBO(context, camera.getData())
 
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */(this.plugins[i]);
