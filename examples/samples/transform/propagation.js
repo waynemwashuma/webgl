@@ -2,14 +2,14 @@ import {
   MeshMaterial3D,
   CuboidMeshBuilder,
   Quaternion,
-  DirectionalLight,
   WebGLRenderer,
   TextureLoader,
   BasicMaterial,
   PerspectiveProjection,
   Camera,
   WebGLCanvasSurface,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  LightPlugin
 } from 'webgllis';
 
 // performance monitor
@@ -23,15 +23,11 @@ const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
+    new LightPlugin(),
     new MeshMaterialPlugin()
   ]
 })
 const camera = new Camera()
-const light = new DirectionalLight()
-
-light.direction.set(0, -1, -1).normalize()
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({

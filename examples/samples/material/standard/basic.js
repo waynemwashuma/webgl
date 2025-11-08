@@ -13,23 +13,29 @@ import {
   UVSphereMeshBuilder,
   OrbitCameraControls,
   SkyBox,
-  TextureType
+  TextureType,
+  LightPlugin,
+  AmbientLight
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
+    new LightPlugin(),
     new MeshMaterialPlugin()
   ]
 })
 const camera = new Camera()
 const cameraControls = new OrbitCameraControls(camera)
-const light1 = new DirectionalLight()
-light1.direction.set(0, -1, 1).normalize()
-light1.intensity = 10
-renderer.lights.ambientLight.intensity = 0.3
-renderer.lights.directionalLights.add(light1)
+
+// lights
+const ambientLight = new AmbientLight()
+const directionalLight = new DirectionalLight()
+
+directionalLight.direction.set(0, -1, 1).normalize()
+directionalLight.intensity = 10
+ambientLight.intensity = 0.3
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
@@ -82,7 +88,7 @@ function update() {
   object2.transform.orientation
     .rotateX(Math.PI / 1000)
     .rotateY(Math.PI / 1000)
-  renderer.render([object1, object2, skyBox], surface, camera)
+  renderer.render([object1, object2, skyBox, ambientLight, directionalLight], surface, camera)
   cameraControls.update()
 
   requestAnimationFrame(update)
