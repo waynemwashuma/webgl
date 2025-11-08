@@ -3,7 +3,7 @@
 import {
   CullFace,
   FrontFaceDirection
-} from "../constant.js"
+} from "../constants/index.js"
 import { abstractClass, abstractMethod } from "../utils/index.js"
 import { RawMaterial } from "./raw.js"
 

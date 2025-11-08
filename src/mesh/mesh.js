@@ -1,4 +1,4 @@
-import { PrimitiveTopology } from "./constants.js"
+import { PrimitiveTopology } from "../constants/index.js"
 import { Attribute } from "./attribute/index.js"
 import { SeparateAttributeData } from "./attributedata/separate.js"
 import { Affine3 } from "../math/index.js"

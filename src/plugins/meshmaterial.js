@@ -7,10 +7,11 @@ import { MeshVertexLayout, Shader, Uniform } from "../core/index.js";
 import { updateTextureSampler } from "../function.js";
 import { RawMaterial } from "../material/index.js";
 import { Affine3 } from "../math/index.js";
-import { Mesh, PrimitiveTopology, Attribute } from "../mesh/index.js";
+import { Mesh, Attribute } from "../mesh/index.js";
 import { MeshMaterial3D, Object3D } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
-import { Sampler, Texture, TextureFormat } from "../texture/index.js";
+import { Sampler, Texture } from "../texture/index.js";
+import { PrimitiveTopology, TextureFormat } from '../constants/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
 

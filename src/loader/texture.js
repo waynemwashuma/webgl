@@ -1,6 +1,7 @@
 /** @import { TextureSettings } from '../texture/index.js' */
 
-import { getTextureFormatSize, Texture, TextureFormat, TextureType } from '../texture/index.js';
+import { TextureFormat, TextureType, getTextureFormatSize } from '../constants/index.js';
+import { Texture } from '../texture/index.js';
 import { assert } from '../utils/index.js';
 import { Loader, OnAssetLoadedStrategy } from './loader.js';
 

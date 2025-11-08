@@ -1,6 +1,6 @@
 import { assert } from "../../utils/index.js"
 import { Attribute } from "../attribute/index.js"
-import { PrimitiveTopology } from "../constants.js"
+import { PrimitiveTopology } from "../../constants/index.js"
 import { Mesh } from "../mesh.js"
 
 export class WireframeBuilder {

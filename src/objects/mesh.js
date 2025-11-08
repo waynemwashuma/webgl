@@ -1,9 +1,10 @@
 import { Mesh } from "../mesh/index.js"
-import { Texture, TextureFormat, TextureType } from "../texture/index.js"
+import { Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
 import { RawMaterial } from "../material/index.js"
 import { Bone3D } from "./bone.js";
+import { TextureFormat, TextureType } from "../constants/index.js"
 
 export class Skin {
 
