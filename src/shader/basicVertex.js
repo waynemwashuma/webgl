@@ -16,8 +16,9 @@ export const basicVertex =
   in vec3 position;
   in vec2 uv;
   in vec3 normal;
-  in vec3 tangent;
-
+  #ifdef VERTEX_TANGENTS
+    in vec3 tangent;
+  #endif
   #ifdef SKINNED
     in uvec4 joint_index;
     in vec4 joint_weight;
@@ -26,7 +27,9 @@ export const basicVertex =
   out vec3 v_position;
   out vec2 v_uv;
   out vec3 v_normal;
-  out vec3 v_tangent;
+  #ifdef VERTEX_TANGENTS
+    out vec3 v_tangent;
+  #endif
   out vec3 cam_direction;
 
   void main(){
@@ -52,7 +55,9 @@ export const basicVertex =
     v_position = world_space_position;
     v_uv = uv;
     v_normal = normal_matrix * normal;
-    v_tangent = normal_matrix * tangent;
+    #ifdef VERTEX_TANGENTS
+      v_tangent = normal_matrix * tangent;
+    #endif
     cam_direction = camera.cam_position - world_space_position;
     gl_Position = camera.projection * camera.view * vec4(world_space_position, 1.0);
   }
