@@ -3,7 +3,7 @@
 /**@import { Caches, WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 
 import { assert } from '../utils/index.js'
-import { Shader, Uniform } from "../core/index.js";
+import { MeshVertexLayout, Shader, Uniform } from "../core/index.js";
 import { updateTextureSampler } from "../function.js";
 import { RawMaterial } from "../material/index.js";
 import { Affine3 } from "../math/index.js";
@@ -50,8 +50,8 @@ export class MeshMaterialPlugin extends Plugin {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
-
       assert(meshLayout, "Mesh layout not available")
+      const shaderdefs = getShaderDefs(meshLayout, meshBits, defines)
       /**
        * @type {WebGLRenderPipelineDescriptor}
        */
@@ -71,16 +71,10 @@ export class MeshMaterialPlugin extends Plugin {
         }
       }
 
-      if (meshBits & MeshKey.Skinned) {
-        descriptor.vertex.defines.set("SKINNED", "")
-        descriptor.fragment?.source?.defines?.set("SKINNED", "")
+      for (const shaderdef of shaderdefs) {
+        descriptor.vertex.defines.set(shaderdef[0],shaderdef[1])
+        descriptor.fragment?.source?.defines?.set(shaderdef[0],shaderdef[1])
       }
-
-      for (const [name, value] of defines) {
-        descriptor.vertex.defines.set(name, value)
-        descriptor.fragment?.source?.defines?.set(name, value)
-      }
-
       for (const [name, value] of includes) {
         descriptor.vertex.includes.set(name, value)
         descriptor.fragment?.source?.includes?.set(name, value)
@@ -252,6 +246,24 @@ function uploadTextures(gl, material, uniforms, caches, defaults) {
       updateTextureSampler(gl, texture, sampler)
     }
   }
+}
+/**
+ * @param {MeshVertexLayout} _meshLayout
+ * @param {bigint} meshBits
+ * @param {ReadonlyMap<string, string>} globalDefines
+ */
+function getShaderDefs(_meshLayout, meshBits, globalDefines){
+  /**@type {[string,string][]} */
+  const shaderdefs = []
+  if (meshBits & MeshKey.Skinned) {
+    shaderdefs.push(["SKINNED", ""])
+  }
+
+  for (const [name, value] of globalDefines) {
+    shaderdefs.push([name, value])
+  }
+
+  return shaderdefs
 }
 
 /**
