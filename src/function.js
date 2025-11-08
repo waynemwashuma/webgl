@@ -12,6 +12,7 @@ import {
 } from "./constant.js"
 import { Attribute, GPUMesh, MeshVertexLayout, UBOLayout, Uniform } from "./core/index.js"
 import { Sampler, Texture } from "./texture/index.js"
+import { assert } from "./utils/index.js"
 /**
  * @param {WebGLRenderingContext} context
  * @param {BufferType} type
@@ -160,8 +161,8 @@ export function createProgram(gl, vshader, fshader, vertexLayout) {
   gl.attachShader(program, vshader)
   gl.attachShader(program, fshader)
 
-  for (const layout of vertexLayout) {
-    for (const attribute of layout) {
+  for (const layout of vertexLayout.layouts) {
+    for (const attribute of layout.attributes) {
       gl.bindAttribLocation(program, attribute.id, attribute.name)
     }
   }
@@ -198,25 +199,26 @@ export function createProgram(gl, vshader, fshader, vertexLayout) {
 
 /**
  * @param {WebGL2RenderingContext} gl
- * @param {ReadonlyMap<string, Attribute>} attributeMap
+ * @param {MeshVertexLayout} layout
  * @param {Mesh} geometry
+ * @param {number} layoutHash
  */
-export function createVAO(gl, attributeMap, geometry) {
-  const vao = new GPUMesh(gl.createVertexArray())
+export function createVAO(gl, layout, geometry, layoutHash) {
+  const vao = new GPUMesh(gl.createVertexArray(), layoutHash)
   gl.bindVertexArray(vao.object)
 
-  updateVAO(gl, attributeMap, geometry, vao)
+  updateVAO(gl, layout, geometry, vao)
   return vao
 }
 
 /**
  * @param {WebGL2RenderingContext} context
- * @param {ReadonlyMap<string, Attribute>} attributeMap
- * @param {Mesh} geometry
+ * @param {MeshVertexLayout} layout
+ * @param {Mesh} mesh
  * @param {GPUMesh} gpuMesh
  */
-export function updateVAO(context, attributeMap, geometry, gpuMesh) {
-  const { indices, attributes } = geometry
+export function updateVAO(context, layout, mesh, gpuMesh) {
+  const { indices, attributes } = mesh
   let attrCount
 
   // TODO: Delete the old buffers if present, probably leaking memory here
@@ -224,19 +226,23 @@ export function updateVAO(context, attributeMap, geometry, gpuMesh) {
     const buffer = createBuffer(context, BufferType.ElementArray, indices.byteLength)
 
     updateBuffer(context, BufferType.ElementArray, indices, BufferUsage.Static)
-    gpuMesh.indexType = mapToIndicesType(geometry.indices)
+    gpuMesh.indexType = mapToIndicesType(indices)
     gpuMesh.indexBuffer = buffer
   }
 
-  for (const [name, data] of attributes) {
-    const attribute = attributeMap.get(name)
+  for (const vertexLayout of layout.layouts) {
+    const attribute = vertexLayout.attributes[0]
+
+    assert(attribute,"The mesh vertex layout is incorrectly set up for the provided mesh.")
+
+    const data = attributes.get(attribute.name)
+
+    assert(data,`The provided mesh does not have the vertex attribute ${attribute.name}`)
+
+    // This only works for separate buffers for each vertex attribute.
     const buffer = createBuffer(context, BufferType.Array, data.value.byteLength)
     const count = data.value.byteLength / (attribute.size * getByteSize(attribute.type))
-
-    if (!attribute) {
-      throw `The attribute "${name}" is not defined in the \`AttributeMap\``
-    }
-
+    
     updateBuffer(context, BufferType.Array, data.value)
     context.bufferData(context.ARRAY_BUFFER, data.value, context.STATIC_DRAW)
     setVertexAttribute(context, attribute.id, attribute.type, attribute.size)

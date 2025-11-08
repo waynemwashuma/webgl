@@ -212,10 +212,19 @@ export class VertexBufferLayout {
   }
 
   /**
-   * @returns {ArrayIterator<Attribute>}
+   * @param {string[]} attributeIds
+   * @returns {boolean}
    */
-  *[Symbol.iterator]() {
-    return this.attributes[Symbol.iterator]()
+  hasOnly(attributeIds) {
+    if (attributeIds.length !== this.attributes.length) return false
+
+    for (let i = 0; i < attributeIds.length; i++) {
+      if (this.attributes.findIndex(value => value.name === attributeIds[i]) === -1) {
+        return false
+      }
+    }
+
+    return true
   }
 }
 
@@ -230,6 +239,26 @@ export class MeshVertexLayout {
    */
   constructor(layouts) {
     this.layouts = layouts
+  }
+
+  /**
+   * @param {Mesh} mesh
+   */
+  compatibleWithMesh(mesh) {
+    for (const attributeName of mesh.attributes.keys()) {
+      let found = false
+      for (const layout of this.layouts) {
+        found = layout.hasOnly([attributeName])
+        if(found){
+          break
+        }
+      }
+
+      if(!found){
+        return false
+      }
+    }
+    return true
   }
   /**
    * @param {Mesh} mesh
@@ -247,13 +276,6 @@ export class MeshVertexLayout {
     }
 
     return new MeshVertexLayout(result)
-  }
-
-  /**
-   * @returns {ArrayIterator<VertexBufferLayout>}
-   */
-  *[Symbol.iterator] () {
-    return this.layouts[Symbol.iterator]()
   }
 }
 
