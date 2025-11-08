@@ -13,6 +13,17 @@ import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture, TextureFormat } from "../texture/index.js";
 
 export class MeshMaterialPlugin extends Plugin {
+
+  /**
+   * @override
+   */
+  init() { }
+
+  /**
+   * @override
+   */
+  preprocess() { }
+
   /**
    * @private
    * @type {Map<string,Map<PipelineKey, number>>}
