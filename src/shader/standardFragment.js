@@ -3,6 +3,7 @@ export const standardFragment =
   precision mediump float;
 
   #include <common>
+  #include <light>
   #include <math>
 
   struct PBRInput {
