@@ -6,7 +6,6 @@ import {
   FrontFaceDirection
 } from "../constant.js"
 import { Color } from "../math/index.js"
-import { MeshKey } from "../objects/mesh.js"
 import { RawMaterial } from "./raw.js"
 
 export class Material extends RawMaterial {
@@ -66,10 +65,9 @@ export class Material extends RawMaterial {
   }
 
   /**
-   * @param {bigint} key
-   * @returns {PipelineKey}
+   * @returns {bigint}
    */
-  getPipelineKey(key) {
+  getPipelineKey() {
     let materialKey = MaterialKey.None
     if (this.cullFace === CullFace.Front) {
       materialKey |= MaterialKey.CullFaceFront
@@ -89,7 +87,7 @@ export class Material extends RawMaterial {
       materialKey |= MaterialKey.FrontFaceCW
     }
 
-    return /**@type {PipelineKey}*/(key | (materialKey << MeshKey.LastBit))
+    return materialKey
   }
 
   /**
@@ -118,7 +116,6 @@ export class Material extends RawMaterial {
  * @enum {bigint}
  */
 export const MaterialKey = /**@type {const}*/({
-  LastBit: 63n,
   None: 0n,
   CullFaceFront: 1n << 0n,
   CullFaceBack: 1n << 1n,

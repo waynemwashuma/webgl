@@ -44,11 +44,10 @@ export class RawMaterial {
   }
 
   /**
-   * @param {bigint} key
-   * @returns {PipelineKey}
+   * @returns {bigint}
    */
-  getPipelineKey(key) {
-    return /**@type {PipelineKey}*/(key)
+  getPipelineKey() {
+    return 0n
   }
 
   /**
@@ -56,13 +55,3 @@ export class RawMaterial {
    */
   specialize(_descriptor) { }
 }
-
-/**
- * @typedef {Brand<bigint,"PipelineKey">} PipelineKey
- */
-
-/**
- * @template T
- * @template {string} U
- * @typedef {T & {__brand:U}} Brand
- */
