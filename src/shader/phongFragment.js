@@ -32,7 +32,11 @@ export const phongFragment =
   void main(){
     vec3 sample_color = texture(mainTexture, v_uv).rgb;
     vec3 base_color = tint(sample_color, material.color.rgb);
-    vec3 normal = normalize(v_normal);
+    #ifdef VERTEX_NORMALS
+      vec3 normal = normalize(v_normal);
+    #else
+      #error "Mesh vertex normals are required for lighting."
+    #endif
     vec3 view_direction = normalize(cam_direction);
     float opacity = material.color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);

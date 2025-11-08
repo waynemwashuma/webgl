@@ -26,7 +26,9 @@ export const basicVertex =
   
   out vec3 v_position;
   out vec2 v_uv;
-  out vec3 v_normal;
+  #ifdef VERTEX_NORMALS
+    out vec3 v_normal;
+  #endif
   #ifdef VERTEX_TANGENTS
     out vec3 v_tangent;
   #endif
@@ -54,7 +56,9 @@ export const basicVertex =
     
     v_position = world_space_position;
     v_uv = uv;
-    v_normal = normal_matrix * normal;
+    #ifdef VERTEX_NORMALS
+      v_normal = normal_matrix * normal;
+    #endif
     #ifdef VERTEX_TANGENTS
       v_tangent = normal_matrix * tangent;
     #endif
