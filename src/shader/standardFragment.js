@@ -19,12 +19,14 @@ export const standardFragment =
     float opacity;
     float metallic;
     float roughness; 
+    float ambient_occlusion;
   };
 
   struct StandardMaterial {
     vec4 color;
     float metallic;
     float roughness;
+    float ambient_occlusion_strength;
     vec3 emissive_color;
     float emissive_intensity;
   };
@@ -138,6 +140,9 @@ export const standardFragment =
     vec4 roughness_texture_color = texture(mainTexture,v_uv);
     properties.roughness *= roughness_texture_color.g;
 
+    vec4 occlusion_texture_color = texture(occlusion_texture,v_uv);
+    properties.ambient_occlusion = mix(1.0,occlusion_texture_color.r, material.ambient_occlusion_strength);
+
     vec4 emissive_texture_color = texture(mainTexture,v_uv);
     properties.emissive *= emissive_texture_color.rgb;
     
@@ -172,7 +177,7 @@ export const standardFragment =
     }
 
     vec3 emissive_exitance = pbr_properties.emissive * material.emissive_intensity;
-    vec3 ambient_exitance = pbr_properties.albedo * ambient_light.color.rgb * ambient_light.intensity;
+    vec3 ambient_exitance = pbr_properties.albedo * ambient_light.color.rgb * ambient_light.intensity * pbr_properties.ambient_occlusion;
     vec3 final_color = emissive_exitance + ambient_exitance + exitance;
 
     // tonemapping output
