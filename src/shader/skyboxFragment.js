@@ -12,7 +12,7 @@ export const skyboxFragment =
 
 	out vec4 fragment_color;
 	
-	uniform SkyBoxMaterialBlock {
+	uniform MaterialBlock {
     SkyBoxMaterial material;
   };
 	uniform samplerCube day;

@@ -18,7 +18,7 @@ export const phongFragment =
   in vec3 v_normal;
   in vec3 cam_direction;
   
-  uniform PhongMaterialBlock {
+  uniform MaterialBlock {
     PhongMaterial material;
   };
   uniform AmbientLightBlock {

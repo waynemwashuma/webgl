@@ -28,6 +28,16 @@ export class UniformBuffers {
    */
   set(gl, name, layout) {
     const index = this.allocator.reserve()
+    return this.setAtPoint(gl, name, index, layout)
+  }
+
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {string} name
+   * @param {number} index
+   * @param {UniformBufferLayout} layout
+   */
+  setAtPoint(gl, name, index, layout) {
     const ubo = new UniformBuffer(gl, index, layout.size)
     this.list.set(name, ubo)
 
@@ -51,7 +61,12 @@ export class UniformBuffers {
     const ubo = this.get(name)
 
     if (ubo) {
-      return ubo
+      if (ubo.size >= layout.size) {
+        return ubo
+      }
+
+      // TODO: Delete the old buffer, we are leaking gpu memory here
+      return this.setAtPoint(gl, name, ubo.point, layout)
     }
 
     return this.set(gl, name, layout)
