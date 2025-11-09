@@ -1,5 +1,4 @@
-import { Attribute, AttributeData } from '../core/index.js';
-import { Mesh } from '../mesh/index.js';
+import { Mesh, Attribute, AttributeData } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D } from '../objects/index.js';
 import { Loader } from './loader.js';

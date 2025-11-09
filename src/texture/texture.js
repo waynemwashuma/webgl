@@ -1,5 +1,5 @@
 /**@import {SamplerSettings} from './sampler.js' */
-import { TextureFormat, TextureType } from "../constant.js"
+import { TextureFormat, TextureType } from "./constants.js"
 import { Sampler } from "./sampler.js"
 
 export class Texture {

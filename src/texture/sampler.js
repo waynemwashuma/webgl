@@ -1,4 +1,5 @@
-import { CompareFunction, TextureFilter, TextureWrap } from '../constant.js'
+import { TextureFilter, TextureWrap } from './constants.js'
+import { CompareFunction } from '../core/index.js'
 export class Sampler {
   /**
    * @type {TextureFilter}

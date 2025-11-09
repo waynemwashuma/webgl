@@ -1,4 +1,4 @@
-export class UBOLayout {
+export class UniformBufferLayout {
   name
   fields
   size

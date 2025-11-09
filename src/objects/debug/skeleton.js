@@ -1,11 +1,11 @@
-import { PrimitiveTopology, TextureFormat } from "../../constant.js";
+/**@import { WebGLRenderer } from "../../renderer/index.js" */
+/**@import { WebGLRenderPipelineDescriptor } from "../../caches/index.js" */
 import { MeshVertexLayout, Shader } from "../../core/index.js";
 import { Material } from "../../material/index.js";
 import { Affine3 } from "../../math/index.js";
-import { Mesh } from "../../mesh/index.js";
-import { WebGLRenderer } from "../../renderer/renderer.js";
+import { Mesh, PrimitiveTopology } from "../../mesh/index.js";
 import { skeletonFragment, skeletonVertex } from "../../shader/index.js";
-import { Texture } from "../../texture/index.js";
+import { Texture, TextureFormat } from "../../texture/index.js";
 import { Bone3D } from "../bone.js";
 import { MeshMaterial3D } from "../mesh.js";
 
@@ -108,7 +108,7 @@ function getRenderPipeline(gl, renderer) {
   }
 
   /**
-   * @type {import("../../core/index.js").WebGLRenderPipelineDescriptor}
+   * @type {WebGLRenderPipelineDescriptor}
    */
   const descriptor = {
     depthWrite: false,

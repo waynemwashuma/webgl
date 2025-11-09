@@ -1,24 +1,17 @@
 /**@import { Brand } from '../utils/index.js' */
 /**@import { WebGLRenderer } from '../renderer/index.js' */
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+/**@import { Caches } from '../caches/index.js' */
 
-import { Attribute, Shader, Uniform } from "../core/index.js"
-import { Mesh } from "../mesh/index.js"
-import {
-  TextureFormat,
-  PrimitiveTopology,
-  TextureType,
-  UNI_MODEL_MAT
-} from "../constant.js"
-import { Sampler, Texture } from "../texture/index.js"
+import { Shader, Uniform } from "../core/index.js"
+import { Mesh, Attribute, PrimitiveTopology } from "../mesh/index.js"
+import { Sampler, Texture, TextureFormat, TextureType } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
-import { updateTextureSampler } from "../function.js"
 import { Material, RawMaterial } from "../material/index.js"
 import { assert } from '../utils/index.js'
-
 import { Bone3D } from "./bone.js";
-import { Caches } from "../core/index.js"
+import { updateTextureSampler } from "../function.js"
 
 export class Skin {
 
@@ -214,7 +207,7 @@ export class MeshMaterial3D extends Object3D {
 
       return descriptor
     })
-    const modelInfo = pipeline.uniforms.get(UNI_MODEL_MAT)
+    const modelInfo = pipeline.uniforms.get("model")
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
     const ubo = caches.uniformBuffers.get(blockName)

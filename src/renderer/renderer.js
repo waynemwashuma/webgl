@@ -1,9 +1,7 @@
 import { DirectionalLight } from "../light/index.js"
-import { Camera } from "../camera/index.js"
-import { TextureType } from "../constant.js"
-import { Attribute, Caches, WebGLDeviceLimits } from "../core/index.js"
+import { WebGLDeviceLimits } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
-import { MeshMaterial3D, Object3D } from "../objects/index.js"
+import { MeshMaterial3D, Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
@@ -11,6 +9,8 @@ import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
 import { assert, ViewRectangle } from '../utils/index.js'
+import { Caches } from "../caches/index.js"
+import { Attribute } from "../mesh/index.js"
 
 export class DirectionalLights {
   /**
@@ -103,7 +103,7 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    this.defaultTexture = createDefaultTexture()
+    this.defaultTexture = Texture.default()
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
@@ -255,17 +255,4 @@ export class WebGLRenderer {
       size.y * height
     )
   }
-}
-
-function createDefaultTexture() {
-  const width = 1
-  const height = 1
-  const pixel = new Uint8Array([255, 255, 255, 255])
-  const texture = new Texture({
-    width,
-    height,
-    data: pixel.buffer,
-    type: TextureType.Texture2D
-  })
-  return texture
 }
