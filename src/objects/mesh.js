@@ -1,5 +1,5 @@
 /**@import { Brand } from '../utils/index.js' */
-/**@import { Caches, WebGLRenderer } from '../renderer/index.js' */
+/**@import { WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 
 import { Attribute, Shader, Uniform } from "../core/index.js"
@@ -18,6 +18,7 @@ import { Material, RawMaterial } from "../material/index.js"
 import { assert } from '../utils/index.js'
 
 import { Bone3D } from "./bone.js";
+import { Caches } from "../core/index.js"
 
 export class Skin {
 

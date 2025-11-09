@@ -1,7 +1,7 @@
 import { getFramebufferAttachment } from "../function.js"
-import { Caches } from "../renderer/renderer.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
 import { Texture } from "../texture/index.js"
+import { Caches } from "./cache.js"
 
 export class ImageFrameBuffer {
   /**

@@ -1,21 +1,15 @@
-/**@import {PipelineKey} from '../objects/index.js' */
-/**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { RawMaterial } from '../material/index.js'
 import { DirectionalLight } from "../light/index.js"
 import { Camera } from "../camera/index.js"
 import { TextureType } from "../constant.js"
-import { Attribute, UBOs, WebGLDeviceLimits, WebGLRenderPipeline, MeshVertexLayout } from "../core/index.js"
+import { Attribute, Caches, WebGLDeviceLimits } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
 import { Texture } from "../texture/index.js"
-import { Mesh } from "../mesh/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
-import { ImageFrameBuffer as FrameBuffer } from "../core/framebuffer.js"
-import { createTexture, createVAO, updateTextureData } from "../function.js"
 import { assert, ViewRectangle } from '../utils/index.js'
 
 export class DirectionalLights {
@@ -49,176 +43,6 @@ export class Lights {
   directionalLights = new DirectionalLights()
 }
 
-export class Caches {
-  uniformBuffers = new UBOs()
-  /**
-   * @type {Map<Mesh, GPUMesh>}
-   */
-  meshes = new Map()
-  /**
-   * @type {Map<Texture, WebGLTexture>}
-   */
-  textures = new Map()
-  /**
-   * @type {WebGLRenderPipeline[]}
-   */
-  renderpipelines = []
-  /**
-   * @type {Map<string,Map<PipelineKey, number>>}
-   */
-  materials = new Map()
-
-  /**
-   * @type {Map<ImageRenderTarget, FrameBuffer>}
-   */
-  renderTargets = new Map()
-
-  /**
-   * @type {MeshVertexLayout[]}
-   */
-  meshLayouts = []
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {ImageRenderTarget} target
-   * @returns {FrameBuffer}
-   */
-  getFrameBuffer(context, target) {
-    const current = this.renderTargets.get(target)
-
-    if (current) {
-      return current
-    }
-
-    const newTarget = new FrameBuffer(context, target, this)
-
-    this.renderTargets.set(target, newTarget)
-    return newTarget
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {Mesh} mesh
-   * @param {ReadonlyMap<string, Attribute>} attributes
-   */
-  getMesh(context, mesh, attributes) {
-    const gpuMesh = this.meshes.get(mesh)
-    if (gpuMesh) {
-      return gpuMesh
-    }
-
-    const [layout, layoutId] = this.getLayout(mesh,attributes)
-    const newMesh = createVAO(context, layout, mesh, layoutId)
-
-    this.meshes.set(mesh, newMesh)
-
-    return newMesh
-  }
-
-  /**
-   * 
-   * @param {Mesh} mesh
-   * @returns {[MeshVertexLayout, number]}
-   * @param {ReadonlyMap<string, Attribute>} attributes
-   */
-  getLayout(mesh, attributes) {
-    for (let i = 0; i < this.meshLayouts.length; i++) {
-      const layout = /**@type {MeshVertexLayout} */(this.meshLayouts[i])
-      if (layout.compatibleWithMesh(mesh)) {
-        return [layout, i]
-      }
-    }
-    const layout = MeshVertexLayout.fromMesh(mesh, attributes)
-    const newId = this.meshLayouts.length
-
-    this.meshLayouts.push(layout)
-
-    return [layout, newId]
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {Texture} texture
-   * @returns {WebGLTexture}
-   */
-  getTexture(context, texture) {
-    const tex = this.textures.get(texture)
-
-    if (tex) {
-      if (texture.changed) {
-        context.bindTexture(texture.type, tex)
-        updateTextureData(context, texture)
-      }
-      return tex
-    }
-    const newTex = createTexture(context, texture)
-    this.textures.set(texture, newTex)
-    return newTex
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {RawMaterial} material
-   * @param {PipelineKey} key
-   * @param {()=>WebGLRenderPipelineDescriptor} compute
-   */
-  getMaterialRenderPipeline(context, material, key, compute) {
-    const name = material.constructor.name
-    let materialCache = this.materials.get(name)
-
-    if (!materialCache) {
-      const newCache = new Map()
-
-      materialCache = newCache
-      this.materials.set(name, newCache)
-    }
-
-    const id = materialCache.get(key)
-
-    if (id !== undefined && this.renderpipelines[id]) {
-      return this.renderpipelines[id]
-    }
-    const descriptor = compute()
-    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor)
-
-    materialCache.set(key, newId)
-    return newRenderPipeline
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {WebGLRenderPipelineDescriptor} descriptor
-   * @returns {[WebGLRenderPipeline, number]}
-   */
-  createRenderPipeline(context, descriptor) {
-    const id = this.renderpipelines.length
-    const pipeline = new WebGLRenderPipeline(context, descriptor)
-
-    for (const [name, uboLayout] of pipeline.uniformBlocks) {
-      const ubo = this.uniformBuffers.getorSet(context, name, uboLayout)
-      const index = context.getUniformBlockIndex(pipeline.program, name)
-
-      context.uniformBlockBinding(pipeline.program, index, ubo.point)
-    }
-    this.renderpipelines[id] = pipeline
-    return [pipeline, id]
-  }
-
-  /**
-   * @param {number} id 
-   * @returns {WebGLRenderPipeline | undefined}
-   */
-  getRenderPipeline(id) {
-    return this.renderpipelines[id]
-  }
-
-  /**
-   * @param {number} id
-   */
-  getMeshVertexLayout(id){
-    return this.meshLayouts[id]
-  }
-}
 
 export class WebGLRenderer {
   /**
