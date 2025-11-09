@@ -37,7 +37,6 @@ export class ImageRenderTarget extends RenderTarget {
       color.data = undefined
       color.width = width
       color.height = height
-      color.update()
     }
   }
 }
