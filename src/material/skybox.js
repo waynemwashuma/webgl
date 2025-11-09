@@ -35,16 +35,23 @@ export class SkyBoxMaterial extends RawMaterial {
     this.lerp = lerp
   }
 
+  /**
+   * @override
+   */
   vertex() {
     return skyboxVertex
   }
 
+  /**
+   * @override
+   */
   fragment() {
     return skyboxFragment
   }
 
   /**
    * @returns {ArrayBuffer}
+   * @override
    */
   getData() {
     return new Float32Array([this.lerp]).buffer
@@ -52,6 +59,7 @@ export class SkyBoxMaterial extends RawMaterial {
 
   /**
    * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
+   * @override
    */
   getTextures() {
     return [
@@ -62,6 +70,7 @@ export class SkyBoxMaterial extends RawMaterial {
 
   /**
    * @param {WebGLRenderPipelineDescriptor} descriptor
+   * @override
    */
   specialize(descriptor) {
     descriptor.cullFace = CullFace.Front

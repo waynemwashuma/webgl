@@ -1,7 +1,5 @@
 import {
   Color,
-  Vector3,
-  Transform3D
 } from '../math/index.js'
 
 export class AmbientLight {

@@ -205,12 +205,12 @@ export class WebGLDeviceLimits {
 
 /**
  * @typedef WebGLShaderPrecisionInfo
- * @property {WebGLShaderPrecisionFormat} highFloat
- * @property {WebGLShaderPrecisionFormat} mediumFloat
- * @property {WebGLShaderPrecisionFormat} lowFloat
- * @property {WebGLShaderPrecisionFormat} highInt
- * @property {WebGLShaderPrecisionFormat} mediumInt
- * @property {WebGLShaderPrecisionFormat} lowInt
+ * @property {WebGLShaderPrecisionFormat | null} highFloat
+ * @property {WebGLShaderPrecisionFormat | null} mediumFloat
+ * @property {WebGLShaderPrecisionFormat | null} lowFloat
+ * @property {WebGLShaderPrecisionFormat | null} highInt
+ * @property {WebGLShaderPrecisionFormat | null} mediumInt
+ * @property {WebGLShaderPrecisionFormat | null} lowInt
  */
 
 /**

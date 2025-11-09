@@ -1,6 +1,7 @@
 import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology, TextureFormat } from "../constant.js";
 import { createProgramFromSrc } from "../function.js";
 import { Mesh } from "../mesh/index.js";
+import { assert } from "../utils/index.js";
 import { Attribute } from "./attribute/attribute.js";
 import { Shader } from "./shader.js";
 
@@ -109,9 +110,12 @@ export class WebGLRenderPipeline {
     const programInfo = createProgramFromSrc(
       context,
       vertex.compile(),
-      fragment.source.compile(),
+      fragment?.source?.compile() || '',
       vertexLayout
     )
+
+    assert(programInfo,'Cannot create webgl render pipeline')
+
     this.program = programInfo.program
     this.uniforms = programInfo.uniforms
     this.uniformBlocks = programInfo.uniformBlocks
@@ -121,7 +125,7 @@ export class WebGLRenderPipeline {
     this.depthTest = depthTest
     this.depthWrite = depthWrite
     this.frontFace = frontFace
-    this.targets = fragment.targets || []
+    this.targets = fragment?.targets || []
   }
 
   /**

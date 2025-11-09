@@ -136,6 +136,9 @@ const slider = screenFolder.add(settings, 'slider', 0, 1).name("Slider")
 slider.onChange(updateRenderTargets)
 screenFolder.open()
 
+/**
+ * @param {number} value
+ */
 function updateRenderTargets(value) {
   if (renderTarget1.scissor && renderTarget2.scissor) {
     renderTarget1.scissor.size.set(value, 1)

@@ -1,6 +1,7 @@
 import { getFramebufferAttachment } from "../function.js"
 import { Caches } from "../renderer/renderer.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
+import { Texture } from "../texture/index.js"
 
 export class ImageFrameBuffer {
   /**
@@ -34,7 +35,7 @@ export class ImageFrameBuffer {
     this.buffer = framebuffer
 
     for (let i = 0; i < rendertarget.color.length; i++) {
-      const color = rendertarget.color[i]
+      const color = /**@type {Texture}*/ (rendertarget.color[i])
       const textColor = caches.getTexture(context, color)
       context.framebufferTexture2D(
         context.FRAMEBUFFER,
@@ -80,7 +81,10 @@ export class ImageFrameBuffer {
     }
   }
 
-  resolve(context){
+  /**
+   * @param {WebGL2RenderingContext} _context
+   */
+  resolve(_context){
     if(this.depthBuffer && this.depthImage){
       //TODO: blit depth buffer into depth image
     }

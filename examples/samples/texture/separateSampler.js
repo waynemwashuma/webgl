@@ -33,14 +33,19 @@ const sampler3 = new Sampler({
 })
 
 const mesh = new QuadGeometry(1, 1)
-const buffer = mesh.attributes.get('uv').value
-const uvs = new Float32Array(
-  buffer.buffer,
-  buffer.byteOffset,
-  buffer.byteLength / Float32Array.BYTES_PER_ELEMENT
-)
-for (let i in uvs) {
-  uvs[i] *= 2
+const buffer = mesh.attributes.get('uv')?.value
+
+if(buffer){
+  const uvs = new Float32Array(
+    buffer.buffer,
+    buffer.byteOffset,
+    buffer.byteLength / Float32Array.BYTES_PER_ELEMENT
+  )
+
+  for (let i in uvs) {
+    // SAFETY: It is a number
+    uvs[i] = /**@type {number}*/(uvs[i]) * 2
+  }
 }
 
 const material1 = new BasicMaterial({

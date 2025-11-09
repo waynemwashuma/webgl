@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { lerp } from './functions/index.js'
 
 /**

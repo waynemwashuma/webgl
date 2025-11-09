@@ -21,6 +21,8 @@ const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"]
 })
 const mesh = new QuadGeometry(1, 1)
+
+/**@type {[BasicMaterial,BasicMaterial,BasicMaterial,BasicMaterial]} */
 const materials = [
   new BasicMaterial({
     mainTexture: texture

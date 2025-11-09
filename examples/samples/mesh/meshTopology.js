@@ -18,6 +18,7 @@ document.body.append(canvas)
 updateView()
 
 const material = new BasicMaterial()
+/**@type {[QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry]} */
 const meshes = [
   new QuadGeometry(),
   new QuadGeometry(),

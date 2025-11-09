@@ -2,7 +2,6 @@ import {
   MeshMaterial3D,
   LambertMaterial,
   UVSphereGeometry,
-  Vector3,
   Quaternion,
   DirectionalLight,
   WebGLRenderer,

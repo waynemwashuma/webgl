@@ -33,14 +33,23 @@ export class LambertMaterial extends Material {
     this.mainSampler = mainSampler
   }
 
+  /**
+   * @override
+   */
   vertex() {
     return basicVertex
   }
 
+  /**
+   * @override
+   */
   fragment() {
     return lambertFragment
   }
 
+  /**
+   * @override
+   */
   getData() {
     const { color } = this
     
@@ -49,6 +58,7 @@ export class LambertMaterial extends Material {
 
   /**
    * @returns {[string, number, Texture | undefined, Sampler | undefined][]}
+   * @override
    */
   getTextures() {
     return [['mainTexture', 0, this.mainTexture, this.mainSampler]]

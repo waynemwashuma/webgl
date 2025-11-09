@@ -1,4 +1,5 @@
 import { WebGLExtensions } from "../core/index.js"
+import { assert } from "../utils/index.js"
 
 export class WebGLCanvasSurface {
   /**
@@ -10,14 +11,18 @@ export class WebGLCanvasSurface {
   /**
    * @type {WebGL2RenderingContext}
    */
-  gl
+  context
   /**
    * @param {HTMLCanvasElement} [canvas]
    * @param {WebGLContextAttributes} [options] 
    */
   constructor(canvas, options) {
     this.canvas = canvas || document.createElement('canvas')
-    this.context = canvas.getContext('webgl2', options)
+    const context = this.canvas.getContext('webgl2', options)
+
+    assert(context, "Webgl context creation failed")
+    
+    this.context = context
     this.extensions = new WebGLExtensions(this.context)
     this.extensions.get("OES_texture_float_linear")
   }

@@ -4,13 +4,30 @@
     "./examples"
   ],
   "compilerOptions": {
-    "checkJs": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "noEmit": true,
+
+    // type checking
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictBuiltinIteratorReturn": true,
+    "noImplicitReturns":true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
-    "target": "ES2020",
+    "noFallthroughCasesInSwitch":true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    // module resolution
+    "module": "es2022",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "noEmit": true,
+    "checkJs": true,
     "skipLibCheck":true,
     "paths":{
       "webgllis":["./src/index.js"],

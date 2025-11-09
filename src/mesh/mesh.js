@@ -44,7 +44,10 @@ export class Mesh {
     )
 
     for (let i = 0; i < data.length; i += 4) {
-      const sum = data[i] + data[i + 1] + data[i + 2] + data[i + 3]
+      const sum = /**@type {number}*/(data[i]) +
+        /**@type {number}*/ (data[i + 1]) +
+        /**@type {number}*/ (data[i + 2]) +
+        /**@type {number}*/ (data[i + 3])
 
       if (sum === 0) {
         data[i] = 0
@@ -53,10 +56,10 @@ export class Mesh {
         data[i + 3] = 0
       } else {
         const inv = 1 / sum
-        data[i] = data[i] * inv
-        data[i + 1] = data[i + 1] * inv
-        data[i + 2] = data[i + 2] * inv
-        data[i + 3] = data[i + 3] * inv
+        data[i] = /**@type {number}*/(data[i]) * inv
+        data[i + 1] = /**@type {number}*/ (data[i + 1]) * inv
+        data[i + 2] = /**@type {number}*/(data[i + 2]) * inv
+        data[i + 3] = /**@type {number}*/(data[i + 3]) * inv
       }
     }
   }

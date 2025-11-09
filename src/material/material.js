@@ -1,5 +1,4 @@
 /**@import {WebGLRenderPipelineDescriptor, BlendDescriptor } from '../core/index.js' */
-/**@import { PipelineKey } from './raw.js' */
 
 import {
   CullFace,
@@ -35,6 +34,7 @@ export class Material extends RawMaterial {
   blendColor = new Color()
 
   /**
+   * @override
    * @returns {string}
    */
   vertex() {
@@ -45,6 +45,7 @@ export class Material extends RawMaterial {
   }
 
   /**
+   * @override
    * @returns {string}
    */
   fragment() {
@@ -55,6 +56,7 @@ export class Material extends RawMaterial {
   }
 
   /**
+   * @override
    * @returns {ArrayBuffer}
    */
   getData() {
@@ -65,6 +67,7 @@ export class Material extends RawMaterial {
   }
 
   /**
+   * @override
    * @returns {bigint}
    */
   getPipelineBits() {
@@ -91,16 +94,18 @@ export class Material extends RawMaterial {
   }
 
   /**
+   * @override
    * @param {WebGLRenderPipelineDescriptor} descriptor 
    */
   specialize(descriptor) {
+    const { blend } = this
     // TODO: Incorporate blending to the pipeline key
 
-    if(this.blend){
-      descriptor.fragment?.targets?.forEach((target)=>{
+    if (blend) {
+      descriptor.fragment?.targets?.forEach((target) => {
         target.blend = {
-          color:this.blend.color.clone(),
-          alpha:this.blend.alpha.clone(),
+          color: blend.color.clone(),
+          alpha: blend.alpha.clone(),
         }
       })
     }

@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Vector3 } from '../vectors/index.js'
 import { Quaternion } from '../angles/index.js'
 import { Matrix3, Matrix4 } from '../matrices/index.js'

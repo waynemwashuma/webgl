@@ -54,6 +54,9 @@ export class PerspectiveProjection extends Projection {
     this.aspect = aspect
   }
 
+  /**
+   * @override
+   */
   isPerspective() {
     return true
   }
@@ -62,6 +65,7 @@ export class PerspectiveProjection extends Projection {
    * @param {number} near
    * @param {number} far
    * @returns {Matrix4}
+   * @override
    */
   asProjectionMatrix(near, far) {
     const top = near * Math.tan(0.5 * this.fov)
@@ -127,6 +131,9 @@ export class OrthographicProjection extends Projection {
     this.bottom = bottom
   }
 
+  /**
+   * @override
+   */
   isOrthographic() {
     return true
   }
@@ -135,6 +142,7 @@ export class OrthographicProjection extends Projection {
    * @param {number} near
    * @param {number} far
    * @returns {Matrix4}
+   * @override
    */
   asProjectionMatrix(near, far) {
     return OrthographicProjection.from(this.left, this.right, this.top, this.bottom, near, far)

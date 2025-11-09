@@ -5,17 +5,18 @@
 import { Attribute, Shader, Uniform } from "../core/index.js"
 import { Mesh } from "../mesh/index.js"
 import {
-  GlDataType,
   TextureFormat,
   PrimitiveTopology,
   TextureType,
   UNI_MODEL_MAT
 } from "../constant.js"
-import { Texture } from "../texture/index.js"
+import { Sampler, Texture } from "../texture/index.js"
 import { Object3D } from "./object3d.js"
 import { Affine3 } from "../math/index.js"
 import { updateTextureSampler } from "../function.js"
 import { Material, RawMaterial } from "../material/index.js"
+import { assert } from '../utils/index.js'
+
 import { Bone3D } from "./bone.js";
 
 export class Skin {
@@ -63,23 +64,24 @@ export class Skin {
   }
 
   setBindPose() {
-    for (let i = 0; i < this.inverseBindPose.length; i++) {
+    for (let i = 0; i < this.bones.length; i++) {
+      const bone = /**@type {Bone3D} */ (this.bones[i])
       const element = this.inverseBindPose[i] || new Affine3();
-
-      element.copy(this.bones[i].transform.world).invert()
+      element.copy(bone.transform.world).invert()
       this.inverseBindPose[i] = element
     }
   }
 
   updateTexture() {
-    const { bones, inverseBindPose } = this
     const data = new Float32Array(this.bones.length * 16)
 
     for (let i = 0; i < this.bones.length; i++) {
       const offset = i * 16
+      const bone = /**@type {Bone3D} */ (this.bones[i])
+      const pose = /**@type {Affine3} */ (this.inverseBindPose[i])
       const world = Affine3.multiply(
-        bones[i].transform.world,
-        inverseBindPose[i]
+        bone.transform.world,
+        pose
       )/**/
 
       // PERF: Remove last row as it is always constant
@@ -138,6 +140,10 @@ export class MeshMaterial3D extends Object3D {
     this.material = material
   }
 
+  /**
+   * @override
+   * @param {Map<Object3D, Object3D>} [entityMap]
+   */
   clone(entityMap) {
     const newMesh = super.clone(entityMap)
 
@@ -165,6 +171,7 @@ export class MeshMaterial3D extends Object3D {
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
+      assert(meshLayout, "Mesh layout not available")
       const { defines, includes } = renderer
       /**
        * @type {WebGLRenderPipelineDescriptor}
@@ -325,7 +332,8 @@ function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
   const textures = material.getTextures()
 
   for (let i = 0; i < textures.length; i++) {
-    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] = textures[i]
+    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] = 
+    /**@type {[string, number, Texture | undefined, Sampler | undefined]}*/(textures[i])
     const textureInfo = uniforms.get(name)
 
     if (textureInfo && textureInfo.texture_unit !== undefined) {

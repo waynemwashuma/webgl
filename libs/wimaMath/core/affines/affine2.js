@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { Rotary } from '../angles/index.js'
 import { Vector2 } from '../vectors/index.js'
 

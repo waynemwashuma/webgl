@@ -5,13 +5,13 @@ const opts = container.appendChild(document.createElement("select"))
 container.style.position = "absolute"
 container.style.top = "0px"
 container.style.left = "0px"
-opts.onchange = e => {
+opts.addEventListener('change', (e) => {
   const { target } = e
   if (!(target instanceof HTMLSelectElement)) return
   localStorage.setItem("play", target.value)
 
   switchDemo(target.value)
-}
+})
 
 /**
  * @param {string} name
@@ -39,7 +39,7 @@ function setupOpts(demos, prefix = '') {
   if (prefix != '') {
     prefix += '/'
   }
-  
+
   for (const name in demos) {
     const prename = prefix + name
     if (demos[name] instanceof URL) {
@@ -58,7 +58,7 @@ function setupOpts(demos, prefix = '') {
 function init(demos) {
   let name = localStorage.getItem("play")
   if (!name)
-    name = Object.keys(demos)[0]
+    name = Object.keys(demos)[0] || null
   if (!name) return
 
   switchDemo(name)

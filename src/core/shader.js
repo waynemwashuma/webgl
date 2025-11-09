@@ -7,19 +7,20 @@ export class Shader {
   source
 
   /**
-   * @typedef {Map<string,string>}
+   * @type {Map<string,string>}
    */
-  defines = new Map()
+  includes = new Map()
 
   /**
    * @type {Map<string,string>}
    */
-  includes = new Map()
+  defines = new Map()
   /**
    * @param {ShaderModuleDescriptor} descriptor 
    */
   constructor({ source }) {
     this.source = source
+    this.defines = new Map()
   }
 
   /**

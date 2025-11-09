@@ -16,6 +16,7 @@ import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
 import { ImageFrameBuffer as FrameBuffer } from "../core/framebuffer.js"
 import { createTexture, createVAO, updateTextureData } from "../function.js"
+import { assert, ViewRectangle } from '../utils/index.js'
 
 export class DirectionalLights {
   /**
@@ -115,13 +116,14 @@ export class Caches {
   }
 
   /**
-   * @private
+   * 
    * @param {Mesh} mesh
    * @returns {[MeshVertexLayout, number]}
+   * @param {ReadonlyMap<string, Attribute>} attributes
    */
   getLayout(mesh, attributes) {
     for (let i = 0; i < this.meshLayouts.length; i++) {
-      const layout = this.meshLayouts[i]
+      const layout = /**@type {MeshVertexLayout} */(this.meshLayouts[i])
       if (layout.compatibleWithMesh(mesh)) {
         return [layout, i]
       }
@@ -265,6 +267,7 @@ export class WebGLRenderer {
     const dummy = new OffscreenCanvas(100, 100)
     const context = dummy.getContext('webgl2')
 
+    assert(context, "Webgl context creation failed")
 
     this.limits = new WebGLDeviceLimits(context)
     this.attributes = new Map()
@@ -353,11 +356,11 @@ export class WebGLRenderer {
     this.updateUBO(context, this.lights.directionalLights.getData())
 
     for (let i = 0; i < this.lights.directionalLights.lights.length; i++) {
-      this.lights.directionalLights.lights[i].update()
+      this.lights.directionalLights.lights[i]?.update()
     }
 
     for (let i = 0; i < objects.length; i++) {
-      const object = objects[i]
+      const object = /**@type {Object3D} */ (objects[i])
       object.update()
       object.traverseDFS((child) => {
         if (child instanceof MeshMaterial3D) {
@@ -394,6 +397,13 @@ export class WebGLRenderer {
     }
   }
 
+  /**
+   * @param {WebGL2RenderingContext} context
+   * @param {ViewRectangle} viewport
+   * @param {ViewRectangle | undefined} scissors
+   * @param {number} width
+   * @param {number} height
+   */
   setViewportScissor(context, viewport, scissors, width, height) {
     const { offset, size } = viewport
 
