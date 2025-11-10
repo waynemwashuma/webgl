@@ -75,7 +75,7 @@ export class WebGLRenderer {
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);
       
-      plugin.init(context, this)
+      plugin.init(this)
     }
     this.includes
       .set("common", commonShaderLib)
@@ -153,7 +153,7 @@ export class WebGLRenderer {
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (this.plugins[i]);
 
-      plugin.preprocess(objects, renderDevice.context, this)
+      plugin.preprocess(objects, renderDevice, this)
     }
 
     this.updateUBO(context, camera.getData())
@@ -164,7 +164,7 @@ export class WebGLRenderer {
         const object = /**@type {Object3D} */ (objects[i])
         object.update()
         object.traverseDFS((child) => {
-          plugin.renderObject3D(child, context, this)
+          plugin.renderObject3D(child, renderDevice, this)
           return true
         })
       }

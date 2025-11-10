@@ -3,7 +3,7 @@
 /**@import { Caches, WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 
 import { assert } from '../utils/index.js'
-import { MeshVertexLayout, Shader, Uniform } from "../core/index.js";
+import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
 import { updateTextureSampler } from "../function.js";
 import { RawMaterial } from "../material/index.js";
 import { Affine3 } from "../math/index.js";
@@ -33,20 +33,20 @@ export class MeshMaterialPlugin extends Plugin {
   /**
    * @override
    * @param {Object3D} object
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer
    */
-  renderObject3D(object, context, renderer) {
+  renderObject3D(object, device, renderer) {
     if (!(object instanceof MeshMaterial3D)) {
       return
     }
     const { caches, attributes, defaults } = renderer
     const { material, mesh, transform } = object
-    const gpuMesh = caches.getMesh(context, mesh, attributes)
+    const gpuMesh = caches.getMesh(device.context, mesh, attributes)
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipeline = this.getMaterialRenderPipeline(context, caches, material, pipelineKey, () => {
+    const pipeline = this.getMaterialRenderPipeline(device.context, caches, material, pipelineKey, () => {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
@@ -89,38 +89,38 @@ export class MeshMaterialPlugin extends Plugin {
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
     const ubo = caches.uniformBuffers.get('MaterialBlock')
 
-    pipeline.use(context)
+    pipeline.use(device.context)
 
     if (ubo) {
       const materialData = material.getData()
-      ubo.update(context, materialData)
+      ubo.update(device.context, materialData)
     }
-    uploadTextures(context, material, pipeline.uniforms, caches, defaults)
+    uploadTextures(device.context, material, pipeline.uniforms, caches, defaults)
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && object.skin) {
-      context.activeTexture(context.TEXTURE0 + boneMatricesInfo.texture_unit)
+      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + boneMatricesInfo.texture_unit)
       object.skin.bindMatrix.copy(object.transform.world)
       object.skin.inverseBindMatrix.copy(object.skin.bindMatrix).invert()
       object.skin.updateTexture()
-      const texture = caches.getTexture(context, object.skin.boneTexture)
+      const texture = caches.getTexture(device.context, object.skin.boneTexture)
 
-      context.bindTexture(object.skin.boneTexture.type, texture)
-      context.texParameteri(object.skin.boneTexture.type, context.TEXTURE_MIN_FILTER, context.LINEAR)
+      device.context.bindTexture(object.skin.boneTexture.type, texture)
+      device.context.texParameteri(object.skin.boneTexture.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
     }
 
     if (modelInfo) {
-      context.uniformMatrix4fv(modelInfo.location, false, modeldata)
+      device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
     }
 
     //drawing
-    context.bindVertexArray(gpuMesh.object)
+    device.context.bindVertexArray(gpuMesh.object)
     if (gpuMesh.indexType !== undefined) {
-      context.drawElements(pipeline.topology,
+      device.context.drawElements(pipeline.topology,
         gpuMesh.count,
         gpuMesh.indexType, 0
       )
     } else {
-      context.drawArrays(pipeline.topology, 0, gpuMesh.count)
+      device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
     }
   }
 
