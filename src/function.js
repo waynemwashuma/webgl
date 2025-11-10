@@ -29,6 +29,7 @@ export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
   context.bufferData(type, data, usage)
 }
 
+// TODO: Use dataview instead of this
 /**
  * Converts an ArrayBuffer to a corresponding TypedArray based on `GlDataType`.
  *
@@ -84,9 +85,9 @@ export function createTexture(gl, texture) {
 export function updateTextureData(gl, texture) {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
 
-  const form = getWebGLTextureFormat(gl, texture.format)
+  const form = getWebGLTextureFormat(texture.format)
 
-  assert(form,"The given texture fromat is not supported")
+  assert(form, "The given texture fromat is not supported")
 
   switch (texture.type) {
     case TextureType.Texture2D:
@@ -218,97 +219,158 @@ function updateCubeMap(gl, texture, form) {
 }
 
 /**
- * @param {WebGL2RenderingContext} gl
- * @param {number} format
- * @returns {{ internalFormat: number, format: number, dataType: number } | undefined}
+ * @param {GLenum} glDataType
+ * @returns {number}
  */
-export function getWebGLTextureFormat(gl, format) {
+export function getGlDataTypeByteSize(glDataType) {
+  switch (glDataType) {
+    case WebGL2RenderingContext.FLOAT:
+    case WebGL2RenderingContext.UNSIGNED_INT:
+    case WebGL2RenderingContext.INT:
+    case WebGL2RenderingContext.INT:
+    case WebGL2RenderingContext.UNSIGNED_INT_24_8:
+    case WebGL2RenderingContext.FLOAT_32_UNSIGNED_INT_24_8_REV:
+      return 4
+    case WebGL2RenderingContext.UNSIGNED_SHORT:
+    case WebGL2RenderingContext.SHORT:
+    case WebGL2RenderingContext.HALF_FLOAT:
+      return 2
+    case WebGL2RenderingContext.UNSIGNED_BYTE:
+    case WebGL2RenderingContext.BYTE:
+      return 1
+    default:
+      console.warn('Unknown or unsupported webgl data type: ', glDataType.toString(16));
+      return 0
+  }
+}
+
+/**
+ * Returns a WebGL texture format configuration based on a custom texture format enum.
+ *
+ * @param {number} format - The custom TextureFormat enum value.
+ * @returns {WebGLTextureFormat | undefined} The corresponding texture format, or undefined if not supported.
+ */
+export function getWebGLTextureFormat(format) {
+  const gl = WebGL2RenderingContext
   switch (format) {
     // --- 8-bit ---
     case TextureFormat.R8Unorm:
-      return { internalFormat: gl.R8, format: gl.RED, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.R8, gl.RED, gl.UNSIGNED_BYTE);
     case TextureFormat.R8Snorm:
-      return { internalFormat: gl.R8_SNORM, format: gl.RED, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.R8_SNORM, gl.RED, gl.BYTE);
     case TextureFormat.R8Uint:
-      return { internalFormat: gl.R8UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.R8UI, gl.RED_INTEGER, gl.UNSIGNED_BYTE);
     case TextureFormat.R8Sint:
-      return { internalFormat: gl.R8I, format: gl.RED_INTEGER, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.R8I, gl.RED_INTEGER, gl.BYTE);
 
     // --- 16-bit ---
     case TextureFormat.R16Uint:
-      return { internalFormat: gl.R16UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_SHORT };
+      return new WebGLTextureFormat(gl.R16UI, gl.RED_INTEGER, gl.UNSIGNED_SHORT);
     case TextureFormat.R16Sint:
-      return { internalFormat: gl.R16I, format: gl.RED_INTEGER, dataType: gl.SHORT };
+      return new WebGLTextureFormat(gl.R16I, gl.RED_INTEGER, gl.SHORT);
     case TextureFormat.R16Float:
-      return { internalFormat: gl.R16F, format: gl.RED, dataType: gl.HALF_FLOAT };
+      return new WebGLTextureFormat(gl.R16F, gl.RED, gl.HALF_FLOAT);
     case TextureFormat.RG8Unorm:
-      return { internalFormat: gl.RG8, format: gl.RG, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.RG8, gl.RG, gl.UNSIGNED_BYTE);
     case TextureFormat.RG8Snorm:
-      return { internalFormat: gl.RG8_SNORM, format: gl.RG, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.RG8_SNORM, gl.RG, gl.BYTE);
     case TextureFormat.RG8Uint:
-      return { internalFormat: gl.RG8UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.RG8UI, gl.RG_INTEGER, gl.UNSIGNED_BYTE);
     case TextureFormat.RG8Sint:
-      return { internalFormat: gl.RG8I, format: gl.RG_INTEGER, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.RG8I, gl.RG_INTEGER, gl.BYTE);
 
     // --- 32-bit ---
     case TextureFormat.R32Uint:
-      return { internalFormat: gl.R32UI, format: gl.RED_INTEGER, dataType: gl.UNSIGNED_INT };
+      return new WebGLTextureFormat(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);
     case TextureFormat.R32Sint:
-      return { internalFormat: gl.R32I, format: gl.RED_INTEGER, dataType: gl.INT };
+      return new WebGLTextureFormat(gl.R32I, gl.RED_INTEGER, gl.INT);
     case TextureFormat.R32Float:
-      return { internalFormat: gl.R32F, format: gl.RED, dataType: gl.FLOAT };
+      return new WebGLTextureFormat(gl.R32F, gl.RED, gl.FLOAT);
     case TextureFormat.RG16Uint:
-      return { internalFormat: gl.RG16UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_SHORT };
+      return new WebGLTextureFormat(gl.RG16UI, gl.RG_INTEGER, gl.UNSIGNED_SHORT);
     case TextureFormat.RG16Sint:
-      return { internalFormat: gl.RG16I, format: gl.RG_INTEGER, dataType: gl.SHORT };
+      return new WebGLTextureFormat(gl.RG16I, gl.RG_INTEGER, gl.SHORT);
     case TextureFormat.RG16Float:
-      return { internalFormat: gl.RG16F, format: gl.RG, dataType: gl.HALF_FLOAT };
+      return new WebGLTextureFormat(gl.RG16F, gl.RG, gl.HALF_FLOAT);
     case TextureFormat.RGBA8Unorm:
-      return { internalFormat: gl.RGBA8, format: gl.RGBA, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
     case TextureFormat.RGBA8UnormSRGB:
-      return { internalFormat: gl.SRGB8_ALPHA8, format: gl.RGBA, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.SRGB8_ALPHA8, gl.RGBA, gl.UNSIGNED_BYTE);
     case TextureFormat.RGBA8Snorm:
-      return { internalFormat: gl.RGBA8_SNORM, format: gl.RGBA, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.RGBA8_SNORM, gl.RGBA, gl.BYTE);
     case TextureFormat.RGBA8Uint:
-      return { internalFormat: gl.RGBA8UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_BYTE };
+      return new WebGLTextureFormat(gl.RGBA8UI, gl.RGBA_INTEGER, gl.UNSIGNED_BYTE);
     case TextureFormat.RGBA8Sint:
-      return { internalFormat: gl.RGBA8I, format: gl.RGBA_INTEGER, dataType: gl.BYTE };
+      return new WebGLTextureFormat(gl.RGBA8I, gl.RGBA_INTEGER, gl.BYTE);
 
     // --- 64-bit ---
     case TextureFormat.RG32Uint:
-      return { internalFormat: gl.RG32UI, format: gl.RG_INTEGER, dataType: gl.UNSIGNED_INT };
+      return new WebGLTextureFormat(gl.RG32UI, gl.RG_INTEGER, gl.UNSIGNED_INT);
     case TextureFormat.RG32Sint:
-      return { internalFormat: gl.RG32I, format: gl.RG_INTEGER, dataType: gl.INT };
+      return new WebGLTextureFormat(gl.RG32I, gl.RG_INTEGER, gl.INT);
     case TextureFormat.RG32Float:
-      return { internalFormat: gl.RG32F, format: gl.RG, dataType: gl.FLOAT };
+      return new WebGLTextureFormat(gl.RG32F, gl.RG, gl.FLOAT);
     case TextureFormat.RGBA16Uint:
-      return { internalFormat: gl.RGBA16UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_SHORT };
+      return new WebGLTextureFormat(gl.RGBA16UI, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT);
     case TextureFormat.RGBA16Sint:
-      return { internalFormat: gl.RGBA16I, format: gl.RGBA_INTEGER, dataType: gl.SHORT };
+      return new WebGLTextureFormat(gl.RGBA16I, gl.RGBA_INTEGER, gl.SHORT);
     case TextureFormat.RGBA16Float:
-      return { internalFormat: gl.RGBA16F, format: gl.RGBA, dataType: gl.HALF_FLOAT };
+      return new WebGLTextureFormat(gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
 
     // --- 128-bit ---
     case TextureFormat.RGBA32Uint:
-      return { internalFormat: gl.RGBA32UI, format: gl.RGBA_INTEGER, dataType: gl.UNSIGNED_INT };
+      return new WebGLTextureFormat(gl.RGBA32UI, gl.RGBA_INTEGER, gl.UNSIGNED_INT);
     case TextureFormat.RGBA32Sint:
-      return { internalFormat: gl.RGBA32I, format: gl.RGBA_INTEGER, dataType: gl.INT };
+      return new WebGLTextureFormat(gl.RGBA32I, gl.RGBA_INTEGER, gl.INT);
     case TextureFormat.RGBA32Float:
-      return { internalFormat: gl.RGBA32F, format: gl.RGBA, dataType: gl.FLOAT };
+      return new WebGLTextureFormat(gl.RGBA32F, gl.RGBA, gl.FLOAT);
 
     // --- Depth / Stencil ---
     case TextureFormat.Depth16Unorm:
-      return { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, dataType: gl.UNSIGNED_SHORT };
+      return new WebGLTextureFormat(gl.DEPTH_COMPONENT16, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
     case TextureFormat.Depth24Plus:
-      return { internalFormat: gl.DEPTH_COMPONENT24, format: gl.DEPTH_COMPONENT, dataType: gl.UNSIGNED_INT };
+      return new WebGLTextureFormat(gl.DEPTH_COMPONENT24, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT);
     case TextureFormat.Depth32Float:
-      return { internalFormat: gl.DEPTH_COMPONENT32F, format: gl.DEPTH_COMPONENT, dataType: gl.FLOAT };
+      return new WebGLTextureFormat(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
     case TextureFormat.Depth24PlusStencil8:
-      return { internalFormat: gl.DEPTH24_STENCIL8, format: gl.DEPTH_STENCIL, dataType: gl.UNSIGNED_INT_24_8 };
+      return new WebGLTextureFormat(gl.DEPTH24_STENCIL8, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8);
     case TextureFormat.Depth32FloatStencil8:
-      return { internalFormat: gl.DEPTH32F_STENCIL8, format: gl.DEPTH_STENCIL, dataType: gl.FLOAT_32_UNSIGNED_INT_24_8_REV };
+      return new WebGLTextureFormat(gl.DEPTH32F_STENCIL8, gl.DEPTH_STENCIL, gl.FLOAT_32_UNSIGNED_INT_24_8_REV);
 
     default:
       return undefined;
+  }
+}
+
+
+/**
+ * Represents a WebGL texture format configuration.
+ */
+export class WebGLTextureFormat {
+  /**
+   * @type {GLenum} Internal format of the texture (e.g., gl.RGBA8)
+   */
+  internalFormat;
+
+  /**
+   * @type {GLenum} Format of the pixel data (e.g., gl.RGBA)
+   */
+  format;
+
+  /**
+   * @type {GLenum} Data type of the pixel data (e.g., gl.UNSIGNED_BYTE)
+   */
+  dataType;
+
+  /**
+   * Creates a WebGLTextureFormat instance.
+   * @param {GLenum} internalFormat - The internal format of the texture.
+   * @param {GLenum} format - The format of the pixel data.
+   * @param {GLenum} dataType - The data type of the pixel data.
+   */
+  constructor(internalFormat, format, dataType) {
+    this.internalFormat = internalFormat;
+    this.format = format;
+    this.dataType = dataType;
   }
 }
