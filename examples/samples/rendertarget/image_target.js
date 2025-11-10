@@ -6,7 +6,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   TextureType,
   SkyBox,
   Texture,
@@ -25,7 +25,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
@@ -98,8 +98,8 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([object1], surface, camera1)
-  renderer.render([skyBox, object2], surface, camera2)
+  renderer.render([object1], renderDevice, camera1)
+  renderer.render([skyBox, object2], renderDevice, camera2)
 
   object1.transform.orientation.multiply(
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)

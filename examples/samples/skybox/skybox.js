@@ -6,7 +6,7 @@ import {
   TextureLoader,
   TextureType,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   MeshMaterialPlugin
 } from 'webgllis';
 
@@ -18,7 +18,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
@@ -85,7 +85,7 @@ function update() {
   }
 
   camera.transform.orientation.multiply(rotation)
-  renderer.render([skyBox],surface, camera)
+  renderer.render([skyBox],renderDevice, camera)
   stats.end()
   
   requestAnimationFrame(update)

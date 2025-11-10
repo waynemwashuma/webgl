@@ -7,7 +7,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   CanvasTarget,
   TextureType,
   SkyBox,
@@ -20,7 +20,7 @@ const settings = {
   slider: 0
 }
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderTarget1 = new CanvasTarget()
 const renderTarget2 = new CanvasTarget()
 const renderer = new WebGLRenderer({
@@ -87,8 +87,8 @@ function update() {
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
   )
 
-  renderer.render([skyBox, object], surface, camera1)
-  renderer.render([object], surface, camera2)
+  renderer.render([skyBox, object], renderDevice, camera1)
+  renderer.render([object], renderDevice, camera2)
   requestAnimationFrame(update)
 }
 

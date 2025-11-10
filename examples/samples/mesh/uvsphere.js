@@ -5,7 +5,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   CullFace,
   WireframeBuilder,
   OrbitCameraControls,
@@ -15,7 +15,7 @@ import {
 import { GUI } from "dat.gui"
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
@@ -53,7 +53,7 @@ requestAnimationFrame(update)
 
 function update() {
   cameraControls.update()
-  renderer.render([object], surface, camera)
+  renderer.render([object], renderDevice, camera)
   requestAnimationFrame(update)
 }
 

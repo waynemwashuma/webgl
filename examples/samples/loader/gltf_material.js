@@ -3,7 +3,7 @@ import {
   PerspectiveProjection,
   GLTFLoader,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   MeshMaterialPlugin,
   OrbitCameraControls,
   TextureType,
@@ -22,7 +22,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
@@ -84,7 +84,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([model, skyBox, ambientLight, directionalLight], surface, camera)
+  renderer.render([model, skyBox, ambientLight, directionalLight], renderDevice, camera)
   cameraControls.update()
   stats.end()
   requestAnimationFrame(update)
