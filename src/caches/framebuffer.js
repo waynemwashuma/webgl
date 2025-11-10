@@ -2,6 +2,7 @@
 import { Texture } from "../texture/index.js"
 import { TextureFormat } from "../constants/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
+import { WebGLRenderDevice } from "../core/index.js"
 
 export class ImageFrameBuffer {
   /**
@@ -24,22 +25,22 @@ export class ImageFrameBuffer {
   depthImage
 
   /**
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {ImageRenderTarget} rendertarget
    * @param {Caches} caches
    */
-  constructor(context, rendertarget, caches) {
-    const framebuffer = context.createFramebuffer()
+  constructor(device, rendertarget, caches) {
+    const framebuffer = device.context.createFramebuffer()
 
-    context.bindFramebuffer(context.FRAMEBUFFER, framebuffer)
+    device.context.bindFramebuffer(WebGL2RenderingContext.FRAMEBUFFER, framebuffer)
     this.buffer = framebuffer
 
     for (let i = 0; i < rendertarget.color.length; i++) {
       const color = /**@type {Texture}*/ (rendertarget.color[i])
-      const textColor = caches.getTexture(context, color)
-      context.framebufferTexture2D(
-        context.FRAMEBUFFER,
-        context.COLOR_ATTACHMENT0 + i,
+      const textColor = caches.getTexture(device, color)
+      device.context.framebufferTexture2D(
+        WebGL2RenderingContext.FRAMEBUFFER,
+        WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
         color.type,
         textColor,
         0
@@ -48,20 +49,20 @@ export class ImageFrameBuffer {
     }
 
     if (rendertarget.internalDepthStencil) {
-      const depth = context.createRenderbuffer()
+      const depth = device.context.createRenderbuffer()
       const format = rendertarget.internalDepthStencil
 
-      context.bindRenderbuffer(context.RENDERBUFFER, depth)
-      context.renderbufferStorage(
-        context.RENDERBUFFER,
+      device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
+      device.context.renderbufferStorage(
+        WebGL2RenderingContext.RENDERBUFFER,
         format,
         rendertarget.width,
         rendertarget.height
       )
-      context.framebufferRenderbuffer(
-        context.FRAMEBUFFER,
+      device.context.framebufferRenderbuffer(
+        WebGL2RenderingContext.FRAMEBUFFER,
         getFramebufferAttachment(format),
-        context.RENDERBUFFER,
+        WebGL2RenderingContext.RENDERBUFFER,
         depth
       )
       this.depthBuffer = depth
@@ -69,10 +70,10 @@ export class ImageFrameBuffer {
 
     if (rendertarget.depthTexture) {
       const { format, type } = rendertarget.depthTexture
-      const texture = caches.getTexture(context, rendertarget.depthTexture)
+      const texture = caches.getTexture(device, rendertarget.depthTexture)
       this.depthImage = texture
-      context.framebufferTexture2D(
-        context.FRAMEBUFFER,
+      device.context.framebufferTexture2D(
+        WebGL2RenderingContext.FRAMEBUFFER,
         getFramebufferAttachment(format),
         type,
         texture,
