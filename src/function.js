@@ -1,33 +1,8 @@
 import {
   GlDataType,
-  BufferUsage,
-  BufferType
+  VertexFormat,
+  TextureFormat
 } from "./constants/index.js"
-import { assert } from "./utils/index.js"
-import { Sampler, Texture } from "./texture/index.js"
-import { TextureFilter, TextureFormat, TextureType, getTextureFormatSize } from "./constants/index.js"
-/**
- * @param {WebGL2RenderingContext} context
- * @param {BufferType} type
- * @param {number} size
- * @param {BufferUsage} usage
- */
-export function createBuffer(context, type, size, usage = context.STATIC_DRAW) {
-  const buffer = context.createBuffer()
-  context.bindBuffer(type, buffer)
-  context.bufferData(type, size, usage)
-  return buffer
-}
-
-/**
- * @param {WebGL2RenderingContext} context 
- * @param {BufferType} type 
- * @param {AllowSharedBufferSource} data 
- * @param {BufferUsage} usage 
- */
-export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
-  context.bufferData(type, data, usage)
-}
 
 // TODO: Use dataview instead of this
 /**
@@ -60,172 +35,6 @@ export function convertBufferToTypedArray(
       return new Int8Array(buffer, offset, length / Int8Array.BYTES_PER_ELEMENT);
     default:
       throw new Error(`Unsupported GL data type: 0x${dataType.toString(16)}`);
-  }
-}
-
-/**
- * @param {WebGL2RenderingContext} gl 
- * @param {Texture} texture 
- */
-export function updateTextureData(gl, texture) {
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY)
-
-  const form = getWebGLTextureFormat(texture.format)
-
-  assert(form, "The given texture fromat is not supported")
-
-  switch (texture.type) {
-    case TextureType.Texture2D:
-      updateTexture2D(gl, texture, form)
-      break;
-    case TextureType.TextureCubeMap:
-      updateCubeMap(gl, texture, form)
-      break
-    default:
-      break;
-  }
-  if (texture.generateMipmaps) {
-    gl.generateMipmap(texture.type)
-  }
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- * @param {Sampler} sampler
- */
-export function updateTextureSampler(gl, texture, sampler) {
-  const lod = sampler.lod
-  const anisotropyExtenstion = gl.getExtension("EXT_texture_filter_anisotropic")
-
-  gl.texParameteri(texture.type, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter)
-  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_S, sampler.wrapS)
-  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_T, sampler.wrapT)
-  gl.texParameteri(texture.type, gl.TEXTURE_WRAP_R, sampler.wrapR)
-
-  if (lod) {
-    gl.texParameteri(texture.type, gl.TEXTURE_MIN_LOD, lod.min)
-    gl.texParameteri(texture.type, gl.TEXTURE_MAX_LOD, lod.max)
-  }
-
-  if (sampler.mipmapFilter !== undefined) {
-    if (sampler.minificationFilter === TextureFilter.Linear) {
-      if (sampler.mipmapFilter === TextureFilter.Linear) {
-        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
-        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-      }
-    } else if (sampler.minificationFilter === TextureFilter.Nearest) {
-      if (sampler.mipmapFilter === TextureFilter.Linear) {
-        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
-        gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
-      }
-    }
-  } else {
-    if (sampler.minificationFilter === TextureFilter.Nearest) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-    } else if (sampler.minificationFilter === TextureFilter.Linear) {
-      gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    }
-  }
-  if (anisotropyExtenstion) {
-    gl.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
-  }
-
-  if (sampler.compare !== undefined) {
-    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_FUNC, sampler.compare)
-  } else {
-    gl.texParameteri(texture.type, gl.TEXTURE_COMPARE_MODE, gl.NONE);
-  }
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- * @param {{ internalFormat: any; format: any; dataType: any; }} form
- */
-function updateTexture2D(gl, texture, form) {
-  const level = 0, border = 0
-
-  const { internalFormat, format, dataType } = form
-  const { data, width, height } = texture
-  const pixelSize = getTextureFormatSize(texture.format)
-  if (data && data.byteLength < width * height * pixelSize) {
-    return console.warn(`Provided image data does not fit a ${width}x${height} 2d texture`)
-  }
-  gl.texImage2D(
-    texture.type,
-    level,
-    internalFormat,
-    width,
-    height,
-    border,
-    format,
-    dataType,
-    data ? convertBufferToTypedArray(data, dataType) : null
-  )
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- * @param {{ internalFormat: any; format: any; dataType: any; }} form
- */
-function updateCubeMap(gl, texture, form) {
-  const level = 0, border = 0
-  const { internalFormat, format, dataType } = form
-  const { data, width, height } = texture
-  const pixelSize = getTextureFormatSize(texture.format)
-  const sliceSize = pixelSize * width * height
-
-  if (data && data.byteLength < sliceSize * 6) {
-    return console.warn(`Provided image data does not fit a ${width}x${height} cubemap texture`)
-  }
-
-  for (let i = 0; i < 6; i++) {
-    const offset = sliceSize * i
-    const src = data ? convertBufferToTypedArray(data, dataType, offset, sliceSize) : null
-
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
-      level,
-      internalFormat,
-      width,
-      height,
-      border,
-      format,
-      dataType,
-      src
-    )
-  }
-}
-
-/**
- * @param {GLenum} glDataType
- * @returns {number}
- */
-export function getGlDataTypeByteSize(glDataType) {
-  switch (glDataType) {
-    case WebGL2RenderingContext.FLOAT:
-    case WebGL2RenderingContext.UNSIGNED_INT:
-    case WebGL2RenderingContext.INT:
-    case WebGL2RenderingContext.INT:
-    case WebGL2RenderingContext.UNSIGNED_INT_24_8:
-    case WebGL2RenderingContext.FLOAT_32_UNSIGNED_INT_24_8_REV:
-      return 4
-    case WebGL2RenderingContext.UNSIGNED_SHORT:
-    case WebGL2RenderingContext.SHORT:
-    case WebGL2RenderingContext.HALF_FLOAT:
-      return 2
-    case WebGL2RenderingContext.UNSIGNED_BYTE:
-    case WebGL2RenderingContext.BYTE:
-      return 1
-    default:
-      console.warn('Unknown or unsupported webgl data type: ', glDataType.toString(16));
-      return 0
   }
 }
 
@@ -327,6 +136,144 @@ export function getWebGLTextureFormat(format) {
   }
 }
 
+/**
+ * Maps a `VertexFormat` variant to WebGL format attributes for use in `vertexAttribPointer` or equivalent functions.
+ * @param {VertexFormat} format
+ * @returns {WebGLAtttributeParams}
+ */
+export function mapVertexFormatToWebGL(format) {
+  const gl = WebGL2RenderingContext
+  switch (format) {
+    // 8-bit int
+    case VertexFormat.Uint8:
+      return { size: 1, type: gl.UNSIGNED_BYTE, normalized: false };
+    case VertexFormat.Uint8x2:
+      return { size: 2, type: gl.UNSIGNED_BYTE, normalized: false };
+    case VertexFormat.Uint8x3:
+      return { size: 3, type: gl.UNSIGNED_BYTE, normalized: false };
+    case VertexFormat.Uint8x4:
+      return { size: 4, type: gl.UNSIGNED_BYTE, normalized: false };
+
+    case VertexFormat.Unorm8:
+      return { size: 1, type: gl.UNSIGNED_BYTE, normalized: true };
+    case VertexFormat.Unorm8x2:
+      return { size: 2, type: gl.UNSIGNED_BYTE, normalized: true };
+    case VertexFormat.Unorm8x3:
+      return { size: 3, type: gl.UNSIGNED_BYTE, normalized: true };
+    case VertexFormat.Unorm8x4:
+      return { size: 4, type: gl.UNSIGNED_BYTE, normalized: true };
+
+    case VertexFormat.Snorm8:
+      return { size: 1, type: gl.BYTE, normalized: true };
+    case VertexFormat.Snorm8x2:
+      return { size: 2, type: gl.BYTE, normalized: true };
+    case VertexFormat.Snorm8x3:
+      return { size: 3, type: gl.BYTE, normalized: true };
+    case VertexFormat.Snorm8x4:
+      return { size: 4, type: gl.BYTE, normalized: true };
+
+    case VertexFormat.Sint8:
+      return { size: 1, type: gl.BYTE, normalized: false };
+    case VertexFormat.Sint8x2:
+      return { size: 2, type: gl.BYTE, normalized: false };
+    case VertexFormat.Sint8x3:
+      return { size: 3, type: gl.BYTE, normalized: false };
+    case VertexFormat.Sint8x4:
+      return { size: 4, type: gl.BYTE, normalized: false };
+
+    // 16-bit int
+    case VertexFormat.Uint16:
+      return { size: 1, type: gl.UNSIGNED_SHORT, normalized: false };
+    case VertexFormat.Uint16x2:
+      return { size: 2, type: gl.UNSIGNED_SHORT, normalized: false };
+    case VertexFormat.Uint16x3:
+      return { size: 3, type: gl.UNSIGNED_SHORT, normalized: false };
+    case VertexFormat.Uint16x4:
+      return { size: 4, type: gl.UNSIGNED_SHORT, normalized: false };
+
+    case VertexFormat.Unorm16:
+      return { size: 1, type: gl.UNSIGNED_SHORT, normalized: true };
+    case VertexFormat.Unorm16x2:
+      return { size: 2, type: gl.UNSIGNED_SHORT, normalized: true };
+    case VertexFormat.Unorm16x3:
+      return { size: 3, type: gl.UNSIGNED_SHORT, normalized: true };
+    case VertexFormat.Unorm16x4:
+      return { size: 4, type: gl.UNSIGNED_SHORT, normalized: true };
+
+    case VertexFormat.Snorm16:
+      return { size: 1, type: gl.SHORT, normalized: true };
+    case VertexFormat.Snorm16x2:
+      return { size: 2, type: gl.SHORT, normalized: true };
+    case VertexFormat.Snorm16x3:
+      return { size: 3, type: gl.SHORT, normalized: true };
+    case VertexFormat.Snorm16x4:
+      return { size: 4, type: gl.SHORT, normalized: true };
+
+    case VertexFormat.Sint16:
+      return { size: 1, type: gl.SHORT, normalized: false };
+    case VertexFormat.Sint16x2:
+      return { size: 2, type: gl.SHORT, normalized: false };
+    case VertexFormat.Sint16x3:
+      return { size: 3, type: gl.SHORT, normalized: false };
+    case VertexFormat.Sint16x4:
+      return { size: 4, type: gl.SHORT, normalized: false };
+
+    // 32-bit int
+    case VertexFormat.Uint32:
+      return { size: 1, type: gl.UNSIGNED_INT, normalized: false };
+    case VertexFormat.Uint32x2:
+      return { size: 2, type: gl.UNSIGNED_INT, normalized: false };
+    case VertexFormat.Uint32x3:
+      return { size: 3, type: gl.UNSIGNED_INT, normalized: false };
+    case VertexFormat.Uint32x4:
+      return { size: 4, type: gl.UNSIGNED_INT, normalized: false };
+
+    case VertexFormat.Sint32:
+      return { size: 1, type: gl.INT, normalized: false };
+    case VertexFormat.Sint32x2:
+      return { size: 2, type: gl.INT, normalized: false };
+    case VertexFormat.Sint32x3:
+      return { size: 3, type: gl.INT, normalized: false };
+    case VertexFormat.Sint32x4:
+      return { size: 4, type: gl.INT, normalized: false };
+
+    // 32-bit floating point
+    case VertexFormat.Float32:
+      return { size: 1, type: gl.FLOAT, normalized: false };
+    case VertexFormat.Float32x2:
+      return { size: 2, type: gl.FLOAT, normalized: false };
+    case VertexFormat.Float32x3:
+      return { size: 3, type: gl.FLOAT, normalized: false };
+    case VertexFormat.Float32x4:
+      return { size: 4, type: gl.FLOAT, normalized: false };
+
+    default:
+      throw new Error(`Unsupported VertexFormat: ${format}`);
+  }
+}
+
+/**
+ * @param {Uint8Array | Uint16Array | Uint32Array} indices
+ */
+export function mapToIndicesType(indices) {
+  if (indices instanceof Uint8Array) {
+    return GlDataType.UnsignedByte
+  }
+  if (indices instanceof Uint16Array) {
+    return GlDataType.UnsignedShort
+  }
+  if (indices instanceof Uint32Array) {
+    return GlDataType.UnsignedInt
+  }
+  throw "This is unreachable!"
+}
+
+/**
+ * @typedef WebGLAtttributeParams
+ * @property {number} size
+ * @property {GLenum} type
+ * @property {boolean} normalized
+ */
 
 /**
  * Represents a WebGL texture format configuration.
