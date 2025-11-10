@@ -1,5 +1,6 @@
 import { PrimitiveTopology } from "./constants.js"
 import { Attribute } from "./attribute/index.js"
+import { SeparateAttributeData } from "./attributedata/separate.js"
 
 export class Mesh {
   /**
@@ -8,32 +9,23 @@ export class Mesh {
   indices
 
   /**
-   * @type {Map<string, DataView>}
+   * @type {SeparateAttributeData}
    */
-  _attributes
+  attributes
 
   /**
    * @type {PrimitiveTopology}
    */
   topology = PrimitiveTopology.Triangles
-  constructor() {
-    this._attributes = new Map()
-  }
-
   /**
-   * @param {string} name
-   * @param {DataView} attribute
+   * @param {SeparateAttributeData} attributes
    */
-  setAttribute(name, attribute) {
-    this._attributes.set(name, attribute)
-    return this
-  }
-  get attributes() {
-    return this._attributes
+  constructor(attributes) {
+    this.attributes = attributes
   }
 
   normalizeJointWeights() {
-    const weights = this.attributes.get(Attribute.JointWeight.name)
+    const weights = this.attributes.data.get(Attribute.JointWeight.name)
 
     if (!weights) return
 

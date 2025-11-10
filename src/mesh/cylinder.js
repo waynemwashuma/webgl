@@ -1,21 +1,28 @@
 import { Mesh } from "./mesh.js"
 import { Attribute } from "./attribute/index.js"
+import { SeparateAttributeData } from "./attributedata/separate.js";
 
 export class CylinderGeometry extends Mesh {
   constructor(radius = 1, height = 1, numSegments = 15) {
-    super()
     const { indices, vertices, normals, uvs } = createCylinder(radius, height, numSegments);
+    const attributes = new SeparateAttributeData()
+
+    attributes
+      .set(
+        Attribute.Position.name,
+        new DataView(new Float32Array(vertices).buffer)
+      )
+      .set(
+        Attribute.Normal.name,
+        new DataView(new Float32Array(normals).buffer)
+      )
+      .set(
+        Attribute.UV.name,
+        new DataView(new Float32Array(uvs).buffer)
+      )
+    super(attributes)
 
     this.indices = new Uint16Array(indices)
-    this.setAttribute(Attribute.Position.name,
-      new DataView(new Float32Array(vertices).buffer)
-    )
-    this.setAttribute(Attribute.Normal.name,
-      new DataView(new Float32Array(normals).buffer)
-    )
-    this.setAttribute(Attribute.UV.name,
-      new DataView(new Float32Array(uvs).buffer)
-    )
   }
 }
 

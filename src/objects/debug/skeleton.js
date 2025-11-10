@@ -3,7 +3,7 @@
 import { MeshVertexLayout, Shader } from "../../core/index.js";
 import { Material } from "../../material/index.js";
 import { Affine3 } from "../../math/index.js";
-import { Mesh, PrimitiveTopology } from "../../mesh/index.js";
+import { Mesh, PrimitiveTopology, SeparateAttributeData } from "../../mesh/index.js";
 import { skeletonFragment, skeletonVertex } from "../../shader/index.js";
 import { Texture, TextureFormat } from "../../texture/index.js";
 import { Bone3D } from "../bone.js";
@@ -32,7 +32,7 @@ export class SkeletonHelper extends MeshMaterial3D {
    * @param {MeshMaterial3D} skinnedMesh
    */
   constructor(rootBone, skinnedMesh) {
-    super(new Mesh(), new Material())
+    super(new Mesh(new SeparateAttributeData()), new Material())
     this.rootBone = rootBone
     this.skinnedMesh = skinnedMesh
   }

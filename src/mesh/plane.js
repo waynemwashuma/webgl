@@ -1,11 +1,10 @@
 import { Mesh } from "./mesh.js"
 import { Attribute } from "./attribute/index.js"
+import { SeparateAttributeData } from "./attributedata/index.js"
 
 
 export class PlaneGeometry extends Mesh {
   constructor(width = 1, height = 1, widthSegments = 8, heightSegments = 8) {
-    super()
-
     const vertices = []
     const normals = []
     const uvs = []
@@ -27,7 +26,7 @@ export class PlaneGeometry extends Mesh {
 
         vertices.push(dx, -dy, 0);
         normals.push(0, 0, 1);
-        uvs.push(y / gridX,1 - (i / gridY));
+        uvs.push(y / gridX, 1 - (i / gridY));
       }
     }
 
@@ -42,17 +41,22 @@ export class PlaneGeometry extends Mesh {
         indices.push(b, c, d);
       }
     }
+    const attributes = new SeparateAttributeData()
 
+    attributes
+      .set(
+        Attribute.Position.name,
+        new DataView(new Float32Array(vertices).buffer)
+      )
+      .set(
+        Attribute.Normal.name,
+        new DataView(new Float32Array(normals).buffer)
+      )
+      .set(
+        Attribute.UV.name,
+        new DataView(new Float32Array(uvs).buffer)
+      )
+    super(attributes)
     this.indices = new Uint16Array(indices)
-    this.setAttribute(Attribute.Position.name,
-      new DataView(new Float32Array(vertices).buffer)
-
-    )
-    this.setAttribute(Attribute.Normal.name,
-      new DataView(new Float32Array(normals).buffer
-    ))
-    this.setAttribute(Attribute.UV.name,
-      new DataView(new Float32Array(uvs).buffer)
-    )
   }
 }

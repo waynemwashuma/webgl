@@ -1,11 +1,10 @@
 import { Mesh } from "./mesh.js"
 import { Attribute } from "./attribute/index.js"
+import { SeparateAttributeData } from "./attributedata/separate.js"
 
 
 export class BoxGeometry extends Mesh {
   constructor(w = 1, h = 1, d = 1) {
-    super()
-
     const vertices = [
       // Front face
       -0.5 * w, -0.5 * h, 0.5 * d,
@@ -121,16 +120,23 @@ export class BoxGeometry extends Mesh {
         i, i + 2, i + 3
       )
     }
-    this.indices = new Uint16Array(indices)
-    this
-      .setAttribute(Attribute.Position.name,
+
+    const attributes = new SeparateAttributeData()
+
+    attributes
+      .set(
+        Attribute.Position.name,
         new DataView(new Float32Array(vertices).buffer)
       )
-      .setAttribute(Attribute.Normal.name,
+      .set(
+        Attribute.Normal.name,
         new DataView(new Float32Array(normals).buffer)
       )
-      .setAttribute(Attribute.UV.name,
+      .set(
+        Attribute.UV.name,
         new DataView(new Float32Array(uv).buffer)
       )
+    super(attributes)
+    this.indices = new Uint16Array(indices)
   }
 }

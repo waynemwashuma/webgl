@@ -3,6 +3,7 @@ import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D } from '../objects/index.js';
 import { Loader } from './loader.js';
 import { arrayBufferToText } from './utils.js';
+import { SeparateAttributeData } from '../mesh/attributedata/separate.js';
 
 /**
  * @extends {Loader<Object3D, ObjLoadSettings>}
@@ -25,24 +26,26 @@ export class OBJLoader extends Loader {
       return
     }
     const raw = arrayBufferToText(buffer)
-    const { attributes } = await loadOBJ(raw)
-    const geometry = new Mesh()
-    const root = new MeshMaterial3D(geometry, new BasicMaterial())
-    const position = attributes.get(Attribute.Position.name)
-    const normals = attributes.get(Attribute.Normal.name)
-    const uvs = attributes.get(Attribute.UV.name)
+    const obj = await loadOBJ(raw)
+    const attributes = new SeparateAttributeData()
+    const position = obj.attributes.get(Attribute.Position.name)
+    const normals = obj.attributes.get(Attribute.Normal.name)
+    const uvs = obj.attributes.get(Attribute.UV.name)
 
     if (position) {
-      geometry.setAttribute(Attribute.Position.name, position)
+      attributes.set(Attribute.Position.name, position)
     }
 
     if (normals) {
-      geometry.setAttribute(Attribute.Position.name, normals)
+      attributes.set(Attribute.Normal.name, normals)
     }
 
     if (uvs) {
-      geometry.setAttribute(Attribute.Position.name, uvs)
+      attributes.set(Attribute.UV.name, uvs)
     }
+    const mesh = new Mesh(attributes)
+    const root = new MeshMaterial3D(mesh, new BasicMaterial())
+
     destination.add(root)
   }
 

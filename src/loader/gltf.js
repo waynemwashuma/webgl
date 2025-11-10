@@ -7,6 +7,7 @@ import { arrayBufferToJSON } from './utils.js';
 import { Bone3D } from '../objects/bone.js';
 import { Affine3 } from '../math/index.js';
 import { GlDataType } from '../constant.js';
+import { SeparateAttributeData } from '../mesh/attributedata/separate.js';
 
 /**
  * @extends {Loader<Object3D, GLTFLoadSettings>}
@@ -1131,20 +1132,21 @@ function parseMeshObject(mesh, meshes, geometries) {
 }
 
 /**
- * @param {GLTFMesh} mesh
+ * @param {GLTFMesh} gltfMesh
  * @param {GLTF} gltf
  */
-function parseGeometry(mesh, gltf) {
+function parseGeometry(gltfMesh, gltf) {
   const results = []
-  for (let i = 0; i < mesh.primitives.length; i++) {
-    const primitive = /**@type {GLTFPrimitive} */ (mesh.primitives[i])
-    const geometry = new Mesh()
+  for (let i = 0; i < gltfMesh.primitives.length; i++) {
+    const primitive = /**@type {GLTFPrimitive} */ (gltfMesh.primitives[i])
+    const attributes = new SeparateAttributeData()
+    const mesh = new Mesh(attributes)
     if (primitive.indices !== undefined) {
       const [dataView, accessor] = getAccessorData(
         primitive.indices,
         gltf
       )
-      geometry.indices = mapToIndices(accessor, dataView)
+      mesh.indices = mapToIndices(accessor, dataView)
     }
     for (const [name, location] of primitive.attributes) {
       const [buffer, accessor] = getAccessorData(
@@ -1154,15 +1156,15 @@ function parseGeometry(mesh, gltf) {
       const attribute = mapAccessorTypeToAttribute(name, accessor, buffer)
       if (!attribute) continue
       const [attributeName, attributeBuffer] = attribute
-      geometry.setAttribute(
+      attributes.set(
         attributeName,
         attributeBuffer
       )
     }
 
-    geometry.normalizeJointWeights()
+    mesh.normalizeJointWeights()
 
-    results.push(geometry)
+    results.push(mesh)
   }
   return results
 }
