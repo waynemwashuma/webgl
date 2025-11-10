@@ -1,6 +1,6 @@
 import { TextureFormat, TextureType, BufferUsage, BufferType, getTextureFormatSize } from "../../constants/index.js"
 import { assert } from "../../utils/index.js"
-import { convertBufferToTypedArray, getWebGLTextureFormat } from "../../function.js"
+import { convertBufferToTypedArray, getWebGLTextureFormat, WebGLTextureFormat } from "../../function.js"
 import { Vector3 } from "../../math/index.js"
 import { WebGLExtensions } from "../extensions.js"
 import { GPUBuffer, GPUTexture } from "../resources/index.js"
@@ -13,11 +13,13 @@ export class WebGLRenderDevice {
   canvas
 
   /**
+   * @readonly
    * @type {WebGLExtensions}
    */
   extensions
 
   /**
+   * @readonly
    * @type {WebGL2RenderingContext}
    */
   context
@@ -72,32 +74,25 @@ export class WebGLRenderDevice {
    * @param {WebGLTextureDescriptor} descriptor 
    * @returns {GPUTexture}
    */
-  createTexture({
-    type,
-    format,
-    width,
-    height,
-    depth = 1
-  }) {
+  createTexture(descriptor) {
+    const { width, height, depth = 1, type, format } = descriptor
     const { context } = this
     const texture = context.createTexture()
     const form = getWebGLTextureFormat(format)
 
     assert(form, "Invalid texture format")
 
-    context.texImage2D(
-      type,
-      0,
-      form.internalFormat,
-      width,
-      height,
-      0,
-      form.format,
-      form.dataType,
-      null
-    )
+    context.bindTexture(type, texture)
+    switch (type) {
+      case TextureType.Texture2D:
+        allocateTexture2D(context, descriptor, form)
+        break
+      case TextureType.TextureCubeMap:
+        allocateCubemap(context, descriptor, form)
+        break
+    }
     const pixelSize = getTextureFormatSize(format)
-    return new GPUTexture(texture, type, form, width, height, depth, pixelSize)
+    return new GPUTexture(texture, type, form,format, width, height, depth, pixelSize)
   }
 
   /**
@@ -121,11 +116,52 @@ export class WebGLRenderDevice {
   }
 }
 
+
+/**
+ * 
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+function allocateTexture2D(context, descriptor, format) {
+  context.texImage2D(
+    WebGL2RenderingContext.TEXTURE_2D,
+    0,
+    format.internalFormat,
+    descriptor.width,
+    descriptor.height,
+    0,
+    format.format,
+    format.dataType,
+    null
+  )
+}
+
+/**
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+function allocateCubemap(context, descriptor, format) {
+  for (let offset = 0; offset < 6; offset++) {
+    context.texImage2D(
+      WebGL2RenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + offset,
+      0,
+      format.internalFormat,
+      descriptor.width,
+      descriptor.height,
+      0,
+      format.format,
+      format.dataType,
+      null
+    )
+  }
+}
 /**
  * @param {WebGL2RenderingContext} context
  * @param {WebGLWriteTextureDescriptor} descriptor
  */
-export function updateTexture2D(context, descriptor) {
+function updateTexture2D(context, descriptor) {
   const {
     texture,
     data,
@@ -136,7 +172,7 @@ export function updateTexture2D(context, descriptor) {
   const { format, dataType } = texture.format
 
   context.texSubImage2D(
-    texture.type,
+    WebGL2RenderingContext.TEXTURE_2D,
     mipmapLevel,
     offset.x,
     offset.y,
@@ -152,7 +188,7 @@ export function updateTexture2D(context, descriptor) {
  * @param {WebGL2RenderingContext} gl
  * @param {WebGLWriteTextureDescriptor} descriptor
  */
-export function updateCubeMap(gl, descriptor) {
+function updateCubeMap(gl, descriptor) {
   const {
     texture,
     data,
@@ -167,7 +203,7 @@ export function updateCubeMap(gl, descriptor) {
 
   for (let i = 0; i < 6; i++) {
     gl.texSubImage2D(
-      texture.type,
+      WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + i,
       mipmapLevel,
       offset.x,
       offset.y,

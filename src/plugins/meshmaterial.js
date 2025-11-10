@@ -72,8 +72,8 @@ export class MeshMaterialPlugin extends Plugin {
       }
 
       for (const shaderdef of shaderdefs) {
-        descriptor.vertex.defines.set(shaderdef[0],shaderdef[1])
-        descriptor.fragment?.source?.defines?.set(shaderdef[0],shaderdef[1])
+        descriptor.vertex.defines.set(shaderdef[0], shaderdef[1])
+        descriptor.fragment?.source?.defines?.set(shaderdef[0], shaderdef[1])
       }
       for (const [name, value] of includes) {
         descriptor.vertex.includes.set(name, value)
@@ -90,7 +90,7 @@ export class MeshMaterialPlugin extends Plugin {
     const ubo = caches.uniformBuffers.get('MaterialBlock')
 
     pipeline.use(device.context)
-
+    
     if (ubo) {
       const materialData = material.getData()
       ubo.update(device.context, materialData)
@@ -104,7 +104,7 @@ export class MeshMaterialPlugin extends Plugin {
       object.skin.updateTexture()
       const texture = caches.getTexture(device, object.skin.boneTexture)
 
-      device.context.bindTexture(object.skin.boneTexture.type, texture)
+      device.context.bindTexture(object.skin.boneTexture.type, texture.inner)
       device.context.texParameteri(object.skin.boneTexture.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
     }
 
@@ -240,9 +240,8 @@ function uploadTextures(device, material, uniforms, caches, defaults) {
 
     if (textureInfo && textureInfo.texture_unit !== undefined) {
       const gpuTexture = caches.getTexture(device, texture)
-
       device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + textureInfo.texture_unit)
-      device.context.bindTexture(texture.type, gpuTexture)
+      device.context.bindTexture(texture.type, gpuTexture.inner)
       updateTextureSampler(device.context, texture, sampler)
     }
   }
@@ -252,23 +251,23 @@ function uploadTextures(device, material, uniforms, caches, defaults) {
  * @param {bigint} meshBits
  * @param {ReadonlyMap<string, string>} globalDefines
  */
-function getShaderDefs(meshLayout, meshBits, globalDefines){
+function getShaderDefs(meshLayout, meshBits, globalDefines) {
   /**@type {[string,string][]} */
   const shaderdefs = []
   if (meshBits & MeshKey.Skinned) {
     shaderdefs.push(["SKINNED", ""])
   }
 
-  if(meshLayout.hasAttribute(Attribute.UV)){
-    shaderdefs.push(['VERTEX_UVS',''])
+  if (meshLayout.hasAttribute(Attribute.UV)) {
+    shaderdefs.push(['VERTEX_UVS', ''])
   }
 
-  if(meshLayout.hasAttribute(Attribute.Normal)){
-    shaderdefs.push(['VERTEX_NORMALS',''])
+  if (meshLayout.hasAttribute(Attribute.Normal)) {
+    shaderdefs.push(['VERTEX_NORMALS', ''])
   }
 
-  if(meshLayout.hasAttribute(Attribute.Tangent)){
-    shaderdefs.push(['VERTEX_TANGENTS',''])
+  if (meshLayout.hasAttribute(Attribute.Tangent)) {
+    shaderdefs.push(['VERTEX_TANGENTS', ''])
   }
 
   for (const [name, value] of globalDefines) {

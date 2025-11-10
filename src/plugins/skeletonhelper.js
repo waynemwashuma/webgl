@@ -56,7 +56,7 @@ export class SkeletonHelperPlugin extends Plugin {
 
 
     device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + transformsInfo.texture_unit)
-    device.context.bindTexture(boneTexture.type, transformsTexture)
+    device.context.bindTexture(boneTexture.type, transformsTexture.inner)
 
     device.context.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(object.skinnedMesh.transform.world)])
     device.context.bindVertexArray(null)

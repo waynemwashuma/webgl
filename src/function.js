@@ -64,21 +64,6 @@ export function convertBufferToTypedArray(
 }
 
 /**
- * @param {WebGL2RenderingContext} gl
- * @param {Texture} texture
- */
-export function createTexture(gl, texture) {
-  const webglTexture = gl.createTexture()
-
-  gl.bindTexture(texture.type, webglTexture)
-  updateTextureData(gl, texture)
-
-  gl.bindTexture(texture.type, null)
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-  return webglTexture
-}
-
-/**
  * @param {WebGL2RenderingContext} gl 
  * @param {Texture} texture 
  */

@@ -1,9 +1,8 @@
 /**@import { WebGLRenderPipelineDescriptor } from './renderpipeline.js' */
-import { createTexture, updateTextureData } from "../function.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
-import { MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
+import { GPUTexture, MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
 import { ImageFrameBuffer } from "./framebuffer.js"
 import { GPUMesh } from "./gpumesh.js"
 import { WebGLRenderPipeline } from "./renderpipeline.js"
@@ -16,7 +15,7 @@ export class Caches {
    */
   meshes = new Map()
   /**
-   * @type {Map<Texture, WebGLTexture>}
+   * @type {Map<Texture, GPUTexture>}
    */
   textures = new Map()
   /**
@@ -94,19 +93,52 @@ export class Caches {
   /**
    * @param {WebGLRenderDevice} device
    * @param {Texture} texture
-   * @returns {WebGLTexture}
+   * @returns {GPUTexture}
    */
   getTexture(device, texture) {
-    const tex = this.textures.get(texture)
+    const gpuTexture = this.textures.get(texture)
 
-    if (tex) {
-      if (texture.changed) {
-        device.context.bindTexture(texture.type, tex)
-        updateTextureData(device.context, texture)
+    if (gpuTexture) {
+      if (texture.changed){
+        if(
+          texture.data &&
+          texture.type === gpuTexture.type &&
+          texture.format === gpuTexture.actualFormat &&
+          texture.width === gpuTexture.width &&
+          texture.height === gpuTexture.height &&
+          texture.depth === gpuTexture.depth
+        ) {
+          // non-structural change, no need to create new gpu texture
+          device.writeTexture({
+            texture: gpuTexture,
+            data: texture.data
+          })
+          return gpuTexture
+        }
+      } else {
+        return gpuTexture
       }
-      return tex
     }
-    const newTex = createTexture(device.context, texture)
+
+    // TODO: Stop leaking memory, delete old gpu textures
+    const newTex = device.createTexture({
+      type: texture.type,
+      format: texture.format,
+      width: texture.width,
+      height: texture.height
+    })
+
+    if (texture.data) {
+      device.writeTexture({
+        texture: newTex,
+        data: texture.data
+      })
+    }
+
+    if (texture.generateMipmaps) {
+      device.context.generateMipmap(texture.type)
+    }
+
     this.textures.set(texture, newTex)
     return newTex
   }
@@ -131,7 +163,7 @@ export class Caches {
   }
 
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {WebGLRenderPipeline | undefined}
    */
   getRenderPipeline(id) {
