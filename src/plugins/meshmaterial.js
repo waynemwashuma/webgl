@@ -113,7 +113,7 @@ export class MeshMaterialPlugin extends Plugin {
     }
 
     //drawing
-    device.context.bindVertexArray(gpuMesh.object)
+    device.context.bindVertexArray(gpuMesh.inner)
     if (gpuMesh.indexType !== undefined) {
       device.context.drawElements(pipeline.topology,
         gpuMesh.count,

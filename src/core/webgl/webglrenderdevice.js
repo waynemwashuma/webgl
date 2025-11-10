@@ -63,11 +63,12 @@ export class WebGLRenderDevice {
    * @param {number} dataOffset
    * @param {number} size
    */
-  writeBuffer(buffer, data, bufferOffset, dataOffset, size) {
+  writeBuffer(buffer, data, bufferOffset = 0, dataOffset = 0, size = data.byteLength) {
     const { context } = this
-
+    const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength)
+    
     context.bindBuffer(buffer.type, buffer.inner)
-    context.bufferSubData(buffer.type, bufferOffset, data, dataOffset, size)
+    context.bufferSubData(buffer.type, bufferOffset, dataView, dataOffset, size)
   }
 
   /**
@@ -116,9 +117,7 @@ export class WebGLRenderDevice {
   }
 }
 
-
 /**
- * 
  * @param {WebGL2RenderingContext} context 
  * @param {WebGLTextureDescriptor} descriptor 
  * @param {WebGLTextureFormat} format 
