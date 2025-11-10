@@ -33,7 +33,7 @@ export function updateBuffer(context, type, data, usage = context.STATIC_DRAW) {
 /**
  * Converts an ArrayBuffer to a corresponding TypedArray based on `GlDataType`.
  *
- * @param {ArrayBuffer} buffer - The buffer to convert.
+ * @param {ArrayBufferLike} buffer - The buffer to convert.
  * @param {GlDataType} dataType - One of the values from GlDataType.
  * @throws {Error} If `dataType` is unknown.
  */
