@@ -1,5 +1,5 @@
 import { PrimitiveTopology } from "./constants.js"
-import { Attribute, AttributeData } from "./attribute/index.js"
+import { Attribute } from "./attribute/index.js"
 
 export class Mesh {
   /**
@@ -8,7 +8,7 @@ export class Mesh {
   indices
 
   /**
-   * @type {Map<string, AttributeData>}
+   * @type {Map<string, DataView>}
    */
   _attributes
 
@@ -22,7 +22,7 @@ export class Mesh {
 
   /**
    * @param {string} name
-   * @param {AttributeData} attribute
+   * @param {DataView} attribute
    */
   setAttribute(name, attribute) {
     this._attributes.set(name, attribute)
@@ -38,9 +38,9 @@ export class Mesh {
     if (!weights) return
 
     const data = new Float32Array(
-      weights.value.buffer,
-      weights.value.byteOffset,
-      weights.value.byteLength / Float32Array.BYTES_PER_ELEMENT
+      weights.buffer,
+      weights.byteOffset,
+      weights.byteLength / Float32Array.BYTES_PER_ELEMENT
     )
 
     for (let i = 0; i < data.length; i += 4) {

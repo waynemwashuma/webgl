@@ -52,7 +52,7 @@ const texture3 = textureLoader.load({
 })
 
 const mesh = new QuadGeometry(1, 1)
-const buffer = mesh.attributes.get('uv')?.value
+const buffer = mesh.attributes.get('uv')
 
 if (buffer) {
   const uvs = new Float32Array(

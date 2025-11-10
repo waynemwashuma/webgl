@@ -1,5 +1,5 @@
 /**@import { LoadSettings } from './loader.js' */
-import { Attribute, AttributeData, Mesh } from '../mesh/index.js';
+import { Attribute, Mesh } from '../mesh/index.js';
 import { BasicMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
@@ -1156,7 +1156,8 @@ function parseGeometry(mesh, gltf) {
       const [attributeName, attributeBuffer] = attribute
       geometry.setAttribute(
         attributeName,
-        new AttributeData(attributeBuffer))
+        attributeBuffer
+      )
     }
 
     geometry.normalizeJointWeights()

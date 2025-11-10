@@ -91,11 +91,11 @@ export function updateVAO(context, layout, mesh, gpuMesh) {
     assert(data,`The provided mesh does not have the vertex attribute ${attribute.name}`)
 
     // This only works for separate buffers for each vertex attribute.
-    const buffer = createBuffer(context, BufferType.Array, data.value.byteLength)
-    const count = data.value.byteLength / (attribute.size * getByteSize(attribute.type))
+    const buffer = createBuffer(context, BufferType.Array, data.byteLength)
+    const count = data.byteLength / (attribute.size * getByteSize(attribute.type))
     
-    updateBuffer(context, BufferType.Array, data.value)
-    context.bufferData(context.ARRAY_BUFFER, data.value, context.STATIC_DRAW)
+    updateBuffer(context, BufferType.Array, data)
+    context.bufferData(context.ARRAY_BUFFER, data, context.STATIC_DRAW)
     setVertexAttribute(context, attribute.id, attribute.type, attribute.size)
     gpuMesh.attributeBuffers.push(buffer)
 

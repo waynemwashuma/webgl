@@ -1,5 +1,5 @@
 import { Mesh } from "./mesh.js"
-import { Attribute, AttributeData } from "./attribute/index.js"
+import { Attribute } from "./attribute/index.js"
 
 
 export class UVSphereGeometry extends Mesh {
@@ -10,13 +10,15 @@ export class UVSphereGeometry extends Mesh {
 
     this.indices = new Uint16Array(indices)
     this.setAttribute(Attribute.Position.name,
-      new AttributeData(new DataView(new Float32Array(vertices).buffer))
+      new DataView(new Float32Array(vertices).buffer)
+
     )
     this.setAttribute(Attribute.Normal.name,
-      new AttributeData(new DataView(new Float32Array(normals).buffer))
+      new DataView(new Float32Array(normals).buffer)
+
     )
     this.setAttribute(Attribute.UV.name,
-      new AttributeData(new DataView(new Float32Array(uvs).buffer))
+      new DataView(new Float32Array(uvs).buffer)
     )
   }
 }
