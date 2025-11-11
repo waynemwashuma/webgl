@@ -19,11 +19,6 @@ export class Object3D {
 
   update() {
     this.transform.updateMatrix(this.parent?.transform)
-
-    for (let i = 0; i < this.children.length; i++) {
-      const child = /**@type {Object3D} */ (this.children[i])
-      child.update()
-    }
   }
 
   /**
