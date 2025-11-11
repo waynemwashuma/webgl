@@ -6,11 +6,13 @@ import others from "./other/index.js"
 import skyBox from "./skybox/index.js"
 import renderTarget from "./rendertarget/index.js"
 import transform from "./transform/index.js"
+import lights from "./lights/index.js"
 
 /**@type {Record<string, any>} */
 export const demos = {
   "material": material,
   "mesh": mesh,
+  "lights": lights,
   "texture": texture,
   "transform": transform,
   "skybox": skyBox,
