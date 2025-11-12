@@ -52,6 +52,12 @@ export class Caches {
     const framebuffer = device.context.createFramebuffer()
     const depthFormat = target.internalDepthStencil || target.depthTexture?.format
     const colorAttachments = []
+    const drawBuffers = target.color.map((texture, offset)=>{
+      if(texture){
+        return WebGL2RenderingContext.COLOR_ATTACHMENT0 + offset
+      }
+      return WebGL2RenderingContext.NONE
+    })
     let depthBuffer
 
     device.context.bindFramebuffer(WebGL2RenderingContext.FRAMEBUFFER, framebuffer)
@@ -91,7 +97,7 @@ export class Caches {
       depthBuffer = /**@type {[WebGLRenderbuffer, TextureFormat]}*/([depth, depthFormat])
     }
 
-    const newTarget = new FrameBuffer(framebuffer, colorAttachments, depthBuffer)
+    const newTarget = new FrameBuffer(framebuffer, colorAttachments,drawBuffers, depthBuffer)
 
     this.renderTargets.set(target, newTarget)
     return newTarget

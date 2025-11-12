@@ -209,6 +209,7 @@ export class WebGLRenderer {
 
     if (!target) {
       context.bindFramebuffer(context.FRAMEBUFFER, null)
+      context.drawBuffers([WebGL2RenderingContext.BACK])
       context.disable(context.SCISSOR_TEST)
       context.viewport(0, 0, canvas.width, canvas.height)
       return
@@ -217,11 +218,13 @@ export class WebGLRenderer {
       const buffer = this.caches.getFrameBuffer(renderDevice, target)
 
       context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
+      context.drawBuffers(buffer.drawBuffers)
       context.enable(context.SCISSOR_TEST)
       this.setViewportScissor(context, target.viewport, target.scissor, target.width, target.height)
     } else if (target instanceof CanvasTarget) {
       context.bindFramebuffer(context.FRAMEBUFFER, null)
       context.enable(context.SCISSOR_TEST)
+      context.drawBuffers([WebGL2RenderingContext.BACK])
       this.setViewportScissor(context, target.viewport, target.scissor, canvas.width, canvas.height)
     }
   }
