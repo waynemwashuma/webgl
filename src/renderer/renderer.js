@@ -9,6 +9,7 @@ import { assert, ViewRectangle } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
+import { RenderTarget } from "../rendertarget/index.js"
 
 export class WebGLRenderer {
   /**
@@ -71,10 +72,10 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    
+
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);
-      
+
       plugin.init(this)
     }
     this.includes
@@ -116,6 +117,7 @@ export class WebGLRenderer {
     }
     if (clearDepth !== undefined) {
       bit |= context.DEPTH_BUFFER_BIT
+      context.depthRange(0, 1)
       context.depthMask(true)
       context.clearDepth(clearDepth)
     }
@@ -138,10 +140,10 @@ export class WebGLRenderer {
     this.setViewport(renderDevice, renderTarget)
     camera.update()
     for (let i = 0; i < objects.length; i++) {
-      /**@type {Object3D} */ (objects[i]).traverseDFS((object)=>{
-        object.update()
-        return true
-      })
+      /**@type {Object3D} */ (objects[i]).traverseDFS((object) => {
+      object.update()
+      return true
+    })
     }
 
     if (renderTarget) {
@@ -174,8 +176,29 @@ export class WebGLRenderer {
         })
       }
     }
+
+    if (renderTarget) {
+      this.resolveDepthTexture(renderDevice, renderTarget)
+    }
   }
 
+  /**
+   * @param {WebGLRenderDevice} device
+   * @param {RenderTarget} renderTarget
+   */
+  resolveDepthTexture(device, renderTarget) {
+    if (renderTarget instanceof ImageRenderTarget) {
+      const framebuffer = this.caches.getFrameBuffer(device, renderTarget) 
+
+      if (framebuffer.depthBuffer && renderTarget.depthTexture) {
+        device.copyRenderBufferToTexture(
+          framebuffer.depthBuffer[0],
+          framebuffer.depthBuffer[1],
+          this.caches.getTexture(device, renderTarget.depthTexture)
+        )
+      }
+    }
+  }
   /**
    * @private
    * @param {WebGLRenderDevice} renderDevice
