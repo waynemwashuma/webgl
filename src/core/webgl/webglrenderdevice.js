@@ -1,11 +1,21 @@
 import { TextureFormat, TextureType, BufferUsage, BufferType, getTextureFormatSize } from "../../constants/index.js"
 import { assert } from "../../utils/index.js"
-import { convertBufferToTypedArray, getWebGLTextureFormat, WebGLTextureFormat } from "../../function.js"
+import { convertBufferToTypedArray, getFramebufferAttachment, getWebGLTextureFormat, mapWebGLAttachmentToBufferBit, WebGLTextureFormat } from "../../function.js"
 import { Vector3 } from "../../math/index.js"
 import { WebGLExtensions } from "../extensions.js"
 import { GPUBuffer, GPUTexture } from "../resources/index.js"
 
 export class WebGLRenderDevice {
+  /**
+   * @private
+   * @type {WebGLFramebuffer}
+   */
+  drawBuffer
+  /**
+   * @private
+   * @type {WebGLFramebuffer}
+   */
+  readBuffer
   /**
    * @readonly
    * @type {HTMLCanvasElement}
@@ -33,6 +43,8 @@ export class WebGLRenderDevice {
 
     assert(context, "Webgl context creation failed")
 
+    this.drawBuffer = context.createFramebuffer()
+    this.readBuffer = context.createFramebuffer()
     this.context = context
     this.extensions = new WebGLExtensions(this.context)
     this.extensions.get("OES_texture_float_linear")
@@ -66,7 +78,7 @@ export class WebGLRenderDevice {
   writeBuffer(buffer, data, bufferOffset = 0, dataOffset = 0, size = data.byteLength) {
     const { context } = this
     const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength)
-    
+
     context.bindBuffer(buffer.type, buffer.inner)
     context.bufferSubData(buffer.type, bufferOffset, dataView, dataOffset, size)
   }
@@ -93,7 +105,7 @@ export class WebGLRenderDevice {
         break
     }
     const pixelSize = getTextureFormatSize(format)
-    return new GPUTexture(texture, type, form,format, width, height, depth, pixelSize)
+    return new GPUTexture(texture, type, form, format, width, height, depth, pixelSize)
   }
 
   /**
@@ -115,6 +127,43 @@ export class WebGLRenderDevice {
         break;
     }
   }
+
+  /**
+   * @param {WebGLRenderbuffer} source
+   * @param {TextureFormat} sourceFormat
+   * @param {GPUTexture} destination
+   */
+  copyRenderBufferToTexture(source, sourceFormat, destination) {
+    const { context } = this
+    const srcAttachment = getFramebufferAttachment(sourceFormat)
+    const dstAttachment = getFramebufferAttachment(destination.actualFormat)
+
+    assert(srcAttachment === dstAttachment ? {} : undefined , "Textures need to bind to same attachment to be copy to each other")
+
+    context.bindFramebuffer(WebGL2RenderingContext.DRAW_FRAMEBUFFER, this.drawBuffer)
+    context.bindFramebuffer(WebGL2RenderingContext.READ_FRAMEBUFFER, this.readBuffer)
+
+    context.framebufferRenderbuffer(
+      WebGL2RenderingContext.READ_FRAMEBUFFER,
+      srcAttachment,
+      WebGL2RenderingContext.RENDERBUFFER,
+      source
+    )
+    context.framebufferTexture2D(
+      WebGL2RenderingContext.DRAW_FRAMEBUFFER,
+      dstAttachment,
+      WebGL2RenderingContext.TEXTURE_2D,
+      destination.inner,
+      0
+    )
+
+    context.blitFramebuffer(
+      0, 0, destination.width, destination.height,
+      0, 0, destination.width, destination.height,
+      mapWebGLAttachmentToBufferBit(dstAttachment),
+      WebGL2RenderingContext.NEAREST
+    )
+  }
 }
 
 /**
@@ -133,6 +182,16 @@ function allocateTexture2D(context, descriptor, format) {
     format.format,
     format.dataType,
     null
+  )
+  context.texParameteri(
+    WebGL2RenderingContext.TEXTURE_2D,
+    WebGL2RenderingContext.TEXTURE_MIN_FILTER,
+    WebGL2RenderingContext.NEAREST
+  )
+  context.texParameteri(
+    WebGL2RenderingContext.TEXTURE_2D,
+    WebGL2RenderingContext.TEXTURE_MAG_FILTER,
+    WebGL2RenderingContext.NEAREST
   )
 }
 
