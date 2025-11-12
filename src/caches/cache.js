@@ -70,7 +70,9 @@ export class Caches {
     const [layout, layoutId] = this.getLayout(mesh, attributes)
     const vao = device.context.createVertexArray()
     const newMesh = new GPUMesh(vao, 0, layoutId)
-    
+
+    // Flush out any change detection that happened when the mesh was creates
+    mesh.changed
     // TODO: Stop leaking memory, delete old gpu buffers
     device.context.bindVertexArray(vao)
     updateVAO(device, layout, mesh, newMesh)
@@ -148,6 +150,8 @@ export class Caches {
       device.context.generateMipmap(texture.type)
     }
 
+    // Flush out any change detection that happened when the image was creates
+    texture.changed
     this.textures.set(texture, newTex)
     return newTex
   }
