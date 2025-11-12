@@ -65,9 +65,8 @@ export class WebGLRenderer {
 
   /**
    * @readonly
-   * @type {Texture}
    */
-  defaultTexture
+  defaults = new Defaults()
 
   /**
    * @readonly
@@ -103,7 +102,6 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    this.defaultTexture = Texture.default()
     this.includes.set("common", commonShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
@@ -255,4 +253,8 @@ export class WebGLRenderer {
       size.y * height
     )
   }
+}
+
+export class Defaults {
+  texture2D = Texture.default()
 }

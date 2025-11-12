@@ -152,14 +152,14 @@ export class MeshMaterial3D extends Object3D {
    * @param {WebGLRenderer} renderer
    */
   renderGL(gl, renderer) {
-    const { caches, attributes, defaultTexture } = renderer
-    const { material, mesh: geometry, transform } = this
+    const { caches, attributes, defaults } = renderer
+    const { material, mesh, transform } = this
     const name = material.constructor.name
     const blockName = material.constructor.name + 'Block'
 
     const materialData = material.getData()
-    const gpuMesh = caches.getMesh(gl, geometry, attributes)
-    const meshBits = createPipelineBitsFromMesh(geometry, this)
+    const gpuMesh = caches.getMesh(gl, mesh, attributes)
+    const meshBits = createPipelineBitsFromMesh(mesh, this)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
     const pipeline = caches.getMaterialRenderPipeline(gl, material, pipelineKey, () => {
@@ -171,7 +171,7 @@ export class MeshMaterial3D extends Object3D {
        * @type {WebGLRenderPipelineDescriptor}
        */
       const descriptor = {
-        topology: geometry.topology,
+        topology: mesh.topology,
         // TODO: Actually implement this to use the mesh
         vertexLayout: meshLayout,
         vertex: new Shader({
@@ -218,7 +218,7 @@ export class MeshMaterial3D extends Object3D {
       return console.warn(`No material uniform buffer \`${blockName}\` set for ${name}`)
     }
     ubo.update(gl, materialData)
-    uploadTextures(gl, material, pipeline.uniforms, caches, defaultTexture)
+    uploadTextures(gl, material, pipeline.uniforms, caches, defaults.texture2D)
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && this.skin) {
       gl.activeTexture(gl.TEXTURE0 + boneMatricesInfo.texture_unit)
