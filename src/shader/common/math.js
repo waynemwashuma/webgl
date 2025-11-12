@@ -1,4 +1,9 @@
 export const mathShaderLib = `
-// constants
-const float PI = 3.14159265359;
+  // constants
+  const float PI = 3.14159265359;
+
+  // functions
+  float sq(float x) {
+    return x * x;
+  }
 `
