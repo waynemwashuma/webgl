@@ -3,7 +3,7 @@ import { WebGLDeviceLimits } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { MeshMaterial3D, Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib } from "../shader/index.js"
-import { Texture } from "../texture/index.js"
+import { Sampler, Texture } from "../texture/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { Color } from "../math/index.js"
@@ -257,4 +257,5 @@ export class WebGLRenderer {
 
 export class Defaults {
   texture2D = Texture.default()
+  textureSampler = Sampler.default()
 }
