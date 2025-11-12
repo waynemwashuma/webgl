@@ -31,6 +31,9 @@ export const lambertFragment =
   uniform PointLightBlock {
     PointLights point_lights;
   };
+  uniform SpotLightBlock {
+    SpotLights spot_lights;
+  };
   uniform sampler2D mainTexture;
   
   out vec4 fragment_color;
@@ -50,6 +53,7 @@ export const lambertFragment =
     float opacity = material.color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     int point_light_count = min(point_lights.count,MAX_POINT_LIGHTS);
+    int spot_light_count = min(spot_lights.count,MAX_SPOT_LIGHTS);
 
     vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
     
@@ -70,6 +74,18 @@ export const lambertFragment =
       float distance = length(distance_vector);
       vec3 direction = distance_vector / distance;
       float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
+      float brightness = calculate_brightness(normal, direction);
+      vec3 irradiance = light.color.rgb * attenuation;
+      
+      accumulative_diffuse += base_color * brightness * irradiance;
+    }
+
+    for (int i = 0; i < spot_light_count; i++) {
+      SpotLight light = spot_lights.lights[i];
+      vec3 distance_vector = light.position - v_position;
+      float distance = length(distance_vector);
+      vec3 direction = distance_vector / distance;
+      float attenuation = attenuate_spot_light(light, direction, distance);
       float brightness = calculate_brightness(normal, direction);
       vec3 irradiance = light.color.rgb * attenuation;
       

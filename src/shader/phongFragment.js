@@ -31,6 +31,9 @@ export const phongFragment =
   uniform PointLightBlock {
     PointLights point_lights;
   };
+  uniform SpotLightBlock {
+    SpotLights spot_lights;
+  };
   uniform sampler2D mainTexture;
   
   out vec4 fragment_color;
@@ -50,6 +53,8 @@ export const phongFragment =
     float opacity = material.color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     int point_light_count = min(point_lights.count,MAX_POINT_LIGHTS);
+    int spot_light_count = min(spot_lights.count,MAX_SPOT_LIGHTS);
+
     vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
     
     vec3 accumulate_light_contribution = vec3(0.0,0.0,0.0);
@@ -71,6 +76,22 @@ export const phongFragment =
       float distance = length(distance_vector);
       vec3 direction = distance_vector / distance;
       float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
+      float brightness = calculate_brightness(normal, direction);
+      vec3 irradiance = light.color.rgb * attenuation;
+      vec3 reflection_direction = reflect(direction, normal);
+      vec3 diffuse_exitance = base_color * brightness * irradiance;
+      
+      float specular_brightness = calculate_brightness(reflection_direction, -view_direction);
+      vec3 specular_exitance = pow(specular_brightness,material.specularShininess) * irradiance * material.specularStrength;
+      accumulate_light_contribution += specular_exitance + diffuse_exitance;
+    }
+
+    for (int i = 0; i < spot_light_count; i++) {
+      SpotLight light = spot_lights.lights[i];
+      vec3 distance_vector = light.position - v_position;
+      float distance = length(distance_vector);
+      vec3 direction = distance_vector / distance;
+      float attenuation = attenuate_spot_light(light, direction, distance);
       float brightness = calculate_brightness(normal, direction);
       vec3 irradiance = light.color.rgb * attenuation;
       vec3 reflection_direction = reflect(direction, normal);
