@@ -4,6 +4,8 @@ export const commonShaderLib = `
     mat4 view;
     mat4 projection;
     vec3 cam_position;
+    float near;
+    float far;
   };
   
   // functions
