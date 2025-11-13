@@ -7,9 +7,9 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  Sampler
 } from 'webgllis';
-import { Sampler } from '../../../src/texture/sampler.js';
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
