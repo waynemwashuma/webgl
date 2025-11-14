@@ -1,6 +1,4 @@
-/**@import {SamplerSettings} from './sampler.js' */
 import { TextureFormat, TextureType } from "./constants.js"
-import { Sampler } from "./sampler.js"
 
 export class Texture {
 
@@ -34,11 +32,6 @@ export class Texture {
   format
 
   /**
-   * @type {Sampler}
-   */
-  defaultSampler
-
-  /**
    * @type {boolean}
    */
   generateMipmaps
@@ -59,7 +52,6 @@ export class Texture {
     data,
     type,
     format = Texture.defaultSettings.format,
-    sampler = Texture.defaultSettings.sampler,
     generateMipmaps = Texture.defaultSettings.generateMipmaps,
     flipY = Texture.defaultSettings.flipY,
     width = Texture.defaultSettings.width,
@@ -73,7 +65,6 @@ export class Texture {
     this.depth = depth
     this.flipY = flipY
     this.format = format
-    this.defaultSampler = new Sampler(sampler)
     this.generateMipmaps = generateMipmaps
   }
 
@@ -97,7 +88,6 @@ export class Texture {
    */
   apply({
     format = Texture.defaultSettings.format,
-    sampler = Texture.defaultSettings.sampler,
     generateMipmaps = Texture.defaultSettings.generateMipmaps,
     flipY = Texture.defaultSettings.flipY,
     width = Texture.defaultSettings.width,
@@ -109,7 +99,6 @@ export class Texture {
     this.depth = depth
     this.flipY = flipY
     this.format = format
-    this.defaultSampler = new Sampler(sampler)
     this.generateMipmaps = generateMipmaps
   }
 
@@ -125,7 +114,6 @@ export class Texture {
     this.type = other.type
     this.flipY = other.flipY
     this.generateMipmaps = other.generateMipmaps
-    this.defaultSampler = other.defaultSampler
     this.update()
     return this
   }
@@ -153,7 +141,6 @@ export class Texture {
    */
   static defaultSettings = {
     format: TextureFormat.RGBA8Unorm,
-    sampler: Sampler.defaultSettings,
     generateMipmaps: false,
     flipY: false,
     width: 0,
@@ -165,7 +152,6 @@ export class Texture {
 /**
  * @typedef TextureSettings
  * @property {boolean} [generateMipmaps=true]
- * @property {SamplerSettings} [sampler]
  * @property {TextureFormat} [format]
  * @property {boolean} [flipY]
  * @property {number} [width]

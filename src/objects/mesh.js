@@ -1,5 +1,5 @@
 /**@import { Brand } from '../utils/index.js' */
-/**@import { WebGLRenderer } from '../renderer/index.js' */
+/**@import { Defaults, WebGLRenderer } from '../renderer/index.js' */
 /**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 /**@import { Caches } from '../caches/index.js' */
 
@@ -218,7 +218,7 @@ export class MeshMaterial3D extends Object3D {
       return console.warn(`No material uniform buffer \`${blockName}\` set for ${name}`)
     }
     ubo.update(gl, materialData)
-    uploadTextures(gl, material, pipeline.uniforms, caches, defaults.texture2D)
+    uploadTextures(gl, material, pipeline.uniforms, caches, defaults)
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && this.skin) {
       gl.activeTexture(gl.TEXTURE0 + boneMatricesInfo.texture_unit)
@@ -320,13 +320,13 @@ function createPipelineBitsFromMesh(mesh, object) {
  * @param {T} material 
  * @param {ReadonlyMap<string, Uniform>} uniforms
  * @param {Caches} caches
- * @param {Texture} defaultTexture
+ * @param {Defaults} defaults
  */
-function uploadTextures(gl, material, uniforms, caches, defaultTexture) {
+function uploadTextures(gl, material, uniforms, caches, defaults) {
   const textures = material.getTextures()
 
   for (let i = 0; i < textures.length; i++) {
-    const [name, _, texture = defaultTexture, sampler = texture.defaultSampler] =
+    const [name, _, texture = defaults.texture2D, sampler = defaults.textureSampler] =
     /**@type {[string, number, Texture | undefined, Sampler | undefined]}*/(textures[i])
     const textureInfo = uniforms.get(name)
 
