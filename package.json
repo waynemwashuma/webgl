@@ -27,6 +27,9 @@
     "test": "npm test"
   },
   "devDependencies": {
-    "@types/dat.gui": "^0.7.13"
+    "@types/dat.gui": "^0.7.13",
+    "rollup": "^4.52.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
   }
 }
