@@ -122,10 +122,15 @@ export class Material extends RawMaterial {
  */
 export const MaterialKey = /**@type {const}*/({
   None: 0n,
+  CullFaceNone: 0n << 0n,
   CullFaceFront: 1n << 0n,
-  CullFaceBack: 1n << 1n,
-  CullFaceBoth: 1n << 2n,
-  FrontFaceCW: 1n << 3n,
-  DepthWrite: 1n << 4n,
-  DepthTest: 1n << 5n
+  CullFaceBack: 2n << 0n,
+  CullFaceBoth: 3n << 0n,
+  FrontFaceCW: 1n << 2n,
+  DepthWrite: 1n << 3n,
+  DepthTest: 1n << 4n,
 })
+
+/**
+ * 
+ */
