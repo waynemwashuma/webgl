@@ -1,5 +1,7 @@
-const textureWrap = new URL("./textureWrap.js", import.meta.url)
+const wrap = new URL("./textureWrap.js", import.meta.url)
+const array = new URL("./arrays.js", import.meta.url)
 
 export default {
-  "texture wrap": textureWrap,
+  "wrap": wrap,
+  "array": array
 }
