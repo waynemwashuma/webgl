@@ -1,4 +1,4 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+/**@import { WebGLRenderPipelineOptions } from '../core/index.js' */
 import { Sampler, Texture } from "../texture/index.js"
 import { abstractClass, abstractMethod } from "../utils/index.js"
 
@@ -46,7 +46,7 @@ export class RawMaterial {
   }
 
   /**
-   * @param {WebGLRenderPipelineDescriptor} _descriptor 
+   * @param {WebGLRenderPipelineOptions} _descriptor 
    */
   specialize(_descriptor) { }
 }

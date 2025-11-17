@@ -1,11 +1,10 @@
-/**@import { WebGLRenderPipelineDescriptor } from './renderpipeline.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 /**@import { WebGLAtttributeParams } from '../function.js' */
 
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
-import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
-import { WebGLRenderPipeline } from "./renderpipeline.js"
+import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js"
 import { UniformBuffers } from "./uniformbuffers.js"
 import { BufferType, BufferUsage } from "../constants/others.js"
 import { getFramebufferAttachment, getWebGLTextureFormat, mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
@@ -212,7 +211,7 @@ export class Caches {
    */
   createRenderPipeline(device, descriptor) {
     const id = this.renderpipelines.length
-    const pipeline = new WebGLRenderPipeline(device.context, descriptor)
+    const pipeline = device.createRenderPipeline(descriptor)
 
     for (const [name, uboLayout] of pipeline.uniformBlocks) {
       const ubo = this.uniformBuffers.getorSet(device.context, name, uboLayout)

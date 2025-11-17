@@ -1,206 +1,164 @@
-import { assert } from "../utils/index.js";
-import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology,TextureFormat, UniformType } from "../constants/index.js";
-import { MeshVertexLayout, UniformBufferLayout } from "../core/layouts/index.js";
-import { Shader } from "../core/shader.js";
-import { Uniform } from "../core/layouts/uniform.js";
+/**@import { WebGLTextureDescriptor, WebGLWriteTextureDescriptor } from './descriptors.js'*/
+import { UniformType } from "../../constants/index.js"
+import { WebGLTextureFormat, convertBufferToTypedArray } from "../../function.js"
+import { Vector3 } from "../../math/index.js"
+import { assert } from "../../utils/index.js"
+import { MeshVertexLayout, Uniform, UniformBufferLayout } from "../layouts/index.js"
 
-export class BlendParams {
-  /**
-   * @type {BlendEquation}
-   */
-  operation
-  /**
-   * @type {BlendMode}
-   */
-  source
-  /**
-   * @type {BlendMode}
-   */
-  destination
-
-  /**
-   * @param {BlendEquation} operation
-   * @param {BlendMode} source
-   * @param {BlendMode} destination
-   */
-  constructor(operation, source, destination) {
-    this.operation = operation
-    this.source = source
-    this.destination = destination
-  }
-
-  clone() {
-    return new BlendParams(
-      this.operation,
-      this.source,
-      this.destination,
-    )
-  }
-
-  static Opaque = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.One,
-    BlendMode.Zero
-  ))
-
-  static AlphaBlend = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.SrcAlpha,
-    BlendMode.OneMinusSrcAlpha,
-  ))
-
-  static PremultiplyAlpha = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.One,
-    BlendMode.OneMinusSrcAlpha,
-  ))
-
-  static AdditiveAlpha = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.SrcAlpha,
-    BlendMode.One,
-  ))
-
-  static AdditiveColor = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.One,
-    BlendMode.One,
-  ))
-
-  static Multiply = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.DstColor,
-    BlendMode.Zero,
-  ))
-
-  static Screen = Object.freeze(new BlendParams(
-    BlendEquation.Add,
-    BlendMode.OneMinusDstColor,
-    BlendMode.One,
-  ))
-
-  static Min = Object.freeze(new BlendParams(
-    BlendEquation.Min,
-    BlendMode.One,
-    BlendMode.One,
-  ))
-
-  static Max = Object.freeze(new BlendParams(
-    BlendEquation.Max,
-    BlendMode.One,
-    BlendMode.One,
-  ))
+/**
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+export function allocateTexture2DArray(context, descriptor, format) {
+  context.texStorage3D(
+    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
+    1,
+    format.internalFormat,
+    descriptor.width,
+    descriptor.height,
+    descriptor.depth || 1
+  )
 }
-export class WebGLRenderPipeline {
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {WebGLRenderPipelineDescriptor} descriptor
-   */
-  constructor(context, {
-    vertex,
-    fragment,
-    topology,
-    vertexLayout,
-    depthTest = true,
-    depthWrite = true,
-    cullFace = CullFace.Back,
-    frontFace = FrontFaceDirection.CCW
-  }) {
-    const programInfo = createProgramFromSrc(
-      context,
-      vertex.compile(),
-      fragment?.source?.compile() || '',
-      vertexLayout
+
+/**
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+export function allocateTexture2D(context, descriptor, format) {
+  context.texImage2D(
+    WebGL2RenderingContext.TEXTURE_2D,
+    0,
+    format.internalFormat,
+    descriptor.width,
+    descriptor.height,
+    0,
+    format.format,
+    format.dataType,
+    null
+  )
+  context.texParameteri(
+    WebGL2RenderingContext.TEXTURE_2D,
+    WebGL2RenderingContext.TEXTURE_MIN_FILTER,
+    WebGL2RenderingContext.NEAREST
+  )
+  context.texParameteri(
+    WebGL2RenderingContext.TEXTURE_2D,
+    WebGL2RenderingContext.TEXTURE_MAG_FILTER,
+    WebGL2RenderingContext.NEAREST
+  )
+}
+
+/**
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+export function allocateCubemap(context, descriptor, format) {
+  for (let offset = 0; offset < 6; offset++) {
+    context.texImage2D(
+      WebGL2RenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + offset,
+      0,
+      format.internalFormat,
+      descriptor.width,
+      descriptor.height,
+      0,
+      format.format,
+      format.dataType,
+      null
     )
-
-    assert(programInfo, 'Cannot create webgl render pipeline')
-
-    this.program = programInfo.program
-    this.uniforms = programInfo.uniforms
-    this.uniformBlocks = programInfo.uniformBlocks
-    this.vertexLayout = vertexLayout
-    this.topology = topology
-    this.cullMode = cullFace
-    this.depthTest = depthTest
-    this.depthWrite = depthWrite
-    this.frontFace = frontFace
-    this.targets = fragment?.targets || []
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} gl
-   */
-  use(gl) {
-    gl.useProgram(this.program);
-
-    // culling
-    if (this.cullMode) {
-      gl.enable(gl.CULL_FACE);
-      gl.cullFace(this.cullMode);
-    } else {
-      gl.disable(gl.CULL_FACE);
-    }
-
-    // depth
-    if (this.depthTest) {
-      gl.enable(gl.DEPTH_TEST)
-    }
-    else {
-      gl.disable(gl.DEPTH_TEST)
-    }
-    gl.depthMask(this.depthWrite);
-
-    // blending
-    // NOTE: webgl does not have ability to blend differently on 
-    // different render targets since state is global.
-    const target = this.targets[0]
-    if (target && target.blend) {
-      const { color, alpha } = target.blend
-
-      gl.enable(gl.BLEND)
-      gl.blendEquationSeparate(color.operation, alpha.operation)
-      gl.blendFuncSeparate(
-        color.source,
-        color.destination,
-        alpha.source,
-        alpha.destination
-      )
-    } else {
-      gl.disable(gl.BLEND);
-    }
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} gl
-   */
-  dispose(gl) {
-    gl.deleteProgram(this.program)
   }
 }
 
 /**
- * @typedef WebGLRenderPipelineDescriptor
- * @property {Shader} vertex
- * @property {{ source: Shader, targets:RenderTargetDescriptor[]}} [fragment]
- * @property {MeshVertexLayout} vertexLayout
- * @property {PrimitiveTopology} topology
- * @property {CullFace} [cullFace]
- * @property {boolean} [depthWrite]
- * @property {boolean} [depthTest]
- * @property {FrontFaceDirection} [frontFace]
+ * @param {WebGL2RenderingContext} context
+ * @param {WebGLWriteTextureDescriptor} descriptor
  */
+export function updateTexture2D(context, descriptor) {
+  const {
+    texture,
+    data,
+    mipmapLevel = 0,
+    offset = new Vector3(0, 0, 0),
+    size = new Vector3(texture.width, texture.height, texture.depth)
+  } = descriptor
+  const { format, dataType } = texture.format
+
+  context.texSubImage2D(
+    WebGL2RenderingContext.TEXTURE_2D,
+    mipmapLevel,
+    offset.x,
+    offset.y,
+    size.x,
+    size.y,
+    format,
+    dataType,
+    convertBufferToTypedArray(data, dataType)
+  )
+}
 
 /**
- * @typedef RenderTargetDescriptor
- * @property {TextureFormat} format
- * @property {BlendDescriptor} [blend]
+ * @param {WebGL2RenderingContext} context
+ * @param {WebGLWriteTextureDescriptor} descriptor
  */
+export function updateTexture2DArray(context, descriptor) {
+  const {
+    texture,
+    data,
+    mipmapLevel = 0,
+    offset = new Vector3(0, 0, 0),
+    size = new Vector3(texture.width, texture.height, texture.depth)
+  } = descriptor
+  const { format, dataType } = texture.format
+
+  context.texSubImage3D(
+    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
+    mipmapLevel,
+    offset.x,
+    offset.y,
+    offset.z,
+    size.x,
+    size.y,
+    size.z,
+    format,
+    dataType,
+    convertBufferToTypedArray(data, dataType)
+  )
+}
 
 /**
- * @typedef BlendDescriptor
- * @property {BlendParams} color
- * @property {BlendParams} alpha
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLWriteTextureDescriptor} descriptor
  */
+export function updateCubeMap(gl, descriptor) {
+  const {
+    texture,
+    data,
+    mipmapLevel = 0,
+    offset = new Vector3(0, 0, 0),
+    size = new Vector3(texture.width, texture.height, texture.depth)
+  } = descriptor
+  const { format, dataType } = texture.format
+  const { width, height, pixelSize } = texture
+  const sliceSize = pixelSize * width * height
+  const src = convertBufferToTypedArray(data, dataType)
+
+  for (let i = 0; i < 6; i++) {
+    gl.texSubImage2D(
+      WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+      mipmapLevel,
+      offset.x,
+      offset.y,
+      size.x,
+      size.y,
+      format,
+      dataType,
+      src,
+      sliceSize * i
+    )
+  }
+}
 
 /**
  * @param {WebGL2RenderingContext} gl
@@ -208,7 +166,7 @@ export class WebGLRenderPipeline {
  * @param {string} fshader
  * @param {MeshVertexLayout} vertexLayout
  */
-function createProgramFromSrc(gl, vshader, fshader, vertexLayout) {
+export function createProgramFromSrc(gl, vshader, fshader, vertexLayout) {
   let v = createshader(gl, vshader, gl.VERTEX_SHADER)
   let f = createshader(gl, fshader, gl.FRAGMENT_SHADER)
   if (f == null || v == null) {

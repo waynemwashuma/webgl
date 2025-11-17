@@ -1,4 +1,4 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+/**@import { WebGLRenderPipelineOptions } from '../core/index.js' */
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { CullFace } from "../constants/index.js"
@@ -69,7 +69,7 @@ export class SkyBoxMaterial extends RawMaterial {
   }
 
   /**
-   * @param {WebGLRenderPipelineDescriptor} descriptor
+   * @param {WebGLRenderPipelineOptions} descriptor
    * @override
    */
   specialize(descriptor) {

@@ -1,4 +1,4 @@
-/**@import {WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+/**@import {WebGLRenderPipelineOptions } from '../core/index.js' */
 
 import {
   CullFace,
@@ -88,7 +88,7 @@ export class Material extends RawMaterial {
 
   /**
    * @override
-   * @param {WebGLRenderPipelineDescriptor} descriptor 
+   * @param {WebGLRenderPipelineOptions} descriptor 
    */
   specialize(descriptor) {
     // TODO: Incorporate blending to the pipeline key
