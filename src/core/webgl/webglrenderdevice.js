@@ -103,6 +103,11 @@ export class WebGLRenderDevice {
       case TextureType.TextureCubeMap:
         allocateCubemap(context, descriptor, form)
         break
+      case TextureType.Texture2DArray:
+        allocateTexture2DArray(context, descriptor, form)
+        break
+      default:
+        throw "The texture type is not supported."
     }
     const pixelSize = getTextureFormatSize(format)
     return new GPUTexture(texture, type, form, format, width, height, depth, pixelSize)
@@ -123,8 +128,11 @@ export class WebGLRenderDevice {
       case TextureType.TextureCubeMap:
         updateCubeMap(context, descriptor)
         break
+      case TextureType.Texture2DArray:
+        updateTexture2DArray(context, descriptor)
+        break
       default:
-        break;
+        throw "Unsupported texture type."
     }
   }
 
@@ -138,7 +146,7 @@ export class WebGLRenderDevice {
     const srcAttachment = getFramebufferAttachment(sourceFormat)
     const dstAttachment = getFramebufferAttachment(destination.actualFormat)
 
-    assert(srcAttachment === dstAttachment ? {} : undefined , "Textures need to bind to same attachment to be copy to each other")
+    assert(srcAttachment === dstAttachment ? {} : undefined, "Textures need to bind to same attachment to be copy to each other")
 
     context.bindFramebuffer(WebGL2RenderingContext.DRAW_FRAMEBUFFER, this.drawBuffer)
     context.bindFramebuffer(WebGL2RenderingContext.READ_FRAMEBUFFER, this.readBuffer)
@@ -164,6 +172,22 @@ export class WebGLRenderDevice {
       WebGL2RenderingContext.NEAREST
     )
   }
+}
+
+/**
+ * @param {WebGL2RenderingContext} context 
+ * @param {WebGLTextureDescriptor} descriptor 
+ * @param {WebGLTextureFormat} format 
+ */
+function allocateTexture2DArray(context, descriptor, format) {
+  context.texStorage3D(
+    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
+    1,
+    format.internalFormat,
+    descriptor.width,
+    descriptor.height,
+    descriptor.depth || 1
+  )
 }
 
 /**
@@ -215,6 +239,7 @@ function allocateCubemap(context, descriptor, format) {
     )
   }
 }
+
 /**
  * @param {WebGL2RenderingContext} context
  * @param {WebGLWriteTextureDescriptor} descriptor
@@ -236,6 +261,35 @@ function updateTexture2D(context, descriptor) {
     offset.y,
     size.x,
     size.y,
+    format,
+    dataType,
+    convertBufferToTypedArray(data, dataType)
+  )
+}
+
+/**
+ * @param {WebGL2RenderingContext} context
+ * @param {WebGLWriteTextureDescriptor} descriptor
+ */
+function updateTexture2DArray(context, descriptor) {
+  const {
+    texture,
+    data,
+    mipmapLevel = 0,
+    offset = new Vector3(0, 0, 0),
+    size = new Vector3(texture.width, texture.height, texture.depth)
+  } = descriptor
+  const { format, dataType } = texture.format
+
+  context.texSubImage3D(
+    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
+    mipmapLevel,
+    offset.x,
+    offset.y,
+    offset.z,
+    size.x,
+    size.y,
+    size.z,
     format,
     dataType,
     convertBufferToTypedArray(data, dataType)

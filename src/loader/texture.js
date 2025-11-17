@@ -51,7 +51,7 @@ export class TextureLoader extends Loader {
     })
     destination.data = buffer
     destination.format = textureFormat,
-      destination.width = width
+    destination.width = width
     destination.height = height
     destination.depth = depth
   }
