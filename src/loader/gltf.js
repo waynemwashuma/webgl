@@ -100,7 +100,7 @@ export class GLTFLoader extends Loader {
 
       if (gltfTextures.sampler !== undefined) {
         const sampler = samplers[gltfTextures.sampler]
-        if(sampler?.mipmapFilter !== undefined){
+        if (sampler?.mipmapFilter !== undefined) {
           image.generateMipmaps = true
         }
         return [image, sampler]
@@ -249,6 +249,29 @@ export class GLTFLoader extends Loader {
     const sceneEntities = scene.nodes.map((node) => {
       return /**@type {Object3D} */ (entityMap.get(node))
     })
+
+    sceneEntities.forEach((object) => {
+      object.traverseDFS((innerObject) => {
+        innerObject.update()
+        return true
+      })
+    })
+
+    sceneEntities.forEach((object) => {
+      object.traverseDFS((innerObject) => {
+        if (
+          innerObject instanceof MeshMaterial3D &&
+          innerObject.skin
+        ) {
+
+          // something is wrong when you are parsing it
+          // TODO: Remove when you figure what is wrong with the gltf inverse bind matrix
+          innerObject.skin.setBindPose()
+        }
+        return true
+      })
+    })
+
 
     destination.add(...sceneEntities)
   }
@@ -1965,9 +1988,6 @@ function parseSkin(gltfSkin, gltf, entityMap) {
     return entity
   })
 
-  // TODO: Remove when you figure what is wrong with the gltf inverse bind matrix
-  // something is wrong when you are parsing it
-  skin.setBindPose()
   return skin
 }
 
