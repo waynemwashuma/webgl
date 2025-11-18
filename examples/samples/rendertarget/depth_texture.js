@@ -14,7 +14,8 @@ import {
   CuboidMeshBuilder,
   MeshMaterialPlugin,
   PlaneMeshBuilder,
-  DepthMaterial
+  DepthMaterial,
+  CanvasTarget
 } from "webgllis"
 
 // performance monitor
@@ -25,6 +26,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
+const canvasTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
@@ -42,8 +44,8 @@ const renderTarget = new ImageRenderTarget({
   depth: depthTexture
 })
 
-const camera1 = new Camera()
-const camera2 = new Camera()
+const camera1 = new Camera(renderTarget)
+const camera2 = new Camera(canvasTarget)
 const mesh = new CuboidMeshBuilder().build()
 const quad = new PlaneMeshBuilder()
 const depthMaterial = new DepthMaterial({
@@ -54,7 +56,6 @@ const object1 = new MeshMaterial3D(mesh, new BasicMaterial())
 const object2 = new MeshMaterial3D(quad.build(), depthMaterial)
 
 //set up the cameras
-camera1.target = renderTarget
 camera1.far = 500
 camera1.transform.position.z = 5
 camera2.transform.position.z = 1

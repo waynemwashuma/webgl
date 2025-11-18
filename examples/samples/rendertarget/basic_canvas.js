@@ -24,7 +24,7 @@ const renderer = new WebGLRenderer({
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],

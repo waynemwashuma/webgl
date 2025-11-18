@@ -11,7 +11,8 @@ import {
   Object3D,
   MeshMaterialPlugin,
   SkeletonHelperPlugin,
-  BasicMaterial
+  BasicMaterial,
+  CanvasTarget
 } from 'webgllis';
 
 // performance monitor
@@ -24,6 +25,7 @@ stats.dom.classList.add('performance-monitor')
 /**@type {Object3D[]} */
 const objects = []
 const canvas = document.createElement('canvas')
+const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
@@ -31,7 +33,7 @@ const renderer = new WebGLRenderer({
     new SkeletonHelperPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 
 const loader = new GLTFLoader()
 const material = new BasicMaterial()
