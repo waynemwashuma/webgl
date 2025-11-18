@@ -2,14 +2,11 @@ import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { CanvasTarget } from "../rendertarget/canvastarget.js"
-import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
-import { assert, ViewRectangle } from '../utils/index.js'
+import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
-import { RenderTarget } from "../rendertarget/index.js"
 
 export class WebGLRenderer {
   /**
@@ -98,38 +95,6 @@ export class WebGLRenderer {
   }
 
   /**
-   * @private
-   * @param {WebGLRenderDevice} renderDevice
-   * @param {Color | undefined} clearColor
-   * @param {number | undefined} clearDepth
-   * @param {number | undefined} clearStencil
-   */
-  clear(renderDevice, clearColor, clearDepth, clearStencil) {
-    const { context } = renderDevice
-    let bit = 0
-    context.stencilMask(0xFF);
-
-    if (clearColor) {
-      const { r, g, b, a } = clearColor
-      bit |= context.COLOR_BUFFER_BIT
-      context.colorMask(true, true, true, true)
-      context.clearColor(r, g, b, a)
-    }
-    if (clearDepth !== undefined) {
-      bit |= context.DEPTH_BUFFER_BIT
-      context.depthRange(0, 1)
-      context.depthMask(true)
-      context.clearDepth(clearDepth)
-    }
-    if (clearStencil !== undefined) {
-      bit |= context.STENCIL_BUFFER_BIT
-      context.stencilMask(0xFF)
-      context.clearStencil(clearStencil)
-    }
-    context.clear(bit)
-  }
-
-  /**
    * @param {Object3D[]} objects
    * @param {WebGLRenderDevice} renderDevice 
    * @param {Camera} camera
@@ -137,27 +102,19 @@ export class WebGLRenderer {
   render(objects, renderDevice, camera) {
     const { context } = renderDevice
     const { target: renderTarget } = camera
+    const { clearColor, clearDepth, clearStencil } = renderTarget
+    const framebuffer = this.caches.getFrameBuffer(renderDevice, renderTarget)
 
-    this.setViewport(renderDevice, renderTarget)
-    camera.update()
+    framebuffer.setViewport(renderDevice.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+    framebuffer.clear(context, clearColor, clearDepth, clearStencil)
+
     for (let i = 0; i < objects.length; i++) {
       /**@type {Object3D} */ (objects[i]).traverseDFS((object) => {
       object.update()
       return true
     })
     }
-
-    if (renderTarget) {
-      const { clearColor, clearDepth, clearStencil } = renderTarget
-      this.clear(renderDevice, clearColor, clearDepth, clearStencil)
-    } else {
-      this.clear(
-        renderDevice,
-        Color.BLACK,
-        1,
-        0
-      )
-    }
+    camera.update()
 
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (this.plugins[i]);
@@ -178,92 +135,10 @@ export class WebGLRenderer {
       }
     }
 
-    if (renderTarget) {
-      this.resolveDepthTexture(renderDevice, renderTarget)
+    if(renderTarget instanceof ImageRenderTarget && renderTarget.depthTexture){
+      const texture = this.caches.getTexture(renderDevice, renderTarget.depthTexture)
+      framebuffer.resolveDepthTexture(renderDevice, texture)
     }
-  }
-
-  /**
-   * @param {WebGLRenderDevice} device
-   * @param {RenderTarget} renderTarget
-   */
-  resolveDepthTexture(device, renderTarget) {
-    if (renderTarget instanceof ImageRenderTarget) {
-      const framebuffer = this.caches.getFrameBuffer(device, renderTarget) 
-
-      if (framebuffer.depthBuffer && renderTarget.depthTexture) {
-        device.copyRenderBufferToTexture(
-          framebuffer.depthBuffer[0],
-          framebuffer.depthBuffer[1],
-          this.caches.getTexture(device, renderTarget.depthTexture)
-        )
-      }
-    }
-  }
-
-  /**
-   * @private
-   * @param {WebGLRenderDevice} renderDevice
-   * @param {RenderTarget} [target]
-   */
-  setViewport(renderDevice, target) {
-    const { canvas, context } = renderDevice
-
-    if (!target) {
-      context.bindFramebuffer(context.FRAMEBUFFER, null)
-      context.drawBuffers([WebGL2RenderingContext.BACK])
-      context.disable(context.SCISSOR_TEST)
-      context.viewport(0, 0, canvas.width, canvas.height)
-      return
-    }
-    if (target instanceof ImageRenderTarget) {
-      const buffer = this.caches.getFrameBuffer(renderDevice, target)
-
-      context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
-      context.drawBuffers(buffer.drawBuffers)
-      context.enable(context.SCISSOR_TEST)
-      this.setViewportScissor(context, target.viewport, target.scissor, target.width, target.height)
-    } else if (target instanceof CanvasTarget) {
-      context.bindFramebuffer(context.FRAMEBUFFER, null)
-      context.enable(context.SCISSOR_TEST)
-      context.drawBuffers([WebGL2RenderingContext.BACK])
-      this.setViewportScissor(context, target.viewport, target.scissor, canvas.width, canvas.height)
-    }
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {ViewRectangle} viewport
-   * @param {ViewRectangle | undefined} scissors
-   * @param {number} width
-   * @param {number} height
-   */
-  setViewportScissor(context, viewport, scissors, width, height) {
-    const { offset, size } = viewport
-
-    if (scissors) {
-      const { offset, size } = scissors
-      context.scissor(
-        offset.x * width,
-        offset.y * height,
-        size.x * width,
-        size.y * height
-      )
-    } else {
-      context.scissor(
-        offset.x * width,
-        offset.y * height,
-        size.x * width,
-        size.y * height
-      )
-    }
-
-    context.viewport(
-      offset.x * width,
-      offset.y * height,
-      size.x * width,
-      size.y * height
-    )
   }
 }
 
