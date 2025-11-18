@@ -128,6 +128,7 @@ export class WebGLRenderer {
     }
     context.clear(bit)
   }
+
   /**
    * @param {Object3D[]} objects
    * @param {WebGLRenderDevice} renderDevice 
@@ -199,10 +200,11 @@ export class WebGLRenderer {
       }
     }
   }
+
   /**
    * @private
    * @param {WebGLRenderDevice} renderDevice
-   * @param {CanvasTarget} [target]
+   * @param {RenderTarget} [target]
    */
   setViewport(renderDevice, target) {
     const { canvas, context } = renderDevice
