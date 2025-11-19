@@ -73,3 +73,18 @@ export class AbstractClassError {
   static MethodUnimplemented = "The method `{0}.{1}()` is not implemented. Override the method without using `super.{1}()`."
   static MethodUncallable = "The method `{0}.{1}()` is not callable.`{0}` is an abstract class."
 }
+
+/**
+ * @param {string} string
+ * @param {string[]} args
+ */
+export function formatString(string, ...args) {
+  return string.replace(/{(\d+)}/g, function (match, number) {
+    const index = parseInt(number)
+    if (typeof index == 'number') {
+      return args[index] || match
+    }
+
+    return match
+  })
+}
