@@ -88,3 +88,28 @@ export function formatString(string, ...args) {
     return match
   })
 }
+
+/**
+ * @param {object} item
+ * @param {object} baseConstructor
+ * @param {string} methodName
+ * @returns {never}
+ */
+export function abstractMethod(item, baseConstructor, methodName) {
+  if (item.constructor === baseConstructor) {
+    throw formatString(AbstractClassError.MethodUncallable, item.constructor.name, methodName)
+  }
+  throw formatString(AbstractClassError.MethodUnimplemented, item.constructor.name, methodName)
+}
+
+/**
+ * 
+ * @param {object} item 
+ * @param {object} baseConstructor 
+ * @returns {never | void}
+ */
+export function abstractClass(item, baseConstructor) {
+  if(item.constructor === baseConstructor){
+    throw formatString(AbstractClassError.Unconstructable, item.constructor.name)
+  }
+}
