@@ -53,5 +53,17 @@ export function assert(test, message) {
 /**
  * @template T
  * @template {string} U
- * @typedef {T & {__brand:U}} Brand
+ * @typedef {T & {__brand: U;}} Brand
  */
+
+/**
+ * @param {ArrayBufferLike} source
+ * @param {ArrayBufferLike} destination
+ * @param {number | undefined} offset
+ * @param {number | undefined} length
+ */
+export function copyBuffer(source, destination, offset, length) {
+  const sourceView = new Uint8Array(source)
+  const destView = new Uint8Array(destination, offset, length)
+  destView.set(sourceView)
+}
