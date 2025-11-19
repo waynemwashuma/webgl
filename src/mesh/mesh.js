@@ -33,6 +33,47 @@ export class Mesh {
     return this
   }
 
+  /**
+   * @param {Mesh} other
+   */
+  merge(other) {
+    const newAttributes = this.attributes.merge(other.attributes)
+    const newMesh = new Mesh(newAttributes)
+    
+    if (this.indices && other.indices) {
+      const positions = this.attributes.get(Attribute.Position.name)
+
+      if(!positions){
+        return newMesh
+      }
+
+      // TODO: Remove this hardcoding and use the attribute map instead
+      const attributeCount = positions.byteLength / (Attribute.Position.size * Float32Array.BYTES_PER_ELEMENT)
+      const offset = this.indices.length
+
+      const newIndices = new Uint16Array(this.indices.length + other.indices.length)
+
+      for (let i = 0; i < this.indices.length; i++) {
+        const index = /**@type {number} */(this.indices[i]);
+
+        newIndices[i] = index
+      }
+
+      for (let i = 0; i < other.indices.length; i++) {
+        const index = /**@type {number} */(other.indices[i]);
+
+        newIndices[i + offset] = index + attributeCount
+      }
+      newMesh.indices = newIndices
+    } else if (!this.indices && !this.indices) {
+      // Do nothing because attributes are already merged
+    } else {
+      // TODO: How do we merge an indexed and non-indexed mesh?
+      throw "Invalid merge, both meshes must either have indices or not have them."
+    }
+    return newMesh
+  }
+
   normalizeJointWeights() {
     const weights = this.attributes.data.get(Attribute.JointWeight.name)
 
