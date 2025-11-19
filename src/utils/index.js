@@ -67,3 +67,9 @@ export function copyBuffer(source, destination, offset, length) {
   const destView = new Uint8Array(destination, offset, length)
   destView.set(sourceView)
 }
+
+export class AbstractClassError {
+  static Unconstructable = "The class `{0}` is not constructible.Extend the class."
+  static MethodUnimplemented = "The method `{0}.{1}()` is not implemented. Override the method without using `super.{1}()`."
+  static MethodUncallable = "The method `{0}.{1}()` is not callable.`{0}` is an abstract class."
+}
