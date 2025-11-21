@@ -1,0 +1,101 @@
+import {
+  MeshMaterial3D,
+  BasicMaterial,
+  WebGLRenderer,
+  TextureLoader,
+  PerspectiveProjection,
+  Camera,
+  WebGLCanvasSurface,
+  CullFace,
+  WireframeBuilder,
+  OrbitCameraControls,
+  Circle3DMeshBuilder
+} from "webgllis"
+import { GUI } from "dat.gui"
+
+const canvas = document.createElement('canvas')
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer()
+const camera = new Camera()
+const cameraControls = new OrbitCameraControls(camera)
+
+const textureLoader = new TextureLoader()
+const texture = textureLoader.load({
+  paths: ["/assets/images/uv.jpg"],
+  textureSettings: {
+    flipY: true
+  }
+})
+const meshBuilder = new Circle3DMeshBuilder()
+
+//create objects
+const object = new MeshMaterial3D(meshBuilder.build(), new BasicMaterial({
+  mainTexture: texture
+}))
+object.material.cullFace = CullFace.None
+
+//set up the camera
+camera.transform.position.z = 5
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 180 * 75
+  camera.projection.aspect = innerWidth / innerHeight
+}
+
+document.body.append(canvas)
+addEventListener("resize", updateView)
+updateView()
+requestAnimationFrame(update)
+
+function update() {
+  cameraControls.update()
+  renderer.render([object], surface, camera)
+  requestAnimationFrame(update)
+}
+
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
+
+  if (camera.projection instanceof PerspectiveProjection) {
+    camera.projection.aspect = innerWidth / innerHeight
+  }
+}
+
+// gui controls
+const settings = {
+  wireframe: false
+}
+const controls = new GUI()
+const buildOptionsFolder = controls.addFolder("Settings")
+buildOptionsFolder
+  .add(meshBuilder, 'radius', 0, 2)
+  .name("Radius")
+  .onFinishChange(buildMesh)
+buildOptionsFolder
+  .add(meshBuilder, 'arcStart', 0, Math.PI * 2)
+  .name("Arc Start")
+  .onFinishChange(buildMesh)
+buildOptionsFolder
+  .add(meshBuilder, 'arcLength', 0, Math.PI * 2)
+  .name("Arc Length")
+  .onFinishChange(buildMesh)
+buildOptionsFolder
+  .add(meshBuilder, 'segments', 1, 100, 1)
+  .name("Segments")
+  .onFinishChange(buildMesh)
+buildOptionsFolder
+  .add(settings, 'wireframe')
+  .name("Wireframe")
+  .onChange(buildMesh)
+buildOptionsFolder.open()
+
+function buildMesh() {
+  const mesh = meshBuilder.build()
+  if(settings.wireframe){
+    object.mesh = new WireframeBuilder(mesh).build()
+  } else {
+    object.mesh = mesh
+  }
+}
