@@ -1,5 +1,6 @@
 export * from "./attribute/index.js"
 export * from "./attributedata/index.js"
+export * from "./builders/index.js"
 export * from "./mesh.js"
 export * from "./box.js"
 export * from "./quad.js"
