@@ -2,12 +2,6 @@ import { GUI } from "dat.gui"
 import {
   MeshMaterial3D,
   BasicMaterial,
-  CircleGeometry,
-  BoxGeometry,
-  UVSphereGeometry,
-  IcosphereGeometry,
-  CylinderGeometry,
-  QuadGeometry,
   Quaternion,
   WebGLRenderer,
   TextureLoader,
@@ -17,7 +11,8 @@ import {
   CanvasTarget,
   TextureType,
   SkyBox,
-  ViewRectangle
+  ViewRectangle,
+  CuboidMeshBuilder
 } from "webgllis"
 
 const settings = {
@@ -53,31 +48,11 @@ const day = textureLoader.load({
 const material = new BasicMaterial({
   mainTexture: texture
 })
-const meshes = [
-  new QuadGeometry(1, 1),
-  new CircleGeometry(0.7),
-  new BoxGeometry(),
-  new UVSphereGeometry(0.7),
-  new IcosphereGeometry(0.7),
-  new CylinderGeometry(0.7),
-]
 
 //create objects
-const objects = meshes.map(mesh => new MeshMaterial3D(mesh, material))
+const object = new MeshMaterial3D(new CuboidMeshBuilder().build(), material) 
 const skyBox = new SkyBox({
   day,
-})
-
-// transform objects to their positions
-objects.forEach((object, i) => {
-  const stepX = 1.6
-  const stepY = 2
-  const startX = -1.6
-  const startY = 1.6
-  const number = 3
-
-  object.transform.position.x = startX + stepX * (i % number)
-  object.transform.position.y = startY - Math.floor(i / number) * stepY
 })
 
 // set up scissors
@@ -103,12 +78,12 @@ addEventListener('resize', updateView)
 requestAnimationFrame(update)
 
 function update() {
-  objects.forEach(object => object.transform.orientation.multiply(
+  object.transform.orientation.multiply(
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
-  ))
+  )
 
-  renderer.render([skyBox, ...objects], surface, camera1)
-  renderer.render(objects, surface, camera2)
+  renderer.render([skyBox, object], surface, camera1)
+  renderer.render([object], surface, camera2)
   requestAnimationFrame(update)
 }
 

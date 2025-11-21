@@ -1,12 +1,13 @@
 import {
   MeshMaterial3D,
   BasicMaterial,
-  QuadGeometry,
   PrimitiveTopology,
   WebGLRenderer,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  PlaneMeshBuilder,
+  Mesh
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -17,16 +18,17 @@ const camera = new Camera()
 document.body.append(canvas)
 updateView()
 
+const meshBuilder = new PlaneMeshBuilder()
 const material = new BasicMaterial()
-/**@type {[QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry, QuadGeometry]} */
+/**@type {[Mesh, Mesh, Mesh, Mesh, Mesh, Mesh, Mesh]} */
 const meshes = [
-  new QuadGeometry(),
-  new QuadGeometry(),
-  new QuadGeometry(),
-  new QuadGeometry(),
-  new QuadGeometry(),
-  new QuadGeometry(),
-  new QuadGeometry()
+  meshBuilder.build(),
+  meshBuilder.build(),
+  meshBuilder.build(),
+  meshBuilder.build(),
+  meshBuilder.build(),
+  meshBuilder.build(),
+  meshBuilder.build()
 ]
 meshes[0].topology = PrimitiveTopology.Points
 meshes[1].topology = PrimitiveTopology.Lines

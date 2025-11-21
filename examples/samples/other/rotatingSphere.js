@@ -1,14 +1,14 @@
 import {
   MeshMaterial3D,
   LambertMaterial,
-  UVSphereGeometry,
   Quaternion,
   DirectionalLight,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  UVSphereMeshBuilder
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -25,7 +25,7 @@ const texture = textureLoader.load({
 })
 const light = new DirectionalLight()
 const sphere = new MeshMaterial3D(
-  new UVSphereGeometry(1),
+  new UVSphereMeshBuilder().build(),
   new LambertMaterial({
     mainTexture: texture,
   })

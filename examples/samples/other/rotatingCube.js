@@ -1,14 +1,14 @@
 import {
   MeshMaterial3D,
   LambertMaterial,
-  BoxGeometry,
   Quaternion,
   DirectionalLight,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  CuboidMeshBuilder
 } from 'webgllis';
 
 const canvas = document.createElement('canvas')
@@ -29,7 +29,7 @@ const texture = textureLoader.load({
   }
 })
 const box = new MeshMaterial3D(
-  new BoxGeometry(1, 1, 1),
+  new CuboidMeshBuilder().build(),
   new LambertMaterial({
     mainTexture: texture
   })

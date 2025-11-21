@@ -1,6 +1,6 @@
 import {
   MeshMaterial3D,
-  BoxGeometry,
+  CuboidMeshBuilder,
   Quaternion,
   DirectionalLight,
   WebGLRenderer,
@@ -28,7 +28,12 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const mesh = new BoxGeometry(0.5, 0.5, 0.5)
+const meshBuilder = new CuboidMeshBuilder()
+meshBuilder.width = 0.5 
+meshBuilder.height = 0.5 
+meshBuilder.depth = 0.5
+
+const mesh = meshBuilder.build()
 const material = new BasicMaterial({
   mainTexture: texture
 })

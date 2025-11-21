@@ -1,18 +1,17 @@
 import {
   MeshMaterial3D,
   BasicMaterial,
-  CircleGeometry,
-  BoxGeometry,
-  UVSphereGeometry,
-  IcosphereGeometry,
-  CylinderGeometry,
-  QuadGeometry,
   Quaternion,
   WebGLRenderer,
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface
+  WebGLCanvasSurface,
+  PlaneMeshBuilder,
+  Circle3DMeshBuilder,
+  CuboidMeshBuilder,
+  UVSphereMeshBuilder,
+  CylinderMeshBuilder
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -30,13 +29,13 @@ const texture = textureLoader.load({
 const material = new BasicMaterial({
   mainTexture: texture
 })
+
 const meshes = [
-  new QuadGeometry(1, 1),
-  new CircleGeometry(0.7),
-  new BoxGeometry(),
-  new UVSphereGeometry(0.7),
-  new IcosphereGeometry(0.7),
-  new CylinderGeometry(0.7),
+  new PlaneMeshBuilder().build(),
+  new Circle3DMeshBuilder().build(),
+  new CuboidMeshBuilder(). build(),
+  new UVSphereMeshBuilder().build(),
+  new CylinderMeshBuilder().build(),
 ]
 
 //create objects
