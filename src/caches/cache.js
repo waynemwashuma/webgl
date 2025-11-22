@@ -1,6 +1,4 @@
-/**@import { PipelineKey } from '../plugins/index.js' */
 import { createTexture, updateTextureData } from "../function.js"
-import { RawMaterial } from "../material/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
@@ -24,10 +22,6 @@ export class Caches {
    * @type {WebGLRenderPipeline[]}
    */
   renderpipelines = []
-  /**
-   * @type {Map<string,Map<PipelineKey, number>>}
-   */
-  materials = new Map()
 
   /**
    * @type {Map<ImageRenderTarget, ImageFrameBuffer>}
@@ -113,35 +107,6 @@ export class Caches {
     const newTex = createTexture(context, texture)
     this.textures.set(texture, newTex)
     return newTex
-  }
-
-  /**
-   * @param {WebGL2RenderingContext} context
-   * @param {RawMaterial} material
-   * @param {PipelineKey} key
-   * @param {()=>import("./renderpipeline.js").WebGLRenderPipelineDescriptor} compute
-   */
-  getMaterialRenderPipeline(context, material, key, compute) {
-    const name = material.constructor.name
-    let materialCache = this.materials.get(name)
-
-    if (!materialCache) {
-      const newCache = new Map()
-
-      materialCache = newCache
-      this.materials.set(name, newCache)
-    }
-
-    const id = materialCache.get(key)
-
-    if (id !== undefined && this.renderpipelines[id]) {
-      return this.renderpipelines[id]
-    }
-    const descriptor = compute()
-    const [newRenderPipeline, newId] = this.createRenderPipeline(context, descriptor)
-
-    materialCache.set(key, newId)
-    return newRenderPipeline
   }
 
   /**
