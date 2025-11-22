@@ -87,6 +87,7 @@ export class FrameBuffer {
    */
   setViewport(context, viewport, scissors) {
     const { width, height } = this
+
     context.bindFramebuffer(context.FRAMEBUFFER, this.buffer)
     context.drawBuffers(this.drawBuffers)
     context.enable(context.SCISSOR_TEST)

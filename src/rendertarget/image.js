@@ -28,27 +28,66 @@ export class ImageRenderTarget extends RenderTarget {
     height,
     internalDepthStencil
   }) {
-    super()
-    this.width = width
-    this.height = height
+    super(width, height)
     this.color = color
     this.depthTexture = depth
     this.internalDepthStencil = internalDepthStencil
-    
+
     for (const color of this.color) {
       color.data = undefined
       color.width = width
       color.height = height
     }
 
-    if(this.depthTexture){
+    if (this.depthTexture) {
       this.depthTexture.data = undefined
       this.depthTexture.width = width
       this.depthTexture.height = height
     }
   }
-}
 
+  /**
+   * @override
+   */
+  get width() {
+    return super.width
+  }
+
+  /**
+   * @override
+   * @param {number} value
+   */
+  set width(value) {
+    super.width = value
+    this.color.forEach((attachment) => {
+      attachment.width = value
+    })
+    if (this.depthTexture) {
+      this.depthTexture.width = value
+    }
+  }
+
+  /**
+   * @override
+   */
+  get height() {
+    return super.height
+  }
+
+  /**
+   * @override
+   * @param {number} value
+   */
+  set height(value) {
+    super.height = value
+    this.color.forEach((attachment) => {
+      attachment.height = value
+    })
+    if (this.depthTexture) {
+      this.depthTexture.height = value
+    }
+  }
+}
 
 /**
  * @typedef ImageRenderTargetOptions

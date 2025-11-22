@@ -45,7 +45,14 @@ export class Caches {
   getFrameBuffer(device, target) {
     const current = this.renderTargets.get(target)
     if (current) {
-      return current
+      if (!target.changed()) {
+        return current
+      }
+      if (target instanceof CanvasTarget) {
+        current.width = target.width
+        current.height = target.height
+        return current
+      }
     }
 
     if (target instanceof ImageRenderTarget) {
@@ -98,14 +105,15 @@ export class Caches {
       }
 
       const newTarget = new FrameBuffer(
-        framebuffer, 
-        colorAttachments, 
-        drawBuffers, 
+        framebuffer,
+        colorAttachments,
+        drawBuffers,
         depthBuffer,
         target.width,
         target.height
       )
 
+      // TODO: Dispose off the previous webgl resources
       this.renderTargets.set(target, newTarget)
       return newTarget
     } else if (target instanceof CanvasTarget) {
@@ -114,8 +122,8 @@ export class Caches {
         [],
         [WebGL2RenderingContext.BACK],
         undefined,
-        target.canvas.width,
-        target.canvas.height
+        target.width,
+        target.height
       )
 
       this.renderTargets.set(target, frameBuffer)
