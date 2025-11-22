@@ -60,7 +60,7 @@ export class WebGLRenderDevice {
     const programInfo = createProgramFromSrc(
       this.context,
       descriptor.vertex.compile(),
-      descriptor.fragment?.source?.compile() || '',
+      descriptor.fragment?.source?.compile() || noopFragment,
       descriptor.vertexLayout
     )
 
@@ -202,3 +202,9 @@ export class WebGLRenderDevice {
     )
   }
 }
+
+const noopFragment = `#version 300 es
+precision mediump float;
+
+void main(){ }
+`
