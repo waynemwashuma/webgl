@@ -11,14 +11,19 @@ import {
   ViewRectangle,
   TextureType,
   SkyBox,
-  CuboidMeshBuilder
+  CuboidMeshBuilder,
+  MeshMaterialPlugin
 } from "webgllis"
 import { GUI } from "dat.gui";
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderTarget = new CanvasTarget()
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new MeshMaterialPlugin()
+  ]
+})
 const camera = new Camera()
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({

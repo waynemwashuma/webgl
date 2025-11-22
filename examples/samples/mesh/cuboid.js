@@ -9,13 +9,18 @@ import {
   CullFace,
   WireframeBuilder,
   OrbitCameraControls,
-  CuboidMeshBuilder
+  CuboidMeshBuilder,
+  MeshMaterialPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new MeshMaterialPlugin()
+  ]
+})
 const camera = new Camera()
 const cameraControls = new OrbitCameraControls(camera)
 
