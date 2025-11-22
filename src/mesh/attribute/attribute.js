@@ -1,4 +1,4 @@
-import { GlDataType } from '../../constant.js'
+import { VertexFormat } from './vertexformat.js'
 
 export class Attribute {
 
@@ -16,80 +16,64 @@ export class Attribute {
 
   /**
    * @readonly
-   * @type {GlDataType}
+   * @type {VertexFormat}
    */
-  type = 0
-
-  /**
-   * @readonly
-   * @type {number}
-   */
-  size = 0
+  format
 
   /**
    * @param {string} name
    * @param {number} location
-   * @param {GlDataType} type
-   * @param {number} size
+   * @param {VertexFormat} format
    */
-  constructor(name, location, type, size) {
+  constructor(name, location, format) {
     this.name = name
     this.id = location
-    this.type = type
-    this.size = size
+    this.format = format
   }
 
   static Position = new Attribute(
     'position',
     0,
-    GlDataType.Float,
-    3
+    VertexFormat.Float32x3
   )
 
   static UV = new Attribute(
     'uv',
     1,
-    GlDataType.Float,
-    2
+    VertexFormat.Float32x2
   )
 
   static UVB = new Attribute(
     'uvb',
     2,
-    GlDataType.Float,
-    2
+    VertexFormat.Float32x2
   )
 
   static Normal = new Attribute(
     'normal',
     3,
-    GlDataType.Float,
-    3
+    VertexFormat.Float32x3
   )
 
   static Tangent = new Attribute(
     'tangent',
     4,
-    GlDataType.Float,
-    3
+    VertexFormat.Float32x3
   )
 
   static Color = new Attribute(
     'color',
     5,
-    GlDataType.Float,
-    4
+    VertexFormat.Float32x4
   )
   static JointWeight = new Attribute(
     'joint_weight',
     6,
-    GlDataType.Float,
-    4
+    VertexFormat.Float32x4
   )
   static JointIndex = new Attribute(
     'joint_index',
     7,
-    GlDataType.UnsignedShort,
-    4
+    VertexFormat.Uint16x4
   )
 }
