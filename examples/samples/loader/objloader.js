@@ -13,6 +13,13 @@ import {
   MeshMaterialPlugin
 } from 'webgllis';
 
+// performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.removeAttribute('style')
+stats.dom.classList.add('performance-monitor')
+
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
@@ -61,8 +68,10 @@ addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
+  stats.begin()
   model.transform.orientation.multiply(rotation)
   renderer.render([model], surface, camera)
+  stats.end()
 
   requestAnimationFrame(update)
 }

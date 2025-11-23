@@ -15,10 +15,17 @@ import {
   MeshMaterialPlugin
 } from "webgllis"
 
+// performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.removeAttribute('style')
+stats.dom.classList.add('performance-monitor')
+
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
-  plugins:[
+  plugins: [
     new MeshMaterialPlugin()
   ]
 })
@@ -32,8 +39,8 @@ renderer.lights.directionalLights.add(light)
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],
-  textureSettings:{
-    flipY:true
+  textureSettings: {
+    flipY: true
   }
 })
 const mesh1 = new CuboidMeshBuilder().build()
@@ -83,9 +90,11 @@ addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
-  objects.forEach(object => object.transform.orientation.multiply(rotation))
-  renderer.render(objects,surface, camera)
 
+  stats.begin()
+  objects.forEach(object => object.transform.orientation.multiply(rotation))
+  renderer.render(objects, surface, camera)
+  stats.end()
   requestAnimationFrame(update)
 }
 

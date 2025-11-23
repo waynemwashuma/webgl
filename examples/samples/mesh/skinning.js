@@ -13,6 +13,13 @@ import {
   SkeletonHelperPlugin
 } from 'webgllis';
 
+// performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.removeAttribute('style')
+stats.dom.classList.add('performance-monitor')
+
 /**@type {Object3D[]} */
 const objects = []
 const canvas = document.createElement('canvas')
@@ -68,6 +75,7 @@ addEventListener("resize", updateView)
 requestAnimationFrame(update)
 
 function update() {
+  stats.begin()
   if (objects[0]) {
     objects[0].traverseDFS((mesh)=>{
       if(mesh instanceof MeshMaterial3D){
@@ -99,6 +107,8 @@ function update() {
   if (objects.length > 0) {
     renderer.render(objects, surface, camera)
   }
+
+  stats.end()
   requestAnimationFrame(update)
 }
 
