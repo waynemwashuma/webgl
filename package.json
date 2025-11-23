@@ -25,11 +25,12 @@
   },
   "scripts": {
     "test": "npm test",
-    "tsc":"tsc -noEmit",
+    "tsc": "tsc -noEmit",
     "build": "rollup --config rollup.config.js"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.13",
+    "@types/stats.js": "^0.17.4",
     "rollup": "^4.52.5",
     "typescript": "^5.9.3",
     "vite": "^7.1.12"
