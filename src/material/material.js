@@ -4,8 +4,12 @@ import {
   CullFace,
   FrontFaceDirection
 } from "../constant.js"
+import { abstractClass, abstractMethod } from "../utils/index.js"
 import { RawMaterial } from "./raw.js"
 
+/**
+ * @abstract
+ */
 export class Material extends RawMaterial {
   /**
    * @type {FrontFaceDirection}
@@ -24,15 +28,16 @@ export class Material extends RawMaterial {
    */
   depthWrite = true
 
+  constructor(){
+    super()
+    abstractClass(this, Material)
+  }
   /**
    * @override
    * @returns {string}
    */
   vertex() {
-    if (this.constructor === RawMaterial) {
-      throw `\`${RawMaterial.name}\` cannot be used directly as a material.`
-    }
-    throw `Implement \`${this.constructor.name}.vertex()\``
+    abstractMethod(this, Material, Material.prototype.vertex.name)
   }
 
   /**
@@ -40,10 +45,7 @@ export class Material extends RawMaterial {
    * @returns {string}
    */
   fragment() {
-    if (this.constructor === RawMaterial) {
-      throw `\`${RawMaterial.name}\` cannot be used directly as a material.`
-    }
-    throw `Implement \`${this.constructor.name}.fragment()\``
+    abstractMethod(this, Material, Material.prototype.fragment.name)
   }
 
   /**
@@ -111,7 +113,3 @@ export const MaterialKey = /**@type {const}*/({
   DepthWrite: 1n << 3n,
   DepthTest: 1n << 4n
 })
-
-/**
- * 
- */
