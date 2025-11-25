@@ -1,5 +1,6 @@
 export * from "./material.js"
 export * from "./basic.js"
+export * from "./normal.js"
 export * from "./lambert.js"
 export * from "./phong.js"
 export * from "./raw.js"
