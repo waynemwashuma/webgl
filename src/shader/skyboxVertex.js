@@ -14,6 +14,9 @@ export const skyboxVertex =
 	out highp vec3 v_uv;
 		
 	void main(){
+	  mat4 view = camera.view;
+		view[3].xyz = vec3(0.0);
 		v_uv = position;
-		gl_Position = camera.projection * camera.view * model * vec4(position.xyz, 1.0); 
+		gl_Position = camera.projection * view * model * vec4(position.xyz, 1.0);
+		gl_Position = gl_Position.xyww;
 	}`
