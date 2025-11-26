@@ -6,6 +6,7 @@ import { WebGLExtensions } from "../extensions.js"
 import { WebGLRenderPipeline } from "./renderpipeline.js"
 import { GPUBuffer, GPUTexture } from "../resources/index.js"
 import { allocateTexture2D, allocateCubemap, allocateTexture2DArray, updateTexture2D, updateCubeMap, updateTexture2DArray, createProgramFromSrc } from "./utils.js"
+import { CompareFunction } from "../constants.js"
 
 export class WebGLRenderDevice {
   /**
@@ -75,7 +76,7 @@ export class WebGLRenderDevice {
       targets: descriptor.fragment?.targets || [],
       frontFace: descriptor.frontFace || FrontFaceDirection.CCW,
       cullFace: descriptor.cullFace || CullFace.Back,
-      depthTest: descriptor.depthTest  || true,
+      depthCompare: descriptor.depthCompare  || CompareFunction.Less,
       depthWrite: descriptor.depthWrite || true
     })
   }

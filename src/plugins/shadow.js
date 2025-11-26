@@ -184,7 +184,6 @@ function getRenderPipeline(device, renderer, mesh, pipelines) {
    */
   const descriptor = {
     depthWrite: true,
-    depthTest: true,
     topology: PrimitiveTopology.Triangles,
     vertexLayout: layout,
     vertex: new Shader({

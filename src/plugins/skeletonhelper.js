@@ -1,5 +1,5 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
+import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
 import { Affine3 } from "../math/index.js";
 import { PrimitiveTopology, TextureFormat } from "../constants/index.js";
 import { Bone3D, Object3D, SkeletonHelper } from "../objects/index.js";
@@ -97,7 +97,7 @@ export class SkeletonHelperPlugin extends Plugin {
      */
     const descriptor = {
       depthWrite: false,
-      depthTest: false,
+      depthCompare: CompareFunction.Always,
       topology: PrimitiveTopology.Lines,
       vertexLayout: new MeshVertexLayout([]),
       vertex: new Shader({

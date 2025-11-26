@@ -1,5 +1,6 @@
 import { BufferUsage, BufferType, TextureType, TextureFormat, CullFace, FrontFaceDirection, PrimitiveTopology } from "../../constants/index.js";
 import { Vector3 } from "../../math/index.js";
+import { CompareFunction } from "../constants.js";
 import { MeshVertexLayout } from "../layouts/index.js";
 import { BlendParams, GPUTexture } from "../resources/index.js";
 import { Shader } from "../shader.js";
@@ -37,7 +38,7 @@ import { Shader } from "../shader.js";
  * @property {PrimitiveTopology} topology
  * @property {CullFace} [cullFace]
  * @property {boolean} [depthWrite]
- * @property {boolean} [depthTest]
+ * @property {CompareFunction} [depthCompare]
  * @property {FrontFaceDirection} [frontFace]
  */
 
