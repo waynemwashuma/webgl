@@ -26,7 +26,9 @@ stats.dom.classList.add('performance-monitor')
 const objects = []
 const canvas = document.createElement('canvas')
 const renderTarget = new CanvasTarget(canvas)
-const renderDevice = new WebGLRenderDevice(canvas)
+const renderDevice = new WebGLRenderDevice(canvas,{
+  depth:true
+})
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin(),

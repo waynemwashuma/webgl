@@ -23,7 +23,9 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const renderDevice = new WebGLRenderDevice(canvas)
+const renderDevice = new WebGLRenderDevice(canvas,{
+  depth:true
+})
 const renderTarget = new CanvasTarget(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
