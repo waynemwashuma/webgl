@@ -2,7 +2,7 @@ import { DirectionalLight } from "../light/index.js"
 import { WebGLDeviceLimits } from "../core/index.js"
 import { AmbientLight } from "../light/index.js"
 import { Object3D, Camera } from "../objects/index.js"
-import { commonShaderLib } from "../shader/index.js"
+import { commonShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
@@ -111,7 +111,9 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    this.includes.set("common", commonShaderLib)
+    this.includes
+      .set("common", commonShaderLib)
+      .set("math", mathShaderLib)
     this.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
 
