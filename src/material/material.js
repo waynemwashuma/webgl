@@ -19,10 +19,7 @@ export class Material extends RawMaterial {
    * @type {CullFace}
    */
   cullFace = CullFace.Back
-  /**
-   * @type {boolean}
-   */
-  depthTest = true
+
   /**
    * @type {boolean}
    */
@@ -72,10 +69,6 @@ export class Material extends RawMaterial {
     } else if (this.cullFace === CullFace.FrontAndBack) {
       materialKey |= MaterialKey.CullFaceBoth
     }
-
-    if (this.depthTest) {
-      materialKey |= MaterialKey.DepthTest
-    }
     if (this.depthWrite) {
       materialKey |= MaterialKey.DepthWrite
     }
@@ -95,7 +88,6 @@ export class Material extends RawMaterial {
 
     descriptor.cullFace = this.cullFace
     descriptor.frontFace = this.frontFace
-    descriptor.depthTest = this.depthTest
     descriptor.depthWrite = this.depthWrite
   }
 }
