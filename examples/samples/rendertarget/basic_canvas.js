@@ -12,7 +12,8 @@ import {
   TextureType,
   SkyBox,
   CuboidMeshBuilder,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  SkyboxPlugin
 } from "webgllis"
 import { GUI } from "dat.gui";
 
@@ -23,6 +24,7 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 const renderTarget = new CanvasTarget(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
+    new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })

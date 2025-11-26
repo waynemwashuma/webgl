@@ -8,8 +8,6 @@ import {
   PlaneMeshBuilder,
   OrbitCameraControls,
   MeshMaterialPlugin,
-  TextureType,
-  SkyBox,
   UVSphereMeshBuilder,
   CanvasTarget,
   BasicMaterial,
@@ -36,17 +34,6 @@ const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],
 })
-const day = textureLoader.load({
-  paths: [
-    "/assets/images/skybox/miramar_right.png",
-    "/assets/images/skybox/miramar_left.png",
-    "/assets/images/skybox/miramar_top.png",
-    "/assets/images/skybox/miramar_bottom.png",
-    "/assets/images/skybox/miramar_back.png",
-    "/assets/images/skybox/miramar_front.png",
-  ],
-  type: TextureType.TextureCubeMap,
-})
 
 //create objects
 const material = new BasicMaterial({
@@ -56,10 +43,6 @@ const meshBuilder = new PlaneMeshBuilder()
 meshBuilder.width = 10
 meshBuilder.height = 10
 
-const skyBox = new SkyBox({
-  day
-})
-skyBox.transform.orientation.rotateY(Math.PI)
 const ground = new MeshMaterial3D(meshBuilder.build(), material)
 const objects = createObjects()
 
@@ -96,7 +79,7 @@ function createObjects() {
 
 function update() {
   cameraControls.update()
-  renderer.render([ground, ...objects, skyBox], renderDevice, camera)
+  renderer.render([ground, ...objects], renderDevice, camera)
   requestAnimationFrame(update)
 }
 

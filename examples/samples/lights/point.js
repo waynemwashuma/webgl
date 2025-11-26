@@ -19,14 +19,15 @@ import {
   Color,
   PhongMaterial,
   StandardMaterial,
-  CanvasTarget
+  CanvasTarget,
+  SkyboxPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
 const canvas = document.createElement('canvas')
 const renderTarget = new CanvasTarget(canvas)
-const renderDevice = new WebGLRenderDevice(canvas,{
-  depth:true
+const renderDevice = new WebGLRenderDevice(canvas, {
+  depth: true
 })
 const ambientLight = new AmbientLight()
 const light = new PointLight()
@@ -37,6 +38,7 @@ light.intensity = 1
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
+    new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })
@@ -159,7 +161,7 @@ const settings = {
     g: 0,
     b: 0
   },
-  material:options[0]
+  material: options[0]
 }
 
 const controls = new GUI()

@@ -16,7 +16,8 @@ import {
   TextureType,
   LightPlugin,
   AmbientLight,
-  CanvasTarget
+  CanvasTarget,
+  SkyboxPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -27,6 +28,7 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
+    new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })

@@ -22,7 +22,8 @@ import {
   Vector3,
   CuboidMeshBuilder,
   Affine3,
-  CanvasTarget
+  CanvasTarget,
+  SkyboxPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -40,6 +41,7 @@ light.intensity = 1
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
+    new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })
