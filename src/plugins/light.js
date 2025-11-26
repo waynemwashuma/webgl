@@ -3,6 +3,7 @@ import { DirectionalLight } from "../light/directional.js";
 import { AmbientLight, PointLight, SpotLight } from "../light/index.js";
 import { Object3D } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
+import { ShadowMap } from "./shadow.js";
 
 export class LightPlugin extends Plugin {
 
@@ -23,6 +24,7 @@ export class LightPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   preprocess(objects, device, renderer) {
+    const shadowMap = renderer.getResource(ShadowMap)
     const directionalLights = new LightQueue()
     const pointLights = new LightQueue()
     const spotLights = new LightQueue()
@@ -42,9 +44,18 @@ export class LightPlugin extends Plugin {
         return true
       })
     }
+
+    const directionalLightData = directionalLights.getData()
+    const item  = new Int32Array(directionalLightData.buffer)
+    
+    for (let i = 0; i < directionalLights.lights.length; i++) {
+      const offset = (i + 1) * 8 + 4;
+      const index = shadowMap?.inner.get(/**@type {DirectionalLight}*/(directionalLights.lights[i]))?.spaceIndex ?? -1
+      item[offset] = index
+    }
     renderer.updateUBO(device.context, {
       name: "DirectionalLightBlock",
-      data: directionalLights.getData()
+      data: directionalLightData
     })
 
     renderer.updateUBO(device.context, {

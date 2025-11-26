@@ -9,11 +9,20 @@ import { Mesh, Attribute } from "../mesh/index.js";
 import { MeshMaterial3D, Object3D } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture } from "../texture/index.js";
-import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
+import { PrimitiveTopology, TextureFilter, TextureFormat, TextureWrap } from '../constants/index.js';
 import { Caches } from '../caches/index.js';
+import { ShadowMap } from './shadow.js';
 
 export class MeshMaterialPlugin extends Plugin {
 
+  shadowSampler = new Sampler({
+    wrapR: TextureWrap.Clamp,
+    wrapS: TextureWrap.Clamp,
+    wrapT: TextureWrap.Clamp,
+    minificationFilter:TextureFilter.Nearest,
+    magnificationFilter:TextureFilter.Nearest,
+    mipmapFilter:undefined
+  })
   /**
    * @override
    */
@@ -39,6 +48,7 @@ export class MeshMaterialPlugin extends Plugin {
     if (!(object instanceof MeshMaterial3D)) {
       return
     }
+    const shadowmap = renderer.getResource(ShadowMap)
     const { caches, attributes, defaults } = renderer
     const { material, mesh, transform } = object
     const gpuMesh = caches.getMesh(device, mesh, attributes)
@@ -83,19 +93,27 @@ export class MeshMaterialPlugin extends Plugin {
 
       return descriptor
     })
+    const shadowInfo = pipeline.uniforms.get('shadow_atlas')
     const modelInfo = pipeline.uniforms.get("model")
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
     const ubo = caches.uniformBuffers.get('MaterialBlock')
 
     pipeline.use(device.context)
-    
+
     if (ubo) {
       const materialData = material.getData()
       ubo.update(device.context, materialData)
     }
     uploadTextures(device, material, pipeline.uniforms, caches, defaults)
 
+    if (shadowmap && shadowInfo && shadowInfo.texture_unit !== undefined) {
+      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + shadowInfo.texture_unit)
+
+      const texture = caches.getTexture(device, shadowmap.shadowAtlas)
+      device.context.bindTexture(shadowmap.shadowAtlas.type, texture.inner)
+      updateTextureSampler(device.context, shadowmap.shadowAtlas, this.shadowSampler)
+    }
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && object.skin) {
       device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + boneMatricesInfo.texture_unit)
       object.skin.bindMatrix.copy(object.transform.world)
