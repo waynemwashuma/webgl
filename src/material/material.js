@@ -102,6 +102,5 @@ export const MaterialKey = /**@type {const}*/({
   CullFaceBack: 2n << 0n,
   CullFaceBoth: 3n << 0n,
   FrontFaceCW: 1n << 2n,
-  DepthWrite: 1n << 3n,
-  DepthTest: 1n << 4n
+  DepthWrite: 1n << 3n
 })
