@@ -35,3 +35,10 @@ export class OrthographicShadow extends Shadow {
    */
   projectionMatrix = new Matrix4()
 }
+
+export class SpotLightShadow extends Shadow {
+  /**
+   * @type {number}
+   */
+  near = 0.1
+}
