@@ -74,10 +74,10 @@ export class WebGLRenderDevice {
       vertexLayout: descriptor.vertexLayout,
       topology: descriptor.topology,
       targets: descriptor.fragment?.targets || [],
-      frontFace: descriptor.frontFace || FrontFaceDirection.CCW,
-      cullFace: descriptor.cullFace || CullFace.Back,
-      depthCompare: descriptor.depthCompare  || CompareFunction.Less,
-      depthWrite: descriptor.depthWrite || true
+      frontFace: descriptor.frontFace ?? FrontFaceDirection.CCW,
+      cullFace: descriptor.cullFace ?? CullFace.Back,
+      depthCompare: descriptor.depthCompare ?? CompareFunction.Less,
+      depthWrite: descriptor.depthWrite ?? true
     })
   }
   /**
