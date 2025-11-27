@@ -1,0 +1,110 @@
+import { GUI } from "dat.gui"
+import {
+  MeshMaterial3D,
+  DirectionalLight,
+  WebGLRenderer,
+  TextureLoader,
+  PerspectiveProjection,
+  Camera,
+  WebGLCanvasSurface,
+  CuboidMeshBuilder,
+  MeshMaterialPlugin,
+  StandardMaterial,
+  UVSphereMeshBuilder,
+  OrbitCameraControls,
+  SkyBox,
+  TextureType
+} from "webgllis"
+
+const canvas = document.createElement('canvas')
+const surface = new WebGLCanvasSurface(canvas)
+const renderer = new WebGLRenderer({
+  plugins: [
+    new MeshMaterialPlugin()
+  ]
+})
+const camera = new Camera()
+const cameraControls = new OrbitCameraControls(camera)
+const light1 = new DirectionalLight()
+light1.direction.set(0, -1, 1).normalize()
+light1.intensity = 10
+renderer.lights.ambientLight.intensity = 0.3
+renderer.lights.directionalLights.add(light1)
+
+const textureLoader = new TextureLoader()
+const texture = textureLoader.load({
+  paths: ["/assets/images/uv.jpg"],
+  textureSettings: {
+    flipY: true
+  }
+})
+const day = textureLoader.load({
+  paths: [
+    "/assets/images/skybox/miramar_right.png",
+    "/assets/images/skybox/miramar_left.png",
+    "/assets/images/skybox/miramar_top.png",
+    "/assets/images/skybox/miramar_bottom.png",
+    "/assets/images/skybox/miramar_back.png",
+    "/assets/images/skybox/miramar_front.png",
+  ],
+  type: TextureType.TextureCubeMap,
+})
+
+const material = new StandardMaterial({
+  mainTexture: texture
+})
+const object1 = new MeshMaterial3D(new CuboidMeshBuilder().build(), material)
+const object2 = new MeshMaterial3D(new UVSphereMeshBuilder().build(), material)
+const skyBox = new SkyBox({
+  day
+})
+
+object1.transform.position.x = -1
+object2.transform.position.x = 1
+skyBox.transform.orientation.rotateY(Math.PI)
+
+//set up the camera
+cameraControls.distance = 2.5
+if (camera.projection instanceof PerspectiveProjection) {
+  camera.projection.fov = Math.PI / 180 * 75
+  camera.projection.aspect = innerWidth / innerHeight
+}
+
+document.body.append(canvas)
+updateView()
+addEventListener("resize", updateView)
+requestAnimationFrame(update)
+
+function update() {
+  object1.transform.orientation
+    .rotateX(Math.PI / 1000)
+    .rotateY(Math.PI / 1000)
+  object2.transform.orientation
+    .rotateX(Math.PI / 1000)
+    .rotateY(Math.PI / 1000)
+  renderer.render([object1, object2, skyBox], surface, camera)
+  cameraControls.update()
+  requestAnimationFrame(update)
+}
+
+function updateView() {
+  canvas.style.width = innerWidth + "px"
+  canvas.style.height = innerHeight + "px"
+  canvas.width = innerWidth * devicePixelRatio
+  canvas.height = innerHeight * devicePixelRatio
+
+  if (camera.projection instanceof PerspectiveProjection) {
+    camera.projection.aspect = innerWidth / innerHeight
+  }
+}
+
+// gui controls
+const controls = new GUI()
+const buildOptionsFolder = controls.addFolder("Settings")
+buildOptionsFolder
+  .add(material, 'metallic', 0, 1)
+  .name("Metallic")
+buildOptionsFolder
+  .add(material, 'roughness', 0, 1)
+  .name("Roughness")
+buildOptionsFolder.open()
