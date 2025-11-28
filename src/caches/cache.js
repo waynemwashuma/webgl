@@ -10,6 +10,7 @@ import { BufferType, BufferUsage } from "../constants/others.js"
 import { getFramebufferAttachment, mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
 import { assert } from "../utils/index.js"
 import { getVertexFormatComponentNumber, getVertexFormatComponentSize } from "../constants/mesh.js"
+import { TextureType } from "../constants/texture.js"
 
 export class Caches {
   uniformBuffers = new UniformBuffers()
@@ -73,14 +74,14 @@ export class Caches {
       for (let i = 0; i < target.color.length; i++) {
         const color = /**@type {Texture}*/ (target.color[i])
         const texture = this.getTexture(device, color)
-        bindTextureToAttachment(device, color, texture, i)
+        bindTextureToAttachment(device, texture, i, target.layer)
         colorAttachments[i] = texture
       }
 
       if (target.depthTexture) {
         const texture = this.getTexture(device, target.depthTexture)
 
-        bindTextureToAttachment(device, target.depthTexture, texture, 0)
+        bindTextureToAttachment(device, texture, 0, target.layer)
         depthBuffer = texture
       }
 
@@ -345,16 +346,32 @@ function setVertexAttribute(context, index, params, stride = 0, offset = 0) {
 
 /**
  * @param {WebGLRenderDevice} device
- * @param {Texture} texture
  * @param {GPUTexture} gpuTexture
  * @param {number} offset
+ * @param {number} layer
  */
-function bindTextureToAttachment(device, texture, gpuTexture, offset) {
-  device.context.framebufferTexture2D(
-    WebGL2RenderingContext.FRAMEBUFFER,
-    getFramebufferAttachment(texture.format) + offset,
-    texture.type,
-    gpuTexture.inner,
-    0
-  )
+function bindTextureToAttachment(device, gpuTexture, offset, layer) {
+  const attachment = getFramebufferAttachment(gpuTexture.actualFormat) + offset
+  switch (gpuTexture.type) {
+    case TextureType.Texture2D:
+      device.context.framebufferTexture2D(
+        WebGL2RenderingContext.FRAMEBUFFER,
+        attachment,
+        WebGL2RenderingContext.TEXTURE_2D,
+        gpuTexture.inner,
+        0
+      )
+      break;
+    case TextureType.Texture2DArray:
+      device.context.framebufferTextureLayer(
+        WebGL2RenderingContext.FRAMEBUFFER,
+        attachment,
+        gpuTexture.inner,
+        0,
+        layer
+      )
+      break;
+    default:
+      break;
+  }
 }
