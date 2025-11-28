@@ -2,7 +2,6 @@ import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { ImageRenderTarget } from "../rendertarget/image.js"
 import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
@@ -154,11 +153,6 @@ export class WebGLRenderer {
           return true
         })
       }
-    }
-
-    if(renderTarget instanceof ImageRenderTarget && renderTarget.depthTexture){
-      const texture = this.caches.getTexture(renderDevice, renderTarget.depthTexture)
-      framebuffer.resolveDepthTexture(renderDevice, texture)
     }
   }
 }

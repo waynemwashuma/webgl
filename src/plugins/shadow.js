@@ -82,10 +82,6 @@ export class ShadowPlugin extends Plugin {
         blocks[i] = item
         area.spaceIndex = i
       }
-      if(renderTarget instanceof ImageRenderTarget && renderTarget.depthTexture){
-        const texture = renderer.caches.getTexture(device, renderTarget.depthTexture)
-        framebuffer.resolveDepthTexture(device, texture)
-      }
     }
 
     renderer.updateUBO(context, {
