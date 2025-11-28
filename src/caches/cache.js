@@ -170,7 +170,6 @@ export class Caches {
     if (gpuTexture) {
       if (texture.changed) {
         if (
-          texture.data &&
           texture.type === gpuTexture.type &&
           texture.format === gpuTexture.actualFormat &&
           texture.width === gpuTexture.width &&
@@ -178,10 +177,13 @@ export class Caches {
           texture.depth === gpuTexture.depth
         ) {
           // non-structural change, no need to create new gpu texture
-          device.writeTexture({
-            texture: gpuTexture,
-            data: texture.data
-          })
+          
+          if(texture.data){
+            device.writeTexture({
+              texture: gpuTexture,
+              data: texture.data
+            })
+          }
           return gpuTexture
         }
       } else {
