@@ -1,6 +1,7 @@
 export const normalFragment =
   `
   precision mediump float;
+  precision mediump sampler2DArray;
 
   #include <common>
 

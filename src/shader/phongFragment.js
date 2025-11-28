@@ -1,6 +1,7 @@
 export const phongFragment =
   `
   precision mediump float;
+  precision mediump sampler2DArray;
 
   #include <common>
   #include <math>

@@ -1,12 +1,11 @@
 /**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { PrimitiveTopology, TextureFormat, TextureType } from "../constants/index.js";
 import { Shader, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js";
-import { DirectionalLight } from "../light/directional.js";
-import { OrthographicShadow, SpotLight, SpotLightShadow } from "../light/index.js";
+import { DirectionalLight, OrthographicShadow, SpotLight, SpotLightShadow } from "../light/index.js";
 import { Affine3, Matrix4 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection, SkyBox } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
-import { ImageRenderTarget } from "../rendertarget/image.js";
+import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
 import { Texture } from "../texture/index.js";
 import { assert } from "../utils/index.js";
@@ -34,17 +33,13 @@ export class ShadowPlugin extends Plugin {
   preprocess(objects, device, renderer) {
     const { context } = device
     const shadowMap = renderer.getResource(ShadowMap)
-    shadowMap?.inner.clear()
     /** @type {ShadowItem[]}*/
     const blocks = []
-
-    assert(shadowMap, "Shadow map not set up.")
     
-    const { target: renderTarget } = shadowMap
-    const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
-
-    framebuffer.setViewport(context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-    framebuffer.clear(context, undefined, 1, undefined)
+    assert(shadowMap, "Shadow map not set up.")
+    shadowMap.inner.forEach((area)=>{
+      area.enabled = false
+    })
     this.lights = []
 
     for (let i = 0; i < objects.length; i++) {
@@ -68,19 +63,26 @@ export class ShadowPlugin extends Plugin {
 
     for (let i = 0; i < this.lights.length; i++) {
       const light = /**@type {Object3D} */ (this.lights[i]);
+      const area = shadowMap.getOrSet(light)
+      const renderTarget = shadowMap.getTarget(i)
+      const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
+
+      area.enabled = true
+      framebuffer.setViewport(context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+      framebuffer.clear(context, undefined, 1, undefined)
 
       if (light instanceof DirectionalLight) {
-        const area = shadowMap.getOrSet(light)
         const item = processDirectionalLight(light, objects, renderer, device, this.pipelines)
 
         blocks[i] = item
         area.spaceIndex = i
+        item.layer = i
       } else if (light instanceof SpotLight) {
-        const area = shadowMap.getOrSet(light)
         const item = processSpotLight(light, objects, renderer, device, this.pipelines)
 
         blocks[i] = item
         area.spaceIndex = i
+        item.layer = i
       }
     }
 
@@ -95,8 +97,9 @@ export class ShadowPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   init(renderer) {
-    renderer.setResource(new ShadowMap())
-    renderer.defines.set('MAX_SHADOW_CASTERS', '10')
+    const maxShadows = 10
+    renderer.setResource(new ShadowMap(maxShadows))
+    renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
   }
 
   /**
@@ -279,29 +282,55 @@ function getRenderPipeline(device, renderer, mesh, pipelines) {
 }
 
 export class ShadowMap {
+  /**
+   * @type {ImageRenderTarget[]}
+   */
+  targets = []
   shadowAtlas = new Texture({
-    type: TextureType.Texture2D,
+    type: TextureType.Texture2DArray,
     format: TextureFormat.Depth32Float
   })
 
+  maxDepth = 10
+
   /**
-   * @type {ImageRenderTarget}
+   * @param {number} maxShadows
    */
-  target
+  constructor(maxShadows){
+    this.maxDepth = maxShadows
+  }
+
   /**
    * @type {Map<Object3D, ShadowArea>}
    */
   inner = new Map()
 
-  constructor() {
-    this.target = new ImageRenderTarget({
+  /**
+   * @param {number} layer
+   */
+  getTarget(layer){
+    if(layer > this.maxDepth){
+      console.error('Maximum shadows reached, some shadows will be ignored');
+      
+    }
+    const target = this.targets[layer]
+
+    if(target){
+      return target
+    }
+
+    const newTarget = new ImageRenderTarget({
       depthTexture: this.shadowAtlas,
       width: 2048,
-      height: 2048
+      height: 2048,
+      depth: this.maxDepth,
+      layer: layer
     })
+    this.targets[layer] = newTarget
+    return newTarget
   }
   /**
-   * @param {Object3D} object 
+   * @param {Object3D} object
    */
   getOrSet(object) {
     const item = this.inner.get(object)
@@ -317,6 +346,7 @@ export class ShadowMap {
   }
 }
 export class ShadowArea {
+  enabled = false
   spaceIndex = -1
 }
 
@@ -324,12 +354,13 @@ export class ShadowItem {
   matrix = new Matrix4()
   bias = 0.001
   normalBias = 0
+  layer = 0
   pack(){
     return [
       ...this.matrix,
       this.bias,
       this.normalBias,
-      0,
+      this.layer,
       0
     ]
   }
