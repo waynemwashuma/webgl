@@ -10,7 +10,7 @@ export class CanvasTarget extends RenderTarget {
    * @param {HTMLCanvasElement} canvas
    */
   constructor(canvas) {
-    super(canvas.width, canvas.height)
+    super(canvas.width, canvas.height, 1)
     this.canvas = canvas
   }
 

@@ -14,10 +14,14 @@ export class RenderTarget {
    * @type {number}
    */
   #width = 0
-   /**
-   * @type {number}
-   */
+  /**
+  * @type {number}
+  */
   #height = 0
+  /**
+  * @type {number}
+  */
+  #depth = 0
   /**
    * @type {Color | undefined}
    */
@@ -46,27 +50,37 @@ export class RenderTarget {
   /**
    * @param {number} width
    * @param {number} height
+   * @param {number} depth
    */
-  constructor(width, height){
+  constructor(width, height, depth) {
     this.#width = width
     this.#height = height
+    this.#depth = depth
   }
-  get width(){
+  get width() {
     return this.#width
   }
-  set width(value){
+  set width(value) {
     this.#width = value
     this._change = true
   }
-  get height(){
+  get height() {
     return this.#height
   }
-  set height(value){
+  set height(value) {
     this.#height = value
     this._change = true
   }
 
-  changed(){
+  get depth() {
+    return this.#depth
+  }
+  set depth(value) {
+    this.#depth = value
+    this._change = true
+  }
+
+  changed() {
     const prev = this._change
     this._change = false
 
