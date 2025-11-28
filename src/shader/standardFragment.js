@@ -5,6 +5,20 @@ export const standardFragment =
   #include <common>
   #include <math>
 
+  struct PBRInput {
+    float NdotL;
+    float NdotV;
+    float NdotH;
+    float HdotV;
+  };
+
+  struct PBRProperties {
+    vec3 albedo;
+    float opacity;
+    float metallic;
+    float roughness; 
+  };
+
   struct StandardMaterial {
     vec4 color;
     float metallic;
@@ -30,97 +44,117 @@ export const standardFragment =
   
   out vec4 fragment_color;
   
-  vec3 quickSRGBtoLinear(vec3 c) {
-    return pow(c, vec3(2.2));
+  vec3 quick_sRGB_to_linear(vec3 color) {
+    return pow(color, vec3(2.2));
   }
   
-  vec3 quickLineartoSRGB(vec3 c) {
-    return pow(c, 1.0 / vec3(2.2));
+  vec3 quick_linear_to_sRGB(vec3 color) {
+    return pow(color, 1.0 / vec3(2.2));
   }
   
-  vec3 fresnel_schlick(float cosTheta, vec3 F0){
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-  }  
+  vec3 fresnel_schlick(float HdotH, vec3 F0){
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - HdotH, 0.0, 1.0), 5.0);
+  }
 
-float distribution_GGX(vec3 N, vec3 H, float roughness){
-  float a = roughness * roughness;
-  float a2 = a * a;
-  float NdotH = max(dot(N, H), 0.0);
-  float NdotH2 = NdotH * NdotH;
+  // Also the Trowbridge-Rietz normal distribution function
+  float GGX_normal_distribution(float NdotH, float roughness){
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH2 = NdotH * NdotH;  
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
   
-  float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-  denom = PI * denom * denom;
-  
-  return a2 / denom;
-}
+    return a2 / denom;
+  }
 
-float geometry_schlickGGX(float NdotV, float roughness){
-  float r = (roughness + 1.0);
-  float k = (r * r) / 8.0;
+  float geometry_schlickGGX(float NdotV, float roughness){
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return NdotV / denom;
+  }
+
+  float geometry_smith(float NdotV, float NdotL, float roughness){
+    float ggx2 = geometry_schlickGGX(NdotV, roughness);
+    float ggx1 = geometry_schlickGGX(NdotL, roughness);
   
-  float num = NdotV;
-  float denom = NdotV * (1.0 - k) + k;
-  
-  return num / denom;
-}
-float geometry_smith(vec3 N, vec3 V, vec3 L, float roughness){
-  float NdotV = max(dot(N, V), 0.0);
-  float NdotL = max(dot(N, L), 0.0);
-  float ggx2 = geometry_schlickGGX(NdotV, roughness);
-  float ggx1 = geometry_schlickGGX(NdotL, roughness);
-  
-  return ggx1 * ggx2;
-}
+    return ggx1 * ggx2;
+  }
+
+  vec3 cook_torrance_BRDF(PBRProperties pbr_properties, PBRInput pbr_input){
+    vec3 F0 = mix(vec3(0.04), pbr_properties.albedo, pbr_properties.metallic);
+    vec3 F = fresnel_schlick(pbr_input.HdotV, F0);
+
+    float NDF = GGX_normal_distribution(pbr_input.NdotH, pbr_properties.roughness);
+    float G = geometry_smith(pbr_input.NdotV, pbr_input.NdotL, pbr_properties.roughness);
+
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * pbr_input.NdotV * pbr_input.NdotL  + 0.0001;
+    vec3 specular = numerator / denominator;
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - pbr_properties.metallic);
+
+    return (kD * pbr_properties.albedo / PI + specular);
+  }
+
+  PBRInput calculate_pbr_input(vec3 N, vec3 V, vec3 L, vec3 H){
+    PBRInput pbr_input;
+
+    pbr_input.NdotV = max(dot(N, V), 0.0);
+    pbr_input.NdotL = max(dot(N, L), 0.0);
+    pbr_input.NdotH = max(dot(N, H), 0.0);
+    pbr_input.HdotV = max(dot(H, V), 0.0);
+
+    return pbr_input;
+  }
+
+  PBRProperties calculate_pbr_properties(){
+    PBRProperties properties;
+
+    properties.albedo = material.color.rgb;
+    properties.opacity = material.color.a;
+    properties.metallic = material.metallic;
+    properties.roughness = material.roughness;
+
+    vec4 albedo_texture_color = texture(mainTexture,v_uv);
+    properties.albedo *= quick_sRGB_to_linear(albedo_texture_color.rgb);
+    properties.opacity *= albedo_texture_color.a;
+
+    properties.metallic = clamp(properties.metallic, 0.0, 1.0);
+    properties.roughness = clamp(properties.roughness, 0.05, 1.0);
+
+    return properties;
+  }
 
   void main(){
-    vec3 sample_color = quickSRGBtoLinear(texture(mainTexture,v_uv).rgb);
-    vec3 base_color = tint(sample_color, material.color.rgb);
+    PBRProperties pbr_properties = calculate_pbr_properties();
     vec3 N = normalize(v_normal);
     vec3 V = normalize(cam_direction);
-    
-    float roughness = clamp(material.roughness, 0.05, 1.0);
-    float metallic = clamp(material.metallic, 0.0, 1.0);
-    float NdotV = dot(N,V);
-    float opacity = material.color.a;
-    
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
-    
-    vec3 L0;
+
+    vec3 exitance;
     for (int i = 0; i < directional_light_count; i++) {
       DirectionalLight light = directional_lights.lights[i];
-      
       vec3 L = -light.direction;
       vec3 H = normalize(L + V);
+      vec3 irradiance = light.color.rgb * light.intensity;
+      PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
       
-      vec3 radiance = light.color.rgb * light.intensity;
-      float NdotL = max(dot(N,L), 0.0);
-      float HdotV = max(dot(H,V), 0.0);
-
-      vec3 F0 = mix(vec3(0.04), base_color, metallic);
-      vec3 F = fresnel_schlick(HdotV, F0);
-      
-      float NDF = distribution_GGX(N, H, roughness);
-      float G = geometry_smith(N, V, L, roughness);
-      
-      vec3 numerator = NDF * G * F;
-      float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0)  + 0.0001;
-      vec3 specular = numerator / denominator;
-      vec3 kS = F;
-      vec3 kD = vec3(1.0) - kS;
-      kD *= 1.0 - metallic;
-      
-      L0 += (kD * base_color / PI + specular) * radiance * NdotL;
+      exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
-    
-    vec3 ambient = base_color * ambient_light.color.rgb * ambient_light.intensity;
-    vec3 final_color = ambient + L0;
-    
-    // tonemap the output
-    final_color = final_color / (final_color + vec3(1.0));
-    
-    // gamma correction
-    final_color = quickLineartoSRGB(final_color); 
 
-    fragment_color = vec4(final_color,opacity);
+    vec3 ambient_exitance = pbr_properties.albedo * ambient_light.color.rgb * ambient_light.intensity;
+    vec3 final_color = ambient_exitance + exitance;
+
+    // tonemapping output
+    // this is temporary until a post processing step is introduced
+    final_color = final_color / (final_color + vec3(1.0));
+
+    // gamma correction
+    // this is temporary until a post processing step is introduced
+    final_color = quick_linear_to_sRGB(final_color); 
+
+    fragment_color = vec4(final_color, pbr_properties.opacity);
   }
 `
