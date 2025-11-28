@@ -43,7 +43,7 @@ const depthTexture = new Texture({
 const renderTarget = new ImageRenderTarget({
   width: 1024,
   height: 1024,
-  depth: depthTexture
+  depthTexture: depthTexture
 })
 
 const camera1 = new Camera(renderTarget)

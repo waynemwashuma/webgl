@@ -23,14 +23,14 @@ export class ImageRenderTarget extends RenderTarget {
    */
   constructor({
     color = [],
-    depth,
+    depthTexture,
     width,
     height,
     internalDepthStencil
   }) {
     super(width, height)
     this.color = color
-    this.depthTexture = depth
+    this.depthTexture = depthTexture
     this.internalDepthStencil = internalDepthStencil
 
     for (const color of this.color) {
@@ -92,7 +92,7 @@ export class ImageRenderTarget extends RenderTarget {
 /**
  * @typedef ImageRenderTargetOptions
  * @property {Texture[]} [color]
- * @property {Texture} [depth]
+ * @property {Texture} [depthTexture]
  * @property {TextureFormat} [internalDepthStencil]
  * @property {number} width
  * @property {number} height

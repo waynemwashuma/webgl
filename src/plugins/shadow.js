@@ -299,7 +299,7 @@ export class ShadowMap {
 
   constructor() {
     this.target = new ImageRenderTarget({
-      depth: this.shadowAtlas,
+      depthTexture: this.shadowAtlas,
       width: 2048,
       height: 2048
     })
