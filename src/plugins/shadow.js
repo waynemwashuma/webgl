@@ -35,11 +35,10 @@ export class ShadowPlugin extends Plugin {
     const shadowMap = renderer.getResource(ShadowMap)
     /** @type {ShadowItem[]}*/
     const blocks = []
-    
+
     assert(shadowMap, "Shadow map not set up.")
-    shadowMap.inner.forEach((area)=>{
-      area.enabled = false
-    })
+
+    shadowMap.reset()
     this.lights = []
 
     for (let i = 0; i < objects.length; i++) {
@@ -47,14 +46,12 @@ export class ShadowPlugin extends Plugin {
 
       object.traverseDFS((object) => {
         if (
-          object instanceof DirectionalLight &&
+          (
+            object instanceof DirectionalLight ||
+            object instanceof SpotLight
+          ) &&
           object.shadow
         ) {
-          this.lights.push(object)
-        } else if(
-          object instanceof SpotLight &&
-          object.shadow
-        ){
           this.lights.push(object)
         }
         return true
@@ -64,31 +61,25 @@ export class ShadowPlugin extends Plugin {
     for (let i = 0; i < this.lights.length; i++) {
       const light = /**@type {Object3D} */ (this.lights[i]);
       const area = shadowMap.getOrSet(light)
-      const renderTarget = shadowMap.getTarget(i)
-      const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
 
       area.enabled = true
-      framebuffer.setViewport(context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-      framebuffer.clear(context, undefined, 1, undefined)
 
       if (light instanceof DirectionalLight) {
-        const item = processDirectionalLight(light, objects, renderer, device, this.pipelines)
+        const item = processDirectionalLight(light, objects, renderer, device, this.pipelines, shadowMap)
 
         blocks[i] = item
         area.spaceIndex = i
-        item.layer = i
       } else if (light instanceof SpotLight) {
-        const item = processSpotLight(light, objects, renderer, device, this.pipelines)
+        const item = processSpotLight(light, objects, renderer, device, this.pipelines, shadowMap)
 
         blocks[i] = item
         area.spaceIndex = i
-        item.layer = i
       }
     }
 
     renderer.updateUBO(context, {
-      name:"ShadowCasterBlock",
-      data: new Float32Array(blocks.flatMap(item=>item.pack()))
+      name: "ShadowCasterBlock",
+      data: new Float32Array(blocks.flatMap(item => item.pack()))
     })
   }
 
@@ -114,14 +105,20 @@ export class ShadowPlugin extends Plugin {
  * @param {WebGLRenderer} renderer
  * @param {WebGLRenderDevice} device
  * @param {Map<number, number>} pipelines
+ * @param {ShadowMap} shadowMap
  */
-function processDirectionalLight(light, objects, renderer, device, pipelines) {
+function processDirectionalLight(light, objects, renderer, device, pipelines, shadowMap) {
+  const [renderTarget, layer] = shadowMap.getTarget()
   // SAFETY: If it is in the light list, it has a shadow.
   const shadow = /**@type {OrthographicShadow}*/ (light.shadow)
   const shadowItem = new ShadowItem()
   const projection = shadow.projection.asProjectionMatrix(shadow.near, shadow.far)
   const view = Affine3.toMatrix4(light.transform.world).invert()
+  const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
 
+  framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+  framebuffer.clear(device.context, undefined, 1, undefined)
+  shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
   Matrix4.multiply(projection, view, shadowItem.matrix)
@@ -175,8 +172,10 @@ function processDirectionalLight(light, objects, renderer, device, pipelines) {
  * @param {WebGLRenderer} renderer
  * @param {WebGLRenderDevice} device
  * @param {Map<number, number>} pipelines
+ * @param {ShadowMap} shadowMap
  */
-function processSpotLight(light, objects, renderer, device, pipelines) {
+function processSpotLight(light, objects, renderer, device, pipelines, shadowMap) {
+  const [renderTarget, layer] = shadowMap.getTarget()
   // SAFETY: If it is in the light list, it has a shadow.
   const shadow = /**@type {SpotLightShadow}*/ (light.shadow)
   const shadowItem = new ShadowItem()
@@ -185,7 +184,12 @@ function processSpotLight(light, objects, renderer, device, pipelines) {
     shadow.near,
     light.range
   )
+  const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
 
+  framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+  framebuffer.clear(device.context, undefined, 1, undefined)
+
+  shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
   Matrix4.multiply(projection, view, shadowItem.matrix)
@@ -282,6 +286,11 @@ function getRenderPipeline(device, renderer, mesh, pipelines) {
 }
 
 export class ShadowMap {
+
+  /**
+   * @private
+   */
+  counter = 0
   /**
    * @type {ImageRenderTarget[]}
    */
@@ -296,7 +305,7 @@ export class ShadowMap {
   /**
    * @param {number} maxShadows
    */
-  constructor(maxShadows){
+  constructor(maxShadows) {
     this.maxDepth = maxShadows
   }
 
@@ -305,18 +314,26 @@ export class ShadowMap {
    */
   inner = new Map()
 
+  reset() {
+    this.counter = 0
+    this.inner.forEach((area) => {
+      area.enabled = false
+    })
+  }
   /**
-   * @param {number} layer
+   * @return {[ImageRenderTarget, number]}
    */
-  getTarget(layer){
-    if(layer > this.maxDepth){
-      console.error('Maximum shadows reached, some shadows will be ignored');
-      
-    }
+  getTarget() {
+    const layer = this.counter
     const target = this.targets[layer]
 
-    if(target){
-      return target
+    if (this.counter > this.maxDepth) {
+      console.error('Maximum shadows reached, some shadows will be ignored');
+    }
+
+    this.counter++
+    if (target) {
+      return [target, layer]
     }
 
     const newTarget = new ImageRenderTarget({
@@ -327,7 +344,8 @@ export class ShadowMap {
       layer: layer
     })
     this.targets[layer] = newTarget
-    return newTarget
+
+    return [newTarget, layer]
   }
   /**
    * @param {Object3D} object
@@ -355,7 +373,7 @@ export class ShadowItem {
   bias = 0.001
   normalBias = 0
   layer = 0
-  pack(){
+  pack() {
     return [
       ...this.matrix,
       this.bias,
