@@ -84,6 +84,7 @@ function update() {
     .rotateY(Math.PI / 1000)
   renderer.render([object1, object2, skyBox], surface, camera)
   cameraControls.update()
+
   requestAnimationFrame(update)
 }
 
@@ -99,12 +100,44 @@ function updateView() {
 }
 
 // gui controls
+const settings = {
+  dummy: {
+    r: 0,
+    g: 0,
+    b: 0,
+    a: 0
+  }
+}
 const controls = new GUI()
 const buildOptionsFolder = controls.addFolder("Settings")
+
+buildOptionsFolder
+  .addColor(settings, 'dummy')
+  .name('Base Color')
+  .onChange((value) => {
+    material.color.set(
+      value.r / 255,
+      value.g / 255,
+      value.b / 255
+    )
+  })
 buildOptionsFolder
   .add(material, 'metallic', 0, 1)
   .name("Metallic")
 buildOptionsFolder
   .add(material, 'roughness', 0, 1)
   .name("Roughness")
+buildOptionsFolder
+  .add(material, 'emissiveIntensity', 0, 1)
+  .name("Emissive Intensity")
+buildOptionsFolder
+  .addColor(settings, 'dummy')
+  .name('Emissive Color')
+  .onChange((value) => {
+    material.emissiveColor.set(
+      value.r / 255,
+      value.g / 255,
+      value.b / 255
+    )
+  })
 buildOptionsFolder.open()

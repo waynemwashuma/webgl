@@ -20,6 +20,16 @@ export class StandardMaterial extends Material {
   roughness = 0
 
   /**
+   * @type {Color}
+   */
+  emissiveColor = new Color(0,0,0)
+
+  /**
+   * @type {number}
+   */
+  emissiveIntensity = 1
+
+  /**
    * @type {Texture | undefined}
    */
   mainTexture
@@ -63,13 +73,21 @@ export class StandardMaterial extends Material {
     const {
       color,
       metallic,
-      roughness
+      roughness,
+      emissiveColor,
+      emissiveIntensity
     } = this
 
     return new Float32Array([
       ...color,
       metallic,
-      roughness
+      roughness,
+      0,
+      0,
+      emissiveColor.r,
+      emissiveColor.g,
+      emissiveColor.b,
+      emissiveIntensity
     ]).buffer
   }
 
