@@ -45,7 +45,7 @@ export class Caches {
   getFrameBuffer(device, target) {
     const current = this.renderTargets.get(target)
     if (current) {
-      if (!target.changed()) {
+      if (!renderTargetChanged(device, this, target, current)) {
         return current
       }
       if (target instanceof CanvasTarget) {
@@ -94,7 +94,7 @@ export class Caches {
         target.height
       )
 
-      // TODO: Dispose off the previous webgl resources
+      // TODO: Dispose off the previous frame buffers
       this.renderTargets.set(target, newTarget)
       return newTarget
     } else if (target instanceof CanvasTarget) {
@@ -177,8 +177,8 @@ export class Caches {
           texture.depth === gpuTexture.depth
         ) {
           // non-structural change, no need to create new gpu texture
-          
-          if(texture.data){
+
+          if (texture.data) {
             device.writeTexture({
               texture: gpuTexture,
               data: texture.data
@@ -376,4 +376,45 @@ function bindTextureToAttachment(device, gpuTexture, offset, layer) {
     default:
       break;
   }
+}
+
+/**
+ * @param {WebGLRenderDevice} device
+ * @param {Caches} caches
+ * @param {RenderTarget} target
+ * @param {FrameBuffer} frameBuffer
+ */
+function renderTargetChanged(device, caches, target, frameBuffer) {
+  if (target instanceof ImageRenderTarget) {
+    const colorLength = Math.max(target.color.length, frameBuffer.colorAttachments.length)
+    for (let i = 0; i < colorLength; i++) {
+      const texture = target.color[i]
+      const attachment = frameBuffer.colorAttachments[i]
+      if (texture) {
+        const current = caches.getTexture(device, texture)
+
+        if (current !== attachment) {
+          return true
+        }
+      } else {
+        if (attachment) {
+          return true
+        }
+      }
+    }
+
+    if (target.depthTexture) {
+      const current = caches.getTexture(device, target.depthTexture)
+
+      if (current !== frameBuffer.depthBuffer) {
+        return true
+      }
+    } else {
+      if (frameBuffer.depthBuffer && !target.depth) {
+        return true
+      }
+    }
+  }
+
+  return target.changed()
 }
