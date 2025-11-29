@@ -11,7 +11,7 @@ export class Sampler {
    */
   minificationFilter
   /**
-   * @type {TextureFilter}
+   * @type {TextureFilter | undefined}
    */
   mipmapFilter
   
@@ -71,14 +71,17 @@ export class Sampler {
   /**
    * @readonly
    * @type {Readonly<
-   *   Required<Omit<SamplerSettings,'compare'>>
-   *   > & {compare:CompareFunction | undefined}
+   *   Required<Omit<SamplerSettings,'compare' | 'mipmapFilter'>>
+   *   > & {
+   *    compare: CompareFunction | undefined;
+   *    mipmapFilter: TextureFilter | undefined;
+   *   }
    * }
    */
   static defaultSettings = {
     magnificationFilter: TextureFilter.Linear,
     minificationFilter: TextureFilter.Linear,
-    mipmapFilter: TextureFilter.Linear,
+    mipmapFilter: undefined,
     wrapS: TextureWrap.Clamp,
     wrapT: TextureWrap.Clamp,
     wrapR: TextureWrap.Clamp,

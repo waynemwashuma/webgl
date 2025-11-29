@@ -122,7 +122,7 @@ export function updateTextureSampler(gl, texture, sampler) {
     gl.texParameteri(texture.type, gl.TEXTURE_MAX_LOD, lod.max)
   }
 
-  if (texture.generateMipmaps) {
+  if (sampler.mipmapFilter !== undefined) {
     if (sampler.minificationFilter === TextureFilter.Linear) {
       if (sampler.mipmapFilter === TextureFilter.Linear) {
         gl.texParameteri(texture.type, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
