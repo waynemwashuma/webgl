@@ -1,6 +1,6 @@
 /**@import { LoadSettings } from './loader.js' */
 import { Attribute, Mesh, VertexFormat } from '../mesh/index.js';
-import { BasicMaterial } from '../material/index.js';
+import { StandardMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
 import { arrayBufferToJSON } from './utils.js';
@@ -8,14 +8,19 @@ import { Bone3D } from '../objects/bone.js';
 import { Affine3 } from '../math/index.js';
 import { GlDataType } from '../constant.js';
 import { SeparateAttributeData } from '../mesh/attributedata/separate.js';
+import { TextureLoader } from './texture.js';
+import { Texture, Sampler, TextureFilter, TextureWrap } from '../texture/index.js';
+import { assert } from '../utils/index.js';
 
+const defaultMaterial = new StandardMaterial()
 /**
  * @extends {Loader<Object3D, GLTFLoadSettings>}
  */
 export class GLTFLoader extends Loader {
-
-  constructor() {
+  textureLoader
+  constructor({ textureLoader = new TextureLoader() } = {}) {
     super(Object3D)
+    this.textureLoader = textureLoader
   }
   /**
    * @override
@@ -32,19 +37,172 @@ export class GLTFLoader extends Loader {
 
     /**@type {Map<number, Object3D>} */
     const entityMap = new Map()
-    const gltf = await loadGLTF(buffer, path)
+    const baseUrl = new URL(path, location.href).href
+    const gltf = await loadGLTF(buffer, baseUrl)
     const scene = gltf.scenes[gltf.scene]
 
     if (!scene) {
       throw "No root scene defined"
     }
 
+    const images = await Promise.all(gltf.images.map(async (gltfTexture) => {
+      if (gltfTexture.uri) {
+        return this.textureLoader.asyncLoad({
+          paths: [new URL(gltfTexture.uri, baseUrl).href]
+        })
+      }
+
+      throw "Unsupported gltf image setting"
+    }))
+    const samplers = gltf.samplers.map((gltfSampler) => {
+      const sampler = new Sampler()
+      sampler.magnificationFilter = gltfSampler.magFilter || TextureFilter.Nearest
+      sampler.wrapS = gltfSampler.wrapS || TextureWrap.Clamp
+      sampler.wrapT = gltfSampler.wrapT || TextureWrap.Clamp
+
+      switch (gltfSampler.minFilter) {
+        case WebGL2RenderingContext.NEAREST:
+          sampler.minificationFilter = TextureFilter.Nearest
+          sampler.mipmapFilter = undefined
+          break;
+        case WebGL2RenderingContext.LINEAR:
+          sampler.minificationFilter = TextureFilter.Linear
+          sampler.mipmapFilter = undefined
+          break;
+        case WebGL2RenderingContext.NEAREST_MIPMAP_NEAREST:
+          sampler.minificationFilter = TextureFilter.Nearest
+          sampler.mipmapFilter = TextureFilter.Nearest
+          break;
+        case WebGL2RenderingContext.NEAREST_MIPMAP_LINEAR:
+          sampler.minificationFilter = TextureFilter.Nearest
+          sampler.mipmapFilter = TextureFilter.Linear
+          break;
+        case WebGL2RenderingContext.LINEAR_MIPMAP_NEAREST:
+          sampler.minificationFilter = TextureFilter.Linear
+          sampler.mipmapFilter = TextureFilter.Nearest
+          break;
+        case WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR:
+          sampler.minificationFilter = TextureFilter.Linear
+          sampler.mipmapFilter = TextureFilter.Linear
+          break;
+        default:
+          throw 'GLTF: Invalid minification sampler';
+      }
+      return sampler
+    })
+
+    /**
+     * @type {[Texture, Sampler | undefined][]}
+     */
+    const textures = gltf.textures.map((gltfTextures) => {
+      const image = images[gltfTextures.source]
+      assert(image, "GLTF texture does not have an image source")
+
+      if (gltfTextures.sampler !== undefined) {
+        const sampler = samplers[gltfTextures.sampler]
+        if(sampler?.mipmapFilter !== undefined){
+          image.generateMipmaps = true
+        }
+        return [image, sampler]
+      }
+      return [image, undefined]
+    })
+    const materials = gltf.materials.map((gltfMaterial) => {
+      const {
+        emissiveFactor,
+        emissiveTexture,
+        normalTexture,
+        occlusionTexture,
+        pbrMetallicRoughness
+      } = gltfMaterial
+      const {
+        baseColorFactor,
+        baseColorTexture,
+        metallicFactor,
+        roughnessFactor,
+        metallicRoughnessTexture
+      } = pbrMetallicRoughness
+      const material = new StandardMaterial()
+
+      material.color.set(
+        baseColorFactor[0],
+        baseColorFactor[1],
+        baseColorFactor[2],
+        baseColorFactor[3]
+      )
+      material.emissiveColor.set(
+        emissiveFactor[0],
+        emissiveFactor[1],
+        emissiveFactor[2]
+      )
+      material.metallic = metallicFactor
+      material.roughness = roughnessFactor
+
+      if (baseColorTexture) {
+        const texture = textures[baseColorTexture.index]
+
+        if (texture) {
+          material.mainTexture = texture[0]
+          material.mainSampler = texture[1]
+        } else {
+          console.warn("gltf: invalid color texture on material");
+        }
+      }
+
+      if (normalTexture) {
+        const texture = textures[normalTexture.index]
+
+        if (texture) {
+          material.normalTexture = texture[0]
+          material.normalSampler = texture[1]
+        } else {
+          console.warn("gltf: invalid normal texture on material");
+        }
+      }
+
+      if (occlusionTexture) {
+        const texture = textures[occlusionTexture.index]
+
+        if (texture) {
+          material.occlusionTexture = texture[0]
+          material.occlusionSampler = texture[1]
+        } else {
+          console.warn("gltf: invalid occlusion texture on material");
+        }
+      }
+
+      if (emissiveTexture) {
+        const texture = textures[emissiveTexture.index]
+
+        if (texture) {
+          material.emissiveTexture = texture[0]
+          material.emissiveSampler = texture[1]
+        } else {
+          console.warn("gltf: invalid emissive texture on material");
+        }
+      }
+
+      if (metallicRoughnessTexture) {
+        const texture = textures[metallicRoughnessTexture.index]
+
+        if (texture) {
+          material.metallicTexture = texture[0]
+          material.metallicSampler = texture[1]
+          material.roughnessTexture = texture[0]
+          material.roughnessSampler = texture[1]
+        } else {
+          console.warn("gltf: invalid metallic-rougness texture on material");
+        }
+      }
+
+      return material
+    })
     const geometries = gltf.meshes.map((data) => {
       return parseGeometry(data, gltf)
     })
 
     gltf.nodes.forEach((node, index) => {
-      const object = parseObject(index, node, gltf, geometries)
+      const object = parseObject(index, node, gltf, geometries, materials)
 
       if (object) {
         entityMap.set(index, object)
@@ -107,10 +265,9 @@ export class GLTFLoader extends Loader {
  * @param {string} baseUrl
  */
 async function loadGLTF(data, baseUrl) {
-  const url = new URL(baseUrl, location.href)
   const json = arrayBufferToJSON(data)
   const { buffers: urlBuffers } = json
-  const buffers = urlBuffers instanceof Array ? await loadBuffers(url.href, urlBuffers) : []
+  const buffers = urlBuffers instanceof Array ? await loadBuffers(baseUrl, urlBuffers) : []
   const gltf = GLTF.deserialize(json)
   gltf.buffers = buffers
 
@@ -152,9 +309,25 @@ class GLTF {
    */
   nodes = []
   /**
+  * @type {GLTFImage[]}
+  */
+  images = []
+  /**
+  * @type {GLFTSampler[]}
+  */
+  samplers = []
+  /**
+    * @type {GLFTTexture[]}
+    */
+  textures = []
+  /**
    * @type {GLTFMesh[]}
    */
   meshes = []
+  /**
+  * @type {GLTFMaterial[]}
+  */
+  materials = []
   /**
    * @type {GLTFSkin[]}
    */
@@ -186,7 +359,20 @@ class GLTF {
    * @param {any} data
    */
   static deserialize(data) {
-    const { scene, scenes, nodes, meshes, bufferViews, accessors, asset, skins } = data
+    const {
+      scene,
+      scenes,
+      nodes,
+      meshes,
+      images,
+      textures,
+      samplers,
+      materials,
+      bufferViews,
+      accessors,
+      asset,
+      skins
+    } = data
 
     if (
       !(asset instanceof Object) ||
@@ -211,6 +397,22 @@ class GLTF {
     gltf.meshes = meshes.map((/**@type {any}*/d) => GLTFMesh.deserialize(d))
     gltf.bufferViews = bufferViews.map((/**@type {any}*/d) => GLTFBufferView.deserialize(d))
     gltf.accessors = accessors.map((/**@type {any}*/d) => GLTFAccessor.deserialize(d))
+
+    if (materials instanceof Array) {
+      gltf.materials = materials.map((/**@type {any}*/d) => GLTFMaterial.deserialize(d))
+    }
+
+    if (images instanceof Array) {
+      gltf.images = images.map((/**@type {any}*/d) => GLTFImage.deserialize(d))
+    }
+
+    if (samplers instanceof Array) {
+      gltf.samplers = samplers.map((/**@type {any}*/d) => GLFTSampler.deserialize(d))
+    }
+
+    if (textures instanceof Array) {
+      gltf.textures = textures.map((/**@type {any}*/d) => GLFTTexture.deserialize(d))
+    }
 
     if (skins instanceof Array) {
       gltf.skins = skins.map(a => GLTFSkin.deserialize(a))
@@ -387,7 +589,8 @@ class GLTFMesh {
   /**
    * @type {Record<string,any>}
    */
-  extras = []
+  extras = {}
+
   /**
    * @type {GLTFPrimitive[]}
    */
@@ -431,6 +634,337 @@ class GLTFMesh {
       mesh.extras = {}
     }
     return mesh
+  }
+}
+
+class GLTFMaterial {
+  /**
+ * @type {string}
+ */
+  name = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = {}
+
+  /**
+   * @type {GLTFPBRetallicRoughness}
+   */
+  pbrMetallicRoughness
+
+  /**
+   * @type {GLFTTextureInfo | undefined}
+   */
+  normalTexture
+
+  /**
+   * @type {GLFTTextureInfo | undefined}
+   */
+  occlusionTexture
+
+  /**
+   * @type {GLFTTextureInfo | undefined}
+   */
+  emissiveTexture
+
+  /**
+   * @type {[number, number, number]}
+   */
+  emissiveFactor = [0, 0, 0]
+
+  /**
+   * @type {GLFTAlphaMode}
+   */
+  alphaMode = GLFTAlphaMode.Opaque
+
+  /**
+   * @type {number}
+   */
+  alphaCutoff = 0.5
+
+  /**
+   * @type {boolean}
+   */
+  doubleSide = false
+
+  /**
+   * @param {GLTFPBRetallicRoughness} metallicRoughness
+   */
+  constructor(metallicRoughness) {
+    this.pbrMetallicRoughness = metallicRoughness
+  }
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const {
+      pbrMetallicRoughness,
+      normalTexture,
+      occlusionTexture,
+      emissiveTexture,
+      emissiveFactor,
+      alphaMode,
+      alphaCutoff,
+      doubleSide,
+      name,
+      extensions,
+      extras
+    } = data
+    const pbr = pbrMetallicRoughness ? GLTFPBRetallicRoughness.deserialize(pbrMetallicRoughness) : new GLTFPBRetallicRoughness()
+    const result = new GLTFMaterial(pbr)
+
+    if (normalTexture instanceof Object) {
+      result.normalTexture = GLFTTextureInfo.deserialize(normalTexture)
+    }
+
+    if (occlusionTexture instanceof Object) {
+      result.occlusionTexture = GLFTTextureInfo.deserialize(occlusionTexture)
+    }
+
+    if (emissiveTexture instanceof Object) {
+      result.emissiveTexture = GLFTTextureInfo.deserialize(emissiveTexture)
+    }
+
+    if (emissiveFactor instanceof Array && emissiveFactor.length === 3) {
+      result.emissiveFactor = /**@type {[number, number, number]}*/(emissiveFactor)
+    }
+
+    if (typeof alphaCutoff === 'number') {
+      result.alphaCutoff = alphaCutoff
+    }
+
+    if (typeof alphaMode === 'string') {
+      result.alphaMode = alphaMode
+    }
+
+    if (typeof doubleSide === 'boolean') {
+      result.doubleSide = doubleSide
+    }
+
+    if (typeof name === "string") {
+      result.name = name
+    } else {
+      result.name = ''
+    }
+
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+    return result
+  }
+}
+
+class GLTFImage {
+  /**
+   * @type {string | undefined}
+   */
+  uri
+
+  /**
+   * @type {number | undefined}
+   */
+  bufferView
+
+  /**
+   * @type {string | undefined}
+   */
+  mimeType
+
+
+  /**
+   * @type {string}
+   */
+  name = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = []
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { uri, bufferView, mimeType, name, extensions, extras } = data
+    const result = new GLTFImage()
+
+    if (typeof uri === 'string') {
+      result.uri = uri
+    }
+
+    if (typeof bufferView === 'number') {
+      result.bufferView = bufferView
+    }
+    if (typeof mimeType === 'string') {
+      result.mimeType = mimeType
+    }
+    if (typeof name === 'string') {
+      result.name = name
+    }
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+
+    return result
+  }
+}
+
+class GLFTSampler {
+  /**
+   * @type {number | undefined}
+   */
+  magFilter
+  /**
+   * @type {number | undefined}
+   */
+  minFilter
+  /**
+   * @type {number | undefined}
+   */
+  wrapS
+  /**
+   * @type {number | undefined}
+   */
+  wrapT
+  /**
+   * @type {string}
+   */
+  name = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = []
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { magFilter, minFilter, wrapS, wrapT, name, extensions, extras } = data
+    const result = new GLFTSampler()
+
+    if (typeof magFilter === 'number') {
+      result.magFilter = magFilter
+    }
+
+    if (typeof minFilter === 'number') {
+      result.minFilter = minFilter
+    }
+
+    if (typeof wrapS === 'number') {
+      result.wrapS = wrapS
+    }
+
+    if (typeof wrapT === 'number') {
+      result.wrapS = wrapT
+    }
+
+    if (typeof name === 'string') {
+      result.name = name
+    }
+
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+
+    return result
+  }
+}
+
+class GLFTTexture {
+  /**
+   * @type {number | undefined}
+   */
+  sampler
+
+  /**
+   * @type {number}
+   */
+  source
+
+  /**
+   * @type {string}
+   */
+  name = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = []
+
+  /**
+   * @param {number} source
+   */
+  constructor(source) {
+    this.source = source
+  }
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { source, sampler, name, extensions, extras } = data
+
+    if (typeof source !== 'number') {
+      throw 'No source for the texture.'
+    }
+
+    const result = new GLFTTexture(source)
+
+    if (typeof sampler === 'number') {
+      result.sampler = sampler
+    }
+
+    if (typeof name === 'string') {
+      result.name = name
+    }
+
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+
+    return result
   }
 }
 
@@ -766,6 +1300,10 @@ class GLTFPrimitive {
    */
   indices
   /**
+   * @type {number | undefined}
+   */
+  material
+  /**
    * @type {GLTFPrimitiveMode}
    */
   mode = GLTFPrimitiveMode.Triangles
@@ -773,11 +1311,15 @@ class GLTFPrimitive {
    * @param {any} data
    */
   static deserialize(data) {
-    const { attributes, indices, mode } = data
+    const { attributes, material, indices, mode } = data
     const primitive = new GLTFPrimitive()
 
     if (typeof indices === "number") {
       primitive.indices = indices
+    }
+
+    if (typeof material === "number") {
+      primitive.material = material
     }
 
     if (attributes instanceof Object) {
@@ -794,6 +1336,168 @@ class GLTFPrimitive {
       this.mode = GLTFPrimitiveMode.Triangles
     }
     return primitive
+  }
+}
+
+class GLTFPBRetallicRoughness {
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = {}
+
+  /**
+   * @type {[number, number, number, number]}
+   */
+  baseColorFactor = [1, 1, 1, 1]
+
+  /**
+   * @type { GLFTTextureInfo | undefined }
+   */
+  baseColorTexture
+
+  /**
+   * @type {number}
+   */
+  metallicFactor = 1
+
+  /**
+   * @type {number}
+   */
+  roughnessFactor = 1
+
+  /**
+   * @type {GLFTTextureInfo | undefined}
+   */
+  metallicRoughnessTexture
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const {
+      baseColorFactor,
+      baseColorTexture,
+      metallicFactor,
+      roughnessFactor,
+      metallicRoughnessTexture,
+      extensions,
+      extras
+    } = data
+
+    const result = new GLTFPBRetallicRoughness()
+
+    if (metallicFactor) {
+      result.metallicFactor = metallicFactor
+    }
+
+    if (roughnessFactor) {
+      result.roughnessFactor = roughnessFactor
+    }
+
+    if (baseColorFactor instanceof Array && baseColorFactor.length === 4) [
+      result.baseColorFactor = /**@type {[number,number,number,number]}*/(baseColorFactor)
+    ]
+
+    if (baseColorTexture) {
+      result.baseColorTexture = GLFTTextureInfo.deserialize(baseColorTexture)
+    }
+
+    if (metallicRoughnessTexture) {
+      result.metallicRoughnessTexture = GLFTTextureInfo.deserialize(metallicRoughnessTexture)
+    }
+
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+
+    return result
+  }
+}
+
+class GLFTTextureInfo {
+  /**
+   * @type {number}
+   */
+  index
+
+  /**
+   * @type {number}
+   */
+  texCoord = 0
+
+  /**
+   * @type {number}
+   */
+  scale = 1
+
+  /**
+   * @type {number}
+   */
+  strength = 1
+
+  /**
+   * @type {Record<string, any>}
+   */
+  extensions = {}
+
+  /**
+   * @type {Record<string, any>}
+   */
+  extras = {}
+
+  /**
+   * @param {number} index
+   */
+  constructor(index) {
+    this.index = index
+  }
+  /**
+ * @param {any} data
+ */
+  static deserialize(data) {
+    const { index, texCoord, scale, strength, extensions, extras } = data
+
+    if (typeof index !== 'number') {
+      throw 'Texture info index is not type of number'
+    }
+    const result = new GLFTTextureInfo(index)
+
+    if (typeof texCoord === 'number') [
+      result.texCoord = texCoord
+    ]
+
+    if (typeof scale === 'number') [
+      result.scale = scale
+    ]
+
+    if (typeof strength === 'number') [
+      result.strength = strength
+    ]
+
+    if (extensions instanceof Object) {
+      result.extensions = extensions
+    } else {
+      result.extensions = {}
+    }
+    if (extras instanceof Object) {
+      result.extras = extras
+    } else {
+      result.extras = {}
+    }
+
+    return result
   }
 }
 
@@ -857,6 +1561,15 @@ export const GLTFPrimitiveMode = /**@type {const}*/({
   Triangles: 4,
   TriangleStrip: 5,
   TriangleFan: 6
+})
+
+/**
+ * @enum {string}
+ */
+export const GLFTAlphaMode = /**@type {const}*/({
+  Opaque: "OPAQUE",
+  Mask: "MASK",
+  Blend: "BLEND"
 })
 
 /**
@@ -1163,9 +1876,10 @@ function getElementSize(type) {
 /**
  * @param {number} mesh
  * @param {GLTFMesh[]} meshes
- * @param {Mesh[][]} geometries
+ * @param {[Mesh,number | undefined][][]} geometries
+ * @param {StandardMaterial[]} materials
  */
-function parseMeshObject(mesh, meshes, geometries) {
+function parseMeshObject(mesh, meshes, geometries, materials) {
   const meshData = meshes[mesh]
   const geometry = geometries[mesh]
 
@@ -1173,22 +1887,30 @@ function parseMeshObject(mesh, meshes, geometries) {
     throw "Invalid mesh index on node"
   }
   if (geometry.length === 1) {
-    return new MeshMaterial3D(/**@type {Mesh}*/(geometry[0]), new BasicMaterial())
+    const item = /**@type {[Mesh,number | undefined]}*/(geometry[0])
+    const material = item[1] !== undefined ? materials[item[1]] : defaultMaterial
+
+    return new MeshMaterial3D(item[0], material || defaultMaterial)
   }
-  const object = new Object3D()
+  const root = new Object3D()
   for (let i = 0; i < geometry.length; i++) {
-    const mesh = new MeshMaterial3D(/**@type {Mesh}*/(geometry[i]), new BasicMaterial())
-    object.add(mesh)
+    const item = /**@type {[Mesh,number | undefined]}*/(geometry[0])
+    const material = item[1] !== undefined ? materials[item[1]] : defaultMaterial
+    const object = new MeshMaterial3D(item[0], material || defaultMaterial)
+
+    root.add(object)
   }
 
-  return object
+  return root
 }
 
 /**
  * @param {GLTFMesh} gltfMesh
  * @param {GLTF} gltf
+ * @returns {[Mesh, number | undefined][]}
  */
 function parseGeometry(gltfMesh, gltf) {
+  /**@type {[Mesh, number | undefined][]}*/
   const results = []
   for (let i = 0; i < gltfMesh.primitives.length; i++) {
     const primitive = /**@type {GLTFPrimitive} */ (gltfMesh.primitives[i])
@@ -1216,8 +1938,7 @@ function parseGeometry(gltfMesh, gltf) {
     }
 
     mesh.normalizeJointWeights()
-
-    results.push(mesh)
+    results.push([mesh, primitive.material])
   }
   return results
 }
@@ -1279,14 +2000,15 @@ function convertToInverseBindPose(poseData) {
  * @param {number} index
  * @param {GLTFNode} node
  * @param {GLTF} gltf
- * @param {Mesh[][]} geometries
+ * @param {[Mesh,number | undefined][][]} geometries
+ * @param {StandardMaterial[]} materials
  */
-function parseObject(index, node, gltf, geometries) {
+function parseObject(index, node, gltf, geometries, materials) {
   const { mesh, transform, name } = node
 
   let object
   if (mesh !== undefined) {
-    object = parseMeshObject(mesh, gltf.meshes, geometries)
+    object = parseMeshObject(mesh, gltf.meshes, geometries, materials)
   } else {
     const bone = parseBone(index, gltf)
 
