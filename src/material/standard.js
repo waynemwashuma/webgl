@@ -59,6 +59,10 @@ export class StandardMaterial extends Material {
   roughnessSampler
 
   /**
+   * @type {number}
+   */
+  occlusionStrength
+  /**
    * @type {Texture | undefined}
    */
   occlusionTexture
@@ -103,6 +107,7 @@ export class StandardMaterial extends Material {
     roughness = 0,
     roughnessTexture,
     roughnessSampler,
+    occlusionStrength = 1,
     occlusionTexture,
     occlusionSampler,
     emissiveColor = new Color(0, 0, 0),
@@ -126,6 +131,7 @@ export class StandardMaterial extends Material {
     this.roughnessTexture = roughnessTexture;
     this.roughnessSampler = roughnessSampler;
 
+    this.occlusionStrength = occlusionStrength
     this.occlusionTexture = occlusionTexture;
     this.occlusionSampler = occlusionSampler;
 
@@ -157,6 +163,7 @@ export class StandardMaterial extends Material {
       color,
       metallic,
       roughness,
+      occlusionStrength,
       emissiveColor,
       emissiveIntensity
     } = this
@@ -165,7 +172,7 @@ export class StandardMaterial extends Material {
       ...color,
       metallic,
       roughness,
-      0,
+      occlusionStrength,
       0,
       emissiveColor.r,
       emissiveColor.g,
@@ -204,6 +211,7 @@ export class StandardMaterial extends Material {
  * @property {number} [roughness] The roughness value of the material, typically between 0 and 1.
  * @property {Texture} [roughnessTexture] A texture representing the roughness values, typically a grayscale image.
  * @property {Sampler} [roughnessSampler] The sampler for the roughness texture.
+ * @property {number} [occlusionStrength]  The strength of the ambient occlusion. 
  * @property {Texture} [occlusionTexture] A texture used for ambient occlusion to simulate shadowing of surfaces.
  * @property {Sampler} [occlusionSampler] The sampler for the ambient occlusion texture.
  * @property {Color} [emissiveColor] The color of emissive light emitted by the material.

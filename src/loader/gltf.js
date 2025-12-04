@@ -164,6 +164,7 @@ export class GLTFLoader extends Loader {
         const texture = textures[occlusionTexture.index]
 
         if (texture) {
+          material.occlusionStrength = occlusionTexture.strength
           material.occlusionTexture = texture[0]
           material.occlusionSampler = texture[1]
         } else {
