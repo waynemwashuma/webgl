@@ -13,6 +13,7 @@ export const standardFragment =
   };
 
   struct PBRProperties {
+    vec3 normal;
     vec3 albedo;
     vec3 emissive;
     float opacity;
@@ -31,6 +32,7 @@ export const standardFragment =
   in vec3 v_position;
   in vec2 v_uv;
   in vec3 v_normal;
+  in vec3 v_tangent;
   in vec3 cam_direction;
   
   uniform StandardMaterialBlock {
@@ -142,12 +144,19 @@ export const standardFragment =
     properties.metallic = clamp(properties.metallic, 0.0, 1.0);
     properties.roughness = clamp(properties.roughness, 0.05, 1.0);
 
+    vec3 normal = normalize(v_normal);
+    vec3 tangent = normalize(v_tangent);
+    vec3 bitangent = cross(normal, tangent);
+    mat3 tangent_space = mat3(tangent, bitangent, normal);
+    vec3 surface_normal = texture(normal_texture, v_uv).rgb * 2.0 - 1.0;
+    properties.normal = tangent_space * surface_normal;
+
     return properties;
   }
 
   void main(){
     PBRProperties pbr_properties = calculate_pbr_properties();
-    vec3 N = normalize(v_normal);
+    vec3 N = pbr_properties.normal;
     vec3 V = normalize(cam_direction);
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
 
