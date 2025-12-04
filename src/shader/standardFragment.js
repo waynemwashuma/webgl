@@ -64,8 +64,8 @@ export const standardFragment =
     return pow(color, 1.0 / vec3(2.2));
   }
   
-  vec3 fresnel_schlick(float HdotH, vec3 F0){
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - HdotH, 0.0, 1.0), 5.0);
+  vec3 fresnel_schlick(float HdotV, vec3 F0){
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - HdotV, 0.0, 1.0), 5.0);
   }
 
   // Also the Trowbridge-Rietz normal distribution function
@@ -134,10 +134,10 @@ export const standardFragment =
     properties.albedo *= quick_sRGB_to_linear(albedo_texture_color.rgb);
     properties.opacity *= albedo_texture_color.a;
     
-    vec4 metallic_texture_color = texture(mainTexture,v_uv);
+    vec4 metallic_texture_color = texture(metallic_texture,v_uv);
     properties.metallic *= metallic_texture_color.b;
 
-    vec4 roughness_texture_color = texture(mainTexture,v_uv);
+    vec4 roughness_texture_color = texture(roughness_texture,v_uv);
     properties.roughness *= roughness_texture_color.g;
 
     vec4 occlusion_texture_color = texture(occlusion_texture,v_uv);
