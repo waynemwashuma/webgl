@@ -8,6 +8,17 @@ import { skeletonFragment, skeletonVertex } from "../shader/index.js";
 import { Texture, TextureFormat } from "../texture/index.js";
 
 export class SkeletonHelperPlugin extends Plugin {
+
+  /**
+   * @override
+   */
+  init() { }
+
+  /**
+   * @override
+   */
+  preprocess() { }
+
   /**
    * @type {number | undefined}
    */
