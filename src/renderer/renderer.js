@@ -184,6 +184,12 @@ export class WebGLRenderer {
       )
     }
 
+    for (let i = 0; i < this.plugins.length; i++) {
+      const plugin = /**@type {Plugin} */ (this.plugins[i]);
+
+      plugin.preprocess(objects, surface.context, this)
+    }
+    
     this.updateUBO(context, camera.getData())
     this.updateUBO(context, this.lights.ambientLight.getData())
     this.updateUBO(context, this.lights.directionalLights.getData())

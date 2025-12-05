@@ -11,6 +11,15 @@ export class Plugin {
   }
 
   /**
+   * @param {Object3D[]} _objects
+   * @param {WebGL2RenderingContext} _context
+   * @param {WebGLRenderer} _renderer
+   */
+  preprocess(_objects, _context, _renderer) {
+    abstractMethod(this, Plugin, Plugin.prototype.preprocess.name)
+  }
+
+  /**
    * @param {Object3D} _object
    * @param {WebGL2RenderingContext} _context
    * @param {WebGLRenderer} _renderer
