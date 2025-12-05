@@ -1,8 +1,7 @@
-import {
-  Color,
-} from '../math/index.js'
+import { Color } from '../math/index.js'
+import { Object3D } from '../objects/index.js'
 
-export class AmbientLight {
+export class AmbientLight extends Object3D {
   intensity = 1
   color = new Color(1, 1, 1)
 
@@ -10,12 +9,12 @@ export class AmbientLight {
     return {
       name: "AmbientLightBlock",
       data: new Float32Array([
-      this.intensity,
-      0,
-      0,
-      0,
-      ...this.color
-    ]).buffer
+        this.intensity,
+        0,
+        0,
+        0,
+        ...this.color
+      ]).buffer
     }
   }
 }
