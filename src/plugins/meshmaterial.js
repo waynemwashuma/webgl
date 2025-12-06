@@ -248,15 +248,19 @@ function uploadTextures(gl, material, uniforms, caches, defaults) {
   }
 }
 /**
- * @param {MeshVertexLayout} _meshLayout
+ * @param {MeshVertexLayout} meshLayout
  * @param {bigint} meshBits
  * @param {ReadonlyMap<string, string>} globalDefines
  */
-function getShaderDefs(_meshLayout, meshBits, globalDefines){
+function getShaderDefs(meshLayout, meshBits, globalDefines){
   /**@type {[string,string][]} */
   const shaderdefs = []
   if (meshBits & MeshKey.Skinned) {
     shaderdefs.push(["SKINNED", ""])
+  }
+
+  if(meshLayout.hasAttribute(Attribute.Tangent)){
+    shaderdefs.push(['VERTEX_TANGENTS',''])
   }
 
   for (const [name, value] of globalDefines) {
