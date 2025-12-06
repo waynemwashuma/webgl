@@ -259,6 +259,10 @@ function getShaderDefs(meshLayout, meshBits, globalDefines){
     shaderdefs.push(["SKINNED", ""])
   }
 
+  if(meshLayout.hasAttribute(Attribute.UV)){
+    shaderdefs.push(['VERTEX_UVS',''])
+  }
+
   if(meshLayout.hasAttribute(Attribute.Normal)){
     shaderdefs.push(['VERTEX_NORMALS',''])
   }

@@ -12,7 +12,9 @@ export const phongFragment =
   };
 
   in vec3 v_position;
-  in vec2 v_uv;
+  #ifdef VERTEX_UVS
+    in vec2 v_uv;
+  #endif
   in vec3 v_normal;
   in vec3 cam_direction;
   
@@ -30,8 +32,11 @@ export const phongFragment =
   out vec4 fragment_color;
  
   void main(){
-    vec3 sample_color = texture(mainTexture, v_uv).rgb;
-    vec3 base_color = tint(sample_color, material.color.rgb);
+    vec3 base_color = material.color.rgb;
+    #ifdef VERTEX_UVS
+      vec4 sample_color = texture(mainTexture,v_uv);
+      base_color *= sample_color.rgb;
+    #endif
     #ifdef VERTEX_NORMALS
       vec3 normal = normalize(v_normal);
     #else
