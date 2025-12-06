@@ -8,7 +8,10 @@ import {
   PerspectiveProjection,
   Camera,
   WebGLCanvasSurface,
-  UVSphereMeshBuilder
+  UVSphereMeshBuilder,
+  AmbientLight,
+  LightPlugin,
+  MeshMaterialPlugin
 } from 'webgllis';
 
 // performance monitor
@@ -20,7 +23,12 @@ stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
-const renderer = new WebGLRenderer()
+const renderer = new WebGLRenderer({
+  plugins:[
+    new LightPlugin(),
+    new MeshMaterialPlugin()
+  ]
+})
 const camera = new Camera()
 
 const textureLoader = new TextureLoader()
@@ -30,23 +38,26 @@ const texture = textureLoader.load({
     flipY:true
   }
 })
-const light = new DirectionalLight()
-const sphere = new MeshMaterial3D(
-  new UVSphereMeshBuilder().build(),
-  new LambertMaterial({
-    mainTexture: texture,
-  })
-)
 
-light.direction.set(0, -1, -1).normalize()
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
+// lights
+const ambientLight = new AmbientLight()
+const directionalLight = new DirectionalLight()
+
+directionalLight.direction.set(0, -1, -1).normalize()
+ambientLight.intensity = 0.15
+
 camera.transform.position.z = 2
 if (camera.projection instanceof PerspectiveProjection) {
   camera.projection.fov = Math.PI / 180 * 120
   camera.projection.aspect = innerWidth / innerHeight
 }
 
+const sphere = new MeshMaterial3D(
+  new UVSphereMeshBuilder().build(),
+  new LambertMaterial({
+    mainTexture: texture,
+  })
+)
 const rotation = Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
 
 document.body.append(canvas)
@@ -58,7 +69,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   sphere.transform.orientation.multiply(rotation)
-  renderer.render([sphere],surface, camera)
+  renderer.render([sphere, directionalLight, ambientLight],surface, camera)
   stats.end()
 
   requestAnimationFrame(update)

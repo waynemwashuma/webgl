@@ -9,7 +9,9 @@ import {
   TextureType,
   SkyBox,
   TextureLoader,
-  DirectionalLight
+  DirectionalLight,
+  LightPlugin,
+  AmbientLight
 } from 'webgllis';
 
 // performance monitor
@@ -23,15 +25,18 @@ const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
-    new MeshMaterialPlugin()
+    new LightPlugin(),
+    new MeshMaterialPlugin(),
   ]
 })
+
 // lighting
-const light = new DirectionalLight()
-light.direction.set(1, -1, -1).normalize()
-light.intensity = 30
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
+const ambientLight = new AmbientLight()
+const directionaLight = new DirectionalLight()
+
+directionaLight.direction.set(1, -1, -1).normalize()
+directionaLight.intensity = 30
+ambientLight.intensity = 0.15
 
 // camera and camera controls
 const camera = new Camera()
@@ -77,7 +82,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([model, skyBox], surface, camera)
+  renderer.render([model, skyBox, ambientLight, directionaLight], surface, camera)
   cameraControls.update()
   stats.end()
   requestAnimationFrame(update)

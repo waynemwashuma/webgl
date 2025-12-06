@@ -13,7 +13,9 @@ import {
   CuboidMeshBuilder,
   UVSphereMeshBuilder,
   MeshMaterialPlugin,
-  NormalMaterial
+  NormalMaterial,
+  AmbientLight,
+  LightPlugin
 } from "webgllis"
 
 // performance monitor
@@ -27,15 +29,18 @@ const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
+    new LightPlugin(),
     new MeshMaterialPlugin()
   ]
 })
 const camera = new Camera()
 
-const light = new DirectionalLight()
-light.direction.set(0, -1, -1).normalize()
-renderer.lights.ambientLight.intensity = 0.15
-renderer.lights.directionalLights.add(light)
+// lights
+const ambientLight = new AmbientLight()
+const directionalLight = new DirectionalLight()
+
+directionalLight.direction.set(0, -1, -1).normalize()
+ambientLight.intensity = 0.15
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
@@ -95,7 +100,7 @@ function update() {
 
   stats.begin()
   objects.forEach(object => object.transform.orientation.multiply(rotation))
-  renderer.render(objects, surface, camera)
+  renderer.render([...objects, ambientLight, directionalLight], surface, camera)
   stats.end()
   requestAnimationFrame(update)
 }

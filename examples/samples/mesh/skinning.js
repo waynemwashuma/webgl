@@ -10,7 +10,8 @@ import {
   Bone3D,
   Object3D,
   MeshMaterialPlugin,
-  SkeletonHelperPlugin
+  SkeletonHelperPlugin,
+  BasicMaterial
 } from 'webgllis';
 
 // performance monitor
@@ -33,6 +34,7 @@ const renderer = new WebGLRenderer({
 const camera = new Camera()
 
 const loader = new GLTFLoader()
+const material = new BasicMaterial()
 loader.asyncLoad({
   paths: ["/assets/models/gltf/pirate_girl/index.gltf"]
 }).then((model) => {
@@ -41,8 +43,11 @@ loader.asyncLoad({
 
   // NOTE: Maybe make this internal to the loader?
   clone.traverseDFS((object) => {
-    if (object instanceof MeshMaterial3D && object.skin) {
-      object.skin.bones = object.skin.bones.map((bone) => entityMap.get(bone))
+    if (object instanceof MeshMaterial3D) {
+      object.material = material
+      if(object.skin){
+        object.skin.bones = object.skin.bones.map((bone) => entityMap.get(bone))
+      }
     }
     return true
   })

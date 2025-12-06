@@ -5,7 +5,9 @@ import {
   Camera,
   Quaternion,
   WebGLCanvasSurface,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  AmbientLight,
+  LightPlugin
 } from 'webgllis';
 
 // performance monitor
@@ -19,11 +21,14 @@ const canvas = document.createElement('canvas')
 const surface = new WebGLCanvasSurface(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
+    new LightPlugin(),
     new MeshMaterialPlugin()
   ]
 })
 const camera = new Camera()
 
+// lights
+const ambientLight = new AmbientLight()
 document.body.append(canvas)
 updateView()
 
@@ -49,7 +54,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   model.transform.orientation.multiply(rotation)
-  renderer.render([model], surface, camera)
+  renderer.render([model, ambientLight], surface, camera)
   stats.end()
   requestAnimationFrame(update)
 }
