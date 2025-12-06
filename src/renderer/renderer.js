@@ -1,6 +1,6 @@
 import { WebGLDeviceLimits } from "../core/index.js"
 import { Object3D, Camera } from "../objects/index.js"
-import { commonShaderLib, mathShaderLib } from "../shader/index.js"
+import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
@@ -80,6 +80,7 @@ export class WebGLRenderer {
     }
     this.includes
       .set("common", commonShaderLib)
+      .set("light", lightShaderLib)
       .set("math", mathShaderLib)
   }
 

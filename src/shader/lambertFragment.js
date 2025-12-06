@@ -3,6 +3,7 @@ export const lambertFragment =
   precision mediump float;
 
   #include <common>
+  #include <light>
   
   struct LambertMaterial {
     vec4 color;

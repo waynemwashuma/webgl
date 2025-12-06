@@ -3,6 +3,7 @@ export const phongFragment =
   precision mediump float;
 
   #include <common>
+  #include <light>
   
   struct PhongMaterial {
     vec4 color;
