@@ -44,7 +44,7 @@ export const standardFragment =
   #endif
   in vec3 cam_direction;
   
-  uniform StandardMaterialBlock {
+  uniform MaterialBlock {
     StandardMaterial material;
   };
   

@@ -41,7 +41,6 @@ export class MeshMaterialPlugin extends Plugin {
     }
     const { caches, attributes, defaults } = renderer
     const { material, mesh, transform } = object
-    const blockName = material.constructor.name + 'Block'
     const gpuMesh = caches.getMesh(context, mesh, attributes)
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
@@ -87,7 +86,7 @@ export class MeshMaterialPlugin extends Plugin {
     const modelInfo = pipeline.uniforms.get("model")
     const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
     const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
-    const ubo = caches.uniformBuffers.get(blockName)
+    const ubo = caches.uniformBuffers.get('MaterialBlock')
 
     pipeline.use(context)
 

@@ -17,7 +17,7 @@ export const lambertFragment =
     in vec3 v_normal;
   #endif
   
-  uniform LambertMaterialBlock {
+  uniform MaterialBlock {
     LambertMaterial material;
   };
   // Lights

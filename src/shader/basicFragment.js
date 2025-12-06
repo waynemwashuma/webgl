@@ -14,7 +14,7 @@ export const basicFragment =
   
   out vec4 fragment_color;
 
-  uniform BasicMaterialBlock {
+  uniform MaterialBlock {
     BasicMaterial material;
   };
   uniform sampler2D mainTexture;

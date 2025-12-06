@@ -12,7 +12,7 @@ export const normalFragment =
   
   out vec4 fragment_color;
 
-  uniform NormalMaterialBlock {
+  uniform MaterialBlock {
     NormalMaterial material;
   };
 
