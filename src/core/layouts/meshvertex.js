@@ -33,6 +33,13 @@ export class MeshVertexLayout {
     }
     return true
   }
+
+  /**
+   * @param {Attribute} attribute
+   */
+  hasAttribute(attribute){
+    return this.layouts.some((layout)=>layout.has(attribute))
+  }
   /**
    * @param {Mesh} mesh
    * @param {ReadonlyMap<string, Attribute>} attributes
