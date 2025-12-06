@@ -34,7 +34,9 @@ export const standardFragment =
 
   in vec3 v_position;
   in vec2 v_uv;
-  in vec3 v_normal;
+  #ifdef VERTEX_NORMALS
+    in vec3 v_normal;
+  #endif
   #ifdef VERTEX_TANGENTS
     in vec3 v_tangent;
   #endif
@@ -153,14 +155,22 @@ export const standardFragment =
     properties.roughness = clamp(properties.roughness, 0.05, 1.0);
 
     #if defined(VERTEX_TANGENTS)
-      vec3 normal = normalize(v_normal);
+      #ifdef VERTEX_NORMALS
+        vec3 normal = normalize(v_normal);
+      #else
+        #error "Mesh vertex normals are required for lighting."
+      #endif
       vec3 tangent = normalize(v_tangent);
       vec3 bitangent = cross(normal, tangent);
       mat3 tangent_space = mat3(tangent, bitangent, normal);
       vec3 surface_normal = texture(normal_texture, v_uv).rgb * 2.0 - 1.0;
       properties.normal = tangent_space * surface_normal;
     #else
-      properties.normal = v_normal;
+      #ifdef VERTEX_NORMALS
+        properties.normal = v_normal;
+      #else
+        #error "Mesh vertex normals are required for lighting."
+      #endif
     #endif
 
     return properties;

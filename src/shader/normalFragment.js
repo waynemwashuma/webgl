@@ -2,6 +2,8 @@ export const normalFragment =
   `
   precision mediump float;
 
+  #include <common>
+
   struct NormalMaterial {
     vec4 padding;
   };
@@ -10,11 +12,16 @@ export const normalFragment =
   
   out vec4 fragment_color;
 
-  uniform BasicMaterialBlock {
+  uniform NormalMaterialBlock {
     NormalMaterial material;
   };
 
   void main(){
-    fragment_color = vec4(v_normal, 1.0);
+    #ifdef VERTEX_NORMALS
+      vec3 normal = normalize(v_normal);
+    #else
+      #error "Mesh vertex normals are required for lighting."
+    #endif
+    fragment_color = vec4(normal, 1.0);
   }
 `
