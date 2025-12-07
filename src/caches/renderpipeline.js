@@ -1,7 +1,5 @@
-/** @import { TextureFormat } from "../texture/index.js" */
-import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, UniformType } from "../constant.js";
 import { assert } from "../utils/index.js";
-import { PrimitiveTopology } from "../mesh/index.js";
+import { BlendEquation, BlendMode, CullFace, FrontFaceDirection, PrimitiveTopology,TextureFormat, UniformType } from "../constants/index.js";
 import { MeshVertexLayout, UniformBufferLayout } from "../core/layouts/index.js";
 import { Shader } from "../core/shader.js";
 import { Uniform } from "../core/layouts/uniform.js";

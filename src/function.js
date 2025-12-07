@@ -2,9 +2,10 @@ import {
   GlDataType,
   BufferUsage,
   BufferType
-} from "./constant.js"
+} from "./constants/index.js"
 import { assert } from "./utils/index.js"
-import { getTextureFormatSize, Sampler, Texture, TextureFilter, TextureFormat, TextureType } from "./texture/index.js"
+import { Sampler, Texture } from "./texture/index.js"
+import { TextureFilter, TextureFormat, TextureType, getTextureFormatSize } from "./constants/index.js"
 /**
  * @param {WebGL2RenderingContext} context
  * @param {BufferType} type

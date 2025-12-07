@@ -1,4 +1,4 @@
-import { VertexFormat } from './vertexformat.js'
+import { VertexFormat } from '../../constants/index.js'
 
 export class Attribute {
 

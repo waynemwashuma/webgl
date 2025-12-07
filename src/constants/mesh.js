@@ -1,6 +1,19 @@
 /**
  * @enum {number}
  */
+export const PrimitiveTopology = /** @type {const} */({
+  Points: 0x0000,
+  Lines: 0x0001,
+  LineLoop: 0x0002,
+  LineStrip: 0x0003,
+  Triangles: 0x0004,
+  TriangleStrip: 0x0005,
+  TriangleFan: 0x0006
+})
+
+/**
+ * @enum {number}
+ */
 export const VertexFormat = /**@type {const}*/({
   // 8-bit unsigned ints
   Uint8: 0,

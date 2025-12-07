@@ -1,16 +1,16 @@
 /**@import { LoadSettings } from './loader.js' */
-import { Attribute, Mesh, VertexFormat } from '../mesh/index.js';
+import { Attribute, Mesh } from '../mesh/index.js';
 import { StandardMaterial } from '../material/index.js';
 import { MeshMaterial3D, Object3D, Skin } from '../objects/index.js';
 import { Loader } from './loader.js';
 import { arrayBufferToJSON } from './utils.js';
 import { Bone3D } from '../objects/bone.js';
 import { Affine3 } from '../math/index.js';
-import { GlDataType } from '../constant.js';
 import { SeparateAttributeData } from '../mesh/attributedata/separate.js';
 import { TextureLoader } from './texture.js';
-import { Texture, Sampler, TextureFilter, TextureWrap } from '../texture/index.js';
+import { Texture, Sampler } from '../texture/index.js';
 import { assert } from '../utils/index.js';
+import { GlDataType, TextureFilter, TextureWrap, VertexFormat } from '../constants/index.js';
 
 const defaultMaterial = new StandardMaterial()
 /**

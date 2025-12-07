@@ -1,11 +1,11 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 import { MeshVertexLayout, Shader } from "../core/index.js";
 import { Affine3 } from "../math/index.js";
-import { PrimitiveTopology } from "../mesh/index.js";
+import { PrimitiveTopology, TextureFormat } from "../constants/index.js";
 import { Bone3D, Object3D, SkeletonHelper } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { skeletonFragment, skeletonVertex } from "../shader/index.js";
-import { Texture, TextureFormat } from "../texture/index.js";
+import { Texture } from "../texture/index.js";
 
 export class SkeletonHelperPlugin extends Plugin {
 

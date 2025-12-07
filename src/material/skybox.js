@@ -1,7 +1,7 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
 import { skyboxFragment, skyboxVertex } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { CullFace } from "../constant.js"
+import { CullFace } from "../constants/index.js"
 import { RawMaterial } from "./raw.js"
 
 export class SkyBoxMaterial extends RawMaterial {

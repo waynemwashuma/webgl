@@ -1,6 +1,6 @@
 /** @import { Caches } from "./cache.js" */
-/** @import { Texture } from "../texture/index.js"*/
-import { TextureFormat } from "../texture/index.js"
+import { Texture } from "../texture/index.js"
+import { TextureFormat } from "../constants/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
 
 export class ImageFrameBuffer {

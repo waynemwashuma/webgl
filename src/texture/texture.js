@@ -1,4 +1,4 @@
-import { TextureFormat, TextureType } from "./constants.js"
+import { TextureFormat, TextureType } from "../constants/index.js"
 
 export class Texture {
 

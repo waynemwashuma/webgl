@@ -1,7 +1,7 @@
-import { BufferType, BufferUsage, GlDataType } from "../constant.js"
+import { VertexFormat, BufferType, BufferUsage, GlDataType } from "../constants/index.js"
 import { MeshVertexLayout } from "../core/index.js"
 import { createBuffer, updateBuffer } from "../function.js"
-import { Mesh, VertexFormat } from "../mesh/index.js"
+import { Mesh } from "../mesh/index.js"
 import { assert } from "../utils/index.js"
 
 export class GPUMesh {
