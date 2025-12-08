@@ -7,22 +7,63 @@ export class Mesh {
   /**
    * @type {Uint8Array | Uint16Array | Uint32Array | undefined}
    */
-  indices
+  #indices
 
   /**
    * @type {SeparateAttributeData}
    */
-  attributes
+  #attributes
 
   /**
    * @type {PrimitiveTopology}
    */
   topology = PrimitiveTopology.Triangles
+
+  /**
+   * Tracks if the attribute data has changed since last checked.
+   * @type {boolean}
+   * */
+  #changed = false
+
   /**
    * @param {SeparateAttributeData} attributes
    */
   constructor(attributes) {
-    this.attributes = attributes
+    this.#attributes = attributes
+  }
+
+  /**
+   * @package
+   * @returns {boolean}
+   * Indicates if the data has changed since last queried.
+   * Automatically resets the flag.
+   */
+  get changed() {
+    const wasChanged = this.#changed
+    this.#changed = false
+    return wasChanged || this.attributes.changed
+  }
+
+  /**
+   * @type {Uint8Array | Uint16Array | Uint32Array | undefined}
+   */
+  get indices() {
+    return this.#indices
+  }
+  set indices(value) {
+    this.#indices = value
+    this.#changed = true
+  }
+
+  /**
+   * @type {SeparateAttributeData}
+   */
+  get attributes() {
+    return this.#attributes
+  }
+  set attributes(value) {
+    this.#attributes = value
+    this.#changed = true
   }
 
   /**
@@ -39,11 +80,11 @@ export class Mesh {
   merge(other) {
     const newAttributes = this.attributes.merge(other.attributes)
     const newMesh = new Mesh(newAttributes)
-    
+
     if (this.indices && other.indices) {
       const positions = this.attributes.get(Attribute.Position.name)
 
-      if(!positions){
+      if (!positions) {
         return newMesh
       }
 
@@ -75,7 +116,7 @@ export class Mesh {
   }
 
   normalizeJointWeights() {
-    const weights = this.attributes.data.get(Attribute.JointWeight.name)
+    const weights = this.attributes.get(Attribute.JointWeight.name)
 
     if (!weights) return
 
