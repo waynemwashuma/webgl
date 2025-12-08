@@ -162,5 +162,4 @@ function updateDataTexture(texture, items) {
   texture.width = 4
   texture.height = items.length
   texture.data = data.buffer
-  texture.update()
 }

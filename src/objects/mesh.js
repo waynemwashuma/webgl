@@ -93,7 +93,6 @@ export class Skin {
     // TODO: Use the entire dimensions of the texture to pack values
     this.boneTexture.height = this.bones.length
     this.boneTexture.data = data.buffer
-    this.boneTexture.update()
   }
 }
 

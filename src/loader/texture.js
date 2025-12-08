@@ -54,7 +54,6 @@ export class TextureLoader extends Loader {
       destination.width = width
     destination.height = height
     destination.depth = depth
-    destination.update()
   }
 
   /**

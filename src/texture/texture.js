@@ -3,48 +3,59 @@ import { TextureFormat, TextureType } from "../constants/index.js"
 export class Texture {
 
   /**
+   * Tracks if the texture has changed since last checked.
    * @type {boolean}
    */
   #changed = false
+
   /**
+   * The raw pixel data for the texture.
    * @type {ArrayBuffer | undefined}
    */
-  data
+  #data
 
   /**
+   * The width of the texture in pixels.
    * @type {number}
    */
-  width
+  #width
 
   /**
+   * The height of the texture in pixels.
    * @type {number}
    */
-  height
+  #height
 
   /**
+   * The depth of the texture, used for 3D textures or texture arrays.
    * @type {number}
    */
-  depth
+  #depth
 
   /**
+   * The texture format of this texture.
    * @type {TextureFormat}
    */
-  format
+  #format
 
   /**
+   * Whether mipmaps should be automatically generated for this texture.
    * @type {boolean}
    */
-  generateMipmaps
+  #generateMipmaps
 
   /**
+   * Whether the texture should be flipped vertically on upload.
    * @type {boolean}
    */
-  flipY
+  #flipY
 
   /**
+   * The type of texture (e.g., Texture2D, TextureCube, etc.).
    * @type {TextureType}
    */
-  type
+  #type
+
   /**
    * @param {TextureSettings & { data?: ArrayBuffer, type: TextureType }} settings
    */
@@ -58,14 +69,14 @@ export class Texture {
     height = Texture.defaultSettings.height,
     depth = Texture.defaultSettings.depth,
   }) {
-    this.data = data
-    this.type = type
-    this.width = width
-    this.height = height
-    this.depth = depth
-    this.flipY = flipY
-    this.format = format
-    this.generateMipmaps = generateMipmaps
+    this.#data = data
+    this.#type = type
+    this.#width = width
+    this.#height = height
+    this.#depth = depth
+    this.#flipY = flipY
+    this.#format = format
+    this.#generateMipmaps = generateMipmaps
   }
 
   /**
@@ -79,11 +90,64 @@ export class Texture {
     return previous
   }
 
-  update() {
-    // TODO: Actually implement this on properties when they change
+  /** @type {ArrayBuffer | undefined} */
+  get data() { return this.#data }
+  set data(value) {
+    this.#data = value
     this.#changed = true
   }
+
+  /** @type {number} */
+  get width() { return this.#width }
+  set width(value) {
+    this.#width = value
+    this.#changed = true
+  }
+
+  /** @type {number} */
+  get height() { return this.#height }
+  set height(value) {
+    this.#height = value
+    this.#changed = true
+  }
+
+  /** @type {number} */
+  get depth() { return this.#depth }
+  set depth(value) {
+    this.#depth = value
+    this.#changed = true
+  }
+
+  /** @type {TextureFormat} */
+  get format() { return this.#format }
+  set format(value) {
+    this.#format = value
+    this.#changed = true
+  }
+
+  /** @type {boolean} */
+  get generateMipmaps() { return this.#generateMipmaps }
+  set generateMipmaps(value) {
+    this.#generateMipmaps = value
+    this.#changed = true
+  }
+
+  /** @type {boolean} */
+  get flipY() { return this.#flipY }
+  set flipY(value) {
+    this.#flipY = value
+    this.#changed = true
+  }
+
+  /** @type {TextureType} */
+  get type() { return this.#type }
+  set type(value) {
+    this.#type = value
+    this.#changed = true
+  }
+
   /**
+   * Applies a new set of texture settings.
    * @param {TextureSettings} settings
    */
   apply({
@@ -103,7 +167,9 @@ export class Texture {
   }
 
   /**
+   * Copies the values from another texture into this one.
    * @param {this} other
+   * @returns {this}
    */
   copy(other) {
     this.data = other.data ? other.data.slice() : undefined
@@ -114,15 +180,22 @@ export class Texture {
     this.type = other.type
     this.flipY = other.flipY
     this.generateMipmaps = other.generateMipmaps
-    this.update()
     return this
   }
 
+  /**
+   * Creates a new texture that is a copy of this one.
+   * @returns {this}
+   */
   clone() {
-    return new /**@type {new (...arg:any) => this}*/(this.constructor)({}).copy(this)
+    return new /** @type {new (...args:any[]) => this} */(this.constructor)({}).copy(this)
   }
 
-  static default(){
+  /**
+   * Creates a default 1×1 white texture.
+   * @returns {Texture}
+   */
+  static default() {
     const width = 1
     const height = 1
     const pixel = new Uint8Array([255, 255, 255, 255])
@@ -130,12 +203,13 @@ export class Texture {
       width,
       height,
       data: pixel.buffer,
-      type: TextureType.Texture2D
+      type: TextureType.Texture2D,
     })
-
     return texture
   }
+
   /**
+   * Default texture settings.
    * @readonly
    * @type {Readonly<Required<TextureSettings>>}
    */
