@@ -58,10 +58,11 @@ export class Caches {
    */
   getMesh(context, mesh, attributes) {
     const gpuMesh = this.meshes.get(mesh)
-    if (gpuMesh) {
+    if (gpuMesh && !mesh.changed) {
       return gpuMesh
     }
 
+    // TODO: Stop leaking memory, delete old gpu buffers
     const [layout, layoutId] = this.getLayout(mesh, attributes)
     const newMesh = new GPUMesh(context, mesh, layout, layoutId)
     this.meshes.set(mesh, newMesh)
