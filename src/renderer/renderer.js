@@ -1,8 +1,7 @@
-import { WebGLDeviceLimits } from "../core/index.js"
+import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
-import { WebGLCanvasSurface } from "../surface/webglsurface.js"
 import { CanvasTarget } from "../rendertarget/canvastarget.js"
 import { Color } from "../math/index.js"
 import { ImageRenderTarget } from "../rendertarget/image.js"
@@ -99,13 +98,13 @@ export class WebGLRenderer {
 
   /**
    * @private
-   * @param {WebGLCanvasSurface} surface
+   * @param {WebGLRenderDevice} renderDevice
    * @param {Color | undefined} clearColor
    * @param {number | undefined} clearDepth
    * @param {number | undefined} clearStencil
    */
-  clear(surface, clearColor, clearDepth, clearStencil) {
-    const { context } = surface
+  clear(renderDevice, clearColor, clearDepth, clearStencil) {
+    const { context } = renderDevice
     let bit = 0
     context.stencilMask(0xFF);
 
@@ -129,22 +128,22 @@ export class WebGLRenderer {
   }
   /**
    * @param {Object3D[]} objects
-   * @param {WebGLCanvasSurface} surface 
+   * @param {WebGLRenderDevice} renderDevice 
    * @param {Camera} camera
    */
-  render(objects, surface, camera) {
-    const { context } = surface
+  render(objects, renderDevice, camera) {
+    const { context } = renderDevice
     const { target: renderTarget } = camera
 
-    this.setViewport(surface, renderTarget)
+    this.setViewport(renderDevice, renderTarget)
     camera.update()
 
     if (renderTarget) {
       const { clearColor, clearDepth, clearStencil } = renderTarget
-      this.clear(surface, clearColor, clearDepth, clearStencil)
+      this.clear(renderDevice, clearColor, clearDepth, clearStencil)
     } else {
       this.clear(
-        surface,
+        renderDevice,
         Color.BLACK,
         1,
         0
@@ -154,7 +153,7 @@ export class WebGLRenderer {
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (this.plugins[i]);
 
-      plugin.preprocess(objects, surface.context, this)
+      plugin.preprocess(objects, renderDevice.context, this)
     }
 
     this.updateUBO(context, camera.getData())
@@ -174,11 +173,11 @@ export class WebGLRenderer {
 
   /**
    * @private
-   * @param {WebGLCanvasSurface} surface
+   * @param {WebGLRenderDevice} renderDevice
    * @param {CanvasTarget} [target]
    */
-  setViewport(surface, target) {
-    const { canvas, context } = surface
+  setViewport(renderDevice, target) {
+    const { canvas, context } = renderDevice
 
     if (!target) {
       context.bindFramebuffer(context.FRAMEBUFFER, null)
