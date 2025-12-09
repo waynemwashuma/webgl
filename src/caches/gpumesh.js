@@ -1,6 +1,6 @@
 import { VertexFormat, BufferType, BufferUsage, GlDataType } from "../constants/index.js"
 import { MeshVertexLayout } from "../core/index.js"
-import { createBuffer, updateBuffer } from "../function.js"
+import { createBuffer, getGlDataTypeByteSize, updateBuffer } from "../function.js"
 import { Mesh } from "../mesh/index.js"
 import { assert } from "../utils/index.js"
 
@@ -93,7 +93,7 @@ export function updateVAO(context, layout, mesh, gpuMesh) {
     // This only works for separate buffers for each vertex attribute.
     const buffer = createBuffer(context, BufferType.Array, data.byteLength)
     const params = mapVertexFormatToWebGL(attribute.format)
-    const count = data.byteLength / (params.size * getByteSize(params.type))
+    const count = data.byteLength / (params.size * getGlDataTypeByteSize(params.type))
 
     updateBuffer(context, BufferType.Array, data)
     context.bufferData(context.ARRAY_BUFFER, data, context.STATIC_DRAW)
@@ -165,31 +165,6 @@ function mapToIndicesType(indices) {
     return GlDataType.UnsignedInt
   }
   throw "This is unreachable!"
-}
-
-/**
- * @param {GlDataType} glDataType
- * @returns {number}
- */
-function getByteSize(glDataType) {
-  switch (glDataType) {
-    case GlDataType.Float:
-      return 4
-    case GlDataType.UnsignedInt:
-      return 4
-    case GlDataType.Int:
-      return 4
-    case GlDataType.UnsignedShort:
-      return 2
-    case GlDataType.Short:
-      return 2
-    case GlDataType.UnsignedByte:
-      return 1
-    case GlDataType.Byte:
-      return 1
-    default:
-      return 0
-  }
 }
 
 /**
