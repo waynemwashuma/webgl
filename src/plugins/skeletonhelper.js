@@ -1,5 +1,5 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
-import { MeshVertexLayout, Shader } from "../core/index.js";
+import { MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
 import { Affine3 } from "../math/index.js";
 import { PrimitiveTopology, TextureFormat } from "../constants/index.js";
 import { Bone3D, Object3D, SkeletonHelper } from "../objects/index.js";
@@ -26,22 +26,22 @@ export class SkeletonHelperPlugin extends Plugin {
   /**
    * @override
    * @param {Object3D} object
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer
    */
-  renderObject3D(object, context, renderer) {
+  renderObject3D(object, device, renderer) {
     if (!(object instanceof SkeletonHelper) || !object.skinnedMesh.skin) {
       return
     }
     const { caches } = renderer
     const { bones, boneTexture } = object.skinnedMesh.skin
-    const pipeline = this.getRenderPipeline(context, renderer)
+    const pipeline = this.getRenderPipeline(device, renderer)
     const transformsInfo = pipeline.uniforms.get("transforms")
     const modelInfo = pipeline.uniforms.get("model")
     const parentInfo = pipeline.uniforms.get("parent_index")
     const childInfo = pipeline.uniforms.get("child_index")
 
-    pipeline.use(context)
+    pipeline.use(device.context)
 
     if (
       !transformsInfo || transformsInfo.texture_unit === undefined ||
@@ -52,14 +52,14 @@ export class SkeletonHelperPlugin extends Plugin {
 
     updateDataTexture(boneTexture, bones.map((bone) => bone.transform.world))
 
-    const transformsTexture = caches.getTexture(context, boneTexture)
+    const transformsTexture = caches.getTexture(device.context, boneTexture)
 
 
-    context.activeTexture(context.TEXTURE0 + transformsInfo.texture_unit)
-    context.bindTexture(boneTexture.type, transformsTexture)
+    device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + transformsInfo.texture_unit)
+    device.context.bindTexture(boneTexture.type, transformsTexture)
 
-    context.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(object.skinnedMesh.transform.world)])
-    context.bindVertexArray(null)
+    device.context.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(object.skinnedMesh.transform.world)])
+    device.context.bindVertexArray(null)
 
     object.rootBone.traverseBFS((parent) => {
       if (parent instanceof Bone3D) {
@@ -68,9 +68,9 @@ export class SkeletonHelperPlugin extends Plugin {
           if (child instanceof Bone3D) {
             const childIndex = child.index
             const parentIndex = parent.index
-            context.uniform1ui(parentInfo.location, parentIndex)
-            context.uniform1ui(childInfo.location, childIndex)
-            context.drawArrays(PrimitiveTopology.Lines, 0, 2)
+            device.context.uniform1ui(parentInfo.location, parentIndex)
+            device.context.uniform1ui(childInfo.location, childIndex)
+            device.context.drawArrays(PrimitiveTopology.Lines, 0, 2)
           }
         }
       }
@@ -79,10 +79,10 @@ export class SkeletonHelperPlugin extends Plugin {
   }
 
   /**
- * @param {WebGL2RenderingContext} context
+ * @param {WebGLRenderDevice} device
  * @param {WebGLRenderer} renderer
  */
-  getRenderPipeline(context, renderer) {
+  getRenderPipeline(device, renderer) {
     const { caches, includes, defines: globalDefines } = renderer
     if (this.pipelineId) {
       const pipeline = caches.getRenderPipeline(this.pipelineId)
@@ -121,7 +121,7 @@ export class SkeletonHelperPlugin extends Plugin {
       descriptor.vertex.includes.set(name, value)
       descriptor.fragment?.source?.includes?.set(name, value)
     }
-    const [newRenderPipeline, newId] = caches.createRenderPipeline(context, descriptor)
+    const [newRenderPipeline, newId] = caches.createRenderPipeline(device.context, descriptor)
 
     this.pipelineId = newId
     return newRenderPipeline

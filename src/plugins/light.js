@@ -1,3 +1,4 @@
+import { WebGLRenderDevice } from "../core/index.js";
 import { DirectionalLight } from "../light/directional.js";
 import { AmbientLight } from "../light/index.js";
 import { Object3D } from "../objects/index.js";
@@ -7,19 +8,18 @@ export class LightPlugin extends Plugin {
 
   /**
    * @override
-   * @param {WebGL2RenderingContext} _context
    * @param {WebGLRenderer} renderer
    */
-  init(_context, renderer){
+  init(renderer){
     renderer.defines.set("MAX_DIRECTIONAL_LIGHTS", "10")
   }
   /**
    * @override
    * @param {Object3D[]} objects
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer
    */
-  preprocess(objects, context, renderer) {
+  preprocess(objects, device, renderer) {
     const directionalLights = new DirectionalLights()
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i])
@@ -28,12 +28,12 @@ export class LightPlugin extends Plugin {
         if (object instanceof DirectionalLight) {
           directionalLights.add(object)
         } else if (object instanceof AmbientLight) {
-          renderer.updateUBO(context, object.getData())
+          renderer.updateUBO(device.context, object.getData())
         }
         return true
       })
     }
-    renderer.updateUBO(context, directionalLights.getData())
+    renderer.updateUBO(device.context, directionalLights.getData())
   }
 
   /**
