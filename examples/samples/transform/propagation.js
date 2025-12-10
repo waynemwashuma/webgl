@@ -7,7 +7,7 @@ import {
   BasicMaterial,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   MeshMaterialPlugin,
   LightPlugin
 } from 'webgllis';
@@ -20,7 +20,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new LightPlugin(),
@@ -67,7 +67,7 @@ function update() {
   stats.begin()
   parent.transform.orientation.multiply(rotation)
 
-  renderer.render([parent],surface, camera)
+  renderer.render([parent],renderDevice, camera)
   stats.end()
 
   requestAnimationFrame(update)

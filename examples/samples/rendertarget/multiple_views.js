@@ -6,7 +6,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   CanvasTarget,
   TextureType,
   SkyBox,
@@ -22,7 +22,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
@@ -109,10 +109,10 @@ function update() {
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
   )
 
-  renderer.render([skyBox, object], surface, camera1)
-  renderer.render([skyBox, object], surface, camera2)
-  renderer.render([skyBox, object], surface, camera3)
-  renderer.render([skyBox, object], surface, camera4)
+  renderer.render([skyBox, object], renderDevice, camera1)
+  renderer.render([skyBox, object], renderDevice, camera2)
+  renderer.render([skyBox, object], renderDevice, camera3)
+  renderer.render([skyBox, object], renderDevice, camera4)
 
   camera1.transform.orientation.multiply(
     Quaternion.fromEuler(Math.PI / 1000, 0, 0)

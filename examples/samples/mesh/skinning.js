@@ -6,7 +6,7 @@ import {
   Quaternion,
   SkeletonHelper,
   MeshMaterial3D,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   Bone3D,
   Object3D,
   MeshMaterialPlugin,
@@ -24,7 +24,7 @@ stats.dom.classList.add('performance-monitor')
 /**@type {Object3D[]} */
 const objects = []
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin(),
@@ -110,7 +110,7 @@ function update() {
   }
 
   if (objects.length > 0) {
-    renderer.render(objects, surface, camera)
+    renderer.render(objects, renderDevice, camera)
   }
 
   stats.end()

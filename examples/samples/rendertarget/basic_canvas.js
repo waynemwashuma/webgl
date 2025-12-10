@@ -6,7 +6,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   CanvasTarget,
   ViewRectangle,
   TextureType,
@@ -17,7 +17,7 @@ import {
 import { GUI } from "dat.gui";
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderTarget = new CanvasTarget()
 const renderer = new WebGLRenderer({
   plugins:[
@@ -72,7 +72,7 @@ function update() {
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
   )
 
-  renderer.render([skyBox, object], surface, camera)
+  renderer.render([skyBox, object], renderDevice, camera)
   requestAnimationFrame(update)
 }
 

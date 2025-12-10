@@ -6,7 +6,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   Sampler,
   PlaneMeshBuilder,
   MeshMaterialPlugin
@@ -20,7 +20,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
@@ -93,7 +93,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([object1, object2, object3],surface, camera)
+  renderer.render([object1, object2, object3],renderDevice, camera)
   stats.end()
 
   requestAnimationFrame(update)

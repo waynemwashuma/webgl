@@ -7,7 +7,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   UVSphereMeshBuilder,
   AmbientLight,
   LightPlugin,
@@ -22,7 +22,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new LightPlugin(),
@@ -71,7 +71,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   sphere.transform.orientation.multiply(rotation)
-  renderer.render([sphere, directionalLight, ambientLight],surface, camera)
+  renderer.render([sphere, directionalLight, ambientLight],renderDevice, camera)
   stats.end()
 
   requestAnimationFrame(update)

@@ -6,7 +6,7 @@ import {
   TextureLoader,
   PerspectiveProjection,
   Camera,
-  WebGLCanvasSurface,
+  WebGLRenderDevice,
   CuboidMeshBuilder,
   MeshMaterialPlugin,
   StandardMaterial,
@@ -19,7 +19,7 @@ import {
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
-const surface = new WebGLCanvasSurface(canvas)
+const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
@@ -90,7 +90,7 @@ function update() {
   object2.transform.orientation
     .rotateX(Math.PI / 1000)
     .rotateY(Math.PI / 1000)
-  renderer.render([object1, object2, skyBox, ambientLight, directionalLight], surface, camera)
+  renderer.render([object1, object2, skyBox, ambientLight, directionalLight], renderDevice, camera)
   cameraControls.update()
 
   requestAnimationFrame(update)
