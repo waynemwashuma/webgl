@@ -52,11 +52,11 @@ export class SkeletonHelperPlugin extends Plugin {
 
     updateDataTexture(boneTexture, bones.map((bone) => bone.transform.world))
 
-    const transformsTexture = caches.getTexture(device.context, boneTexture)
+    const transformsTexture = caches.getTexture(device, boneTexture)
 
 
     device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + transformsInfo.texture_unit)
-    device.context.bindTexture(boneTexture.type, transformsTexture)
+    device.context.bindTexture(boneTexture.type, transformsTexture.inner)
 
     device.context.uniformMatrix4fv(modelInfo.location, false, [...Affine3.toMatrix4(object.skinnedMesh.transform.world)])
     device.context.bindVertexArray(null)
@@ -121,7 +121,7 @@ export class SkeletonHelperPlugin extends Plugin {
       descriptor.vertex.includes.set(name, value)
       descriptor.fragment?.source?.includes?.set(name, value)
     }
-    const [newRenderPipeline, newId] = caches.createRenderPipeline(device.context, descriptor)
+    const [newRenderPipeline, newId] = caches.createRenderPipeline(device, descriptor)
 
     this.pipelineId = newId
     return newRenderPipeline

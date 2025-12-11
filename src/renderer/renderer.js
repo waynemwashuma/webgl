@@ -186,7 +186,7 @@ export class WebGLRenderer {
       return
     }
     if (target instanceof ImageRenderTarget) {
-      const buffer = this.caches.getFrameBuffer(context, target)
+      const buffer = this.caches.getFrameBuffer(renderDevice, target)
 
       context.bindFramebuffer(context.FRAMEBUFFER, buffer.buffer)
       context.enable(context.SCISSOR_TEST)

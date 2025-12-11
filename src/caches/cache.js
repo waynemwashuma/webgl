@@ -1,8 +1,8 @@
-import { createTexture, updateTextureData } from "../function.js"
+/**@import { WebGLRenderPipelineDescriptor } from './renderpipeline.js' */
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
-import { MeshVertexLayout } from "../core/index.js"
+import { GPUTexture, MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
 import { ImageFrameBuffer } from "./framebuffer.js"
 import { GPUMesh } from "./gpumesh.js"
 import { WebGLRenderPipeline } from "./renderpipeline.js"
@@ -15,7 +15,7 @@ export class Caches {
    */
   meshes = new Map()
   /**
-   * @type {Map<Texture, WebGLTexture>}
+   * @type {Map<Texture, GPUTexture>}
    */
   textures = new Map()
   /**
@@ -34,29 +34,29 @@ export class Caches {
   meshLayouts = []
 
   /**
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {ImageRenderTarget} target
    * @returns {ImageFrameBuffer}
    */
-  getFrameBuffer(context, target) {
+  getFrameBuffer(device, target) {
     const current = this.renderTargets.get(target)
 
     if (current) {
       return current
     }
 
-    const newTarget = new ImageFrameBuffer(context, target, this)
+    const newTarget = new ImageFrameBuffer(device, target, this)
 
     this.renderTargets.set(target, newTarget)
     return newTarget
   }
 
   /**
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {Mesh} mesh
    * @param {ReadonlyMap<string, Attribute>} attributes
    */
-  getMesh(context, mesh, attributes) {
+  getMesh(device, mesh, attributes) {
     const gpuMesh = this.meshes.get(mesh)
     if (gpuMesh && !mesh.changed) {
       return gpuMesh
@@ -64,7 +64,7 @@ export class Caches {
 
     // TODO: Stop leaking memory, delete old gpu buffers
     const [layout, layoutId] = this.getLayout(mesh, attributes)
-    const newMesh = new GPUMesh(context, mesh, layout, layoutId)
+    const newMesh = new GPUMesh(device.context, mesh, layout, layoutId)
     this.meshes.set(mesh, newMesh)
 
     return newMesh
@@ -91,46 +91,79 @@ export class Caches {
   }
 
   /**
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {Texture} texture
-   * @returns {WebGLTexture}
+   * @returns {GPUTexture}
    */
-  getTexture(context, texture) {
-    const tex = this.textures.get(texture)
+  getTexture(device, texture) {
+    const gpuTexture = this.textures.get(texture)
 
-    if (tex) {
-      if (texture.changed) {
-        context.bindTexture(texture.type, tex)
-        updateTextureData(context, texture)
+    if (gpuTexture) {
+      if (texture.changed){
+        if(
+          texture.data &&
+          texture.type === gpuTexture.type &&
+          texture.format === gpuTexture.actualFormat &&
+          texture.width === gpuTexture.width &&
+          texture.height === gpuTexture.height &&
+          texture.depth === gpuTexture.depth
+        ) {
+          // non-structural change, no need to create new gpu texture
+          device.writeTexture({
+            texture: gpuTexture,
+            data: texture.data
+          })
+          return gpuTexture
+        }
+      } else {
+        return gpuTexture
       }
-      return tex
     }
-    const newTex = createTexture(context, texture)
+
+    // TODO: Stop leaking memory, delete old gpu textures
+    const newTex = device.createTexture({
+      type: texture.type,
+      format: texture.format,
+      width: texture.width,
+      height: texture.height
+    })
+
+    if (texture.data) {
+      device.writeTexture({
+        texture: newTex,
+        data: texture.data
+      })
+    }
+
+    if (texture.generateMipmaps) {
+      device.context.generateMipmap(texture.type)
+    }
+
     this.textures.set(texture, newTex)
     return newTex
   }
 
   /**
-   * @param {WebGL2RenderingContext} context
-   * @param {import("./renderpipeline.js").WebGLRenderPipelineDescriptor} descriptor
+   * @param {WebGLRenderDevice} device
+   * @param {WebGLRenderPipelineDescriptor} descriptor
    * @returns {[WebGLRenderPipeline, number]}
    */
-  createRenderPipeline(context, descriptor) {
+  createRenderPipeline(device, descriptor) {
     const id = this.renderpipelines.length
-    const pipeline = new WebGLRenderPipeline(context, descriptor)
+    const pipeline = new WebGLRenderPipeline(device.context, descriptor)
 
     for (const [name, uboLayout] of pipeline.uniformBlocks) {
-      const ubo = this.uniformBuffers.getorSet(context, name, uboLayout)
-      const index = context.getUniformBlockIndex(pipeline.program, name)
+      const ubo = this.uniformBuffers.getorSet(device.context, name, uboLayout)
+      const index = device.context.getUniformBlockIndex(pipeline.program, name)
 
-      context.uniformBlockBinding(pipeline.program, index, ubo.point)
+      device.context.uniformBlockBinding(pipeline.program, index, ubo.point)
     }
     this.renderpipelines[id] = pipeline
     return [pipeline, id]
   }
 
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {WebGLRenderPipeline | undefined}
    */
   getRenderPipeline(id) {

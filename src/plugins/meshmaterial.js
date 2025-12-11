@@ -42,11 +42,11 @@ export class MeshMaterialPlugin extends Plugin {
     }
     const { caches, attributes, defaults } = renderer
     const { material, mesh, transform } = object
-    const gpuMesh = caches.getMesh(device.context, mesh, attributes)
+    const gpuMesh = caches.getMesh(device, mesh, attributes)
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipeline = this.getMaterialRenderPipeline(device.context, caches, material, pipelineKey, () => {
+    const pipeline = this.getMaterialRenderPipeline(device, caches, material, pipelineKey, () => {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
@@ -72,8 +72,8 @@ export class MeshMaterialPlugin extends Plugin {
       }
 
       for (const shaderdef of shaderdefs) {
-        descriptor.vertex.defines.set(shaderdef[0],shaderdef[1])
-        descriptor.fragment?.source?.defines?.set(shaderdef[0],shaderdef[1])
+        descriptor.vertex.defines.set(shaderdef[0], shaderdef[1])
+        descriptor.fragment?.source?.defines?.set(shaderdef[0], shaderdef[1])
       }
       for (const [name, value] of includes) {
         descriptor.vertex.includes.set(name, value)
@@ -90,21 +90,21 @@ export class MeshMaterialPlugin extends Plugin {
     const ubo = caches.uniformBuffers.get('MaterialBlock')
 
     pipeline.use(device.context)
-
+    
     if (ubo) {
       const materialData = material.getData()
       ubo.update(device.context, materialData)
     }
-    uploadTextures(device.context, material, pipeline.uniforms, caches, defaults)
+    uploadTextures(device, material, pipeline.uniforms, caches, defaults)
 
     if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && object.skin) {
       device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + boneMatricesInfo.texture_unit)
       object.skin.bindMatrix.copy(object.transform.world)
       object.skin.inverseBindMatrix.copy(object.skin.bindMatrix).invert()
       object.skin.updateTexture()
-      const texture = caches.getTexture(device.context, object.skin.boneTexture)
+      const texture = caches.getTexture(device, object.skin.boneTexture)
 
-      device.context.bindTexture(object.skin.boneTexture.type, texture)
+      device.context.bindTexture(object.skin.boneTexture.type, texture.inner)
       device.context.texParameteri(object.skin.boneTexture.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
     }
 
@@ -125,13 +125,13 @@ export class MeshMaterialPlugin extends Plugin {
   }
 
   /**
-   * @param {WebGL2RenderingContext} context
+   * @param {WebGLRenderDevice} device
    * @param {Caches} caches
    * @param {RawMaterial} material
    * @param {PipelineKey} key
    * @param {() => WebGLRenderPipelineDescriptor} compute
    */
-  getMaterialRenderPipeline(context, caches, material, key, compute) {
+  getMaterialRenderPipeline(device, caches, material, key, compute) {
     const name = material.constructor.name
     let materialCache = this.materials.get(name)
 
@@ -151,7 +151,7 @@ export class MeshMaterialPlugin extends Plugin {
       }
     }
     const descriptor = compute()
-    const [newRenderPipeline, newId] = caches.createRenderPipeline(context, descriptor)
+    const [newRenderPipeline, newId] = caches.createRenderPipeline(device, descriptor)
 
     materialCache.set(key, newId)
     return newRenderPipeline
@@ -224,13 +224,13 @@ function createPipelineBitsFromMesh(mesh, object) {
 
 /**
  * @template {RawMaterial} T
- * @param {WebGL2RenderingContext} gl
+ * @param {WebGLRenderDevice} device
  * @param {T} material 
  * @param {ReadonlyMap<string, Uniform>} uniforms
  * @param {Caches} caches
  * @param {Defaults} defaults
  */
-function uploadTextures(gl, material, uniforms, caches, defaults) {
+function uploadTextures(device, material, uniforms, caches, defaults) {
   const textures = material.getTextures()
 
   for (let i = 0; i < textures.length; i++) {
@@ -239,11 +239,10 @@ function uploadTextures(gl, material, uniforms, caches, defaults) {
     const textureInfo = uniforms.get(name)
 
     if (textureInfo && textureInfo.texture_unit !== undefined) {
-      const gpuTexture = caches.getTexture(gl, texture)
-
-      gl.activeTexture(gl.TEXTURE0 + textureInfo.texture_unit)
-      gl.bindTexture(texture.type, gpuTexture)
-      updateTextureSampler(gl, texture, sampler)
+      const gpuTexture = caches.getTexture(device, texture)
+      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + textureInfo.texture_unit)
+      device.context.bindTexture(texture.type, gpuTexture.inner)
+      updateTextureSampler(device.context, texture, sampler)
     }
   }
 }
@@ -252,23 +251,23 @@ function uploadTextures(gl, material, uniforms, caches, defaults) {
  * @param {bigint} meshBits
  * @param {ReadonlyMap<string, string>} globalDefines
  */
-function getShaderDefs(meshLayout, meshBits, globalDefines){
+function getShaderDefs(meshLayout, meshBits, globalDefines) {
   /**@type {[string,string][]} */
   const shaderdefs = []
   if (meshBits & MeshKey.Skinned) {
     shaderdefs.push(["SKINNED", ""])
   }
 
-  if(meshLayout.hasAttribute(Attribute.UV)){
-    shaderdefs.push(['VERTEX_UVS',''])
+  if (meshLayout.hasAttribute(Attribute.UV)) {
+    shaderdefs.push(['VERTEX_UVS', ''])
   }
 
-  if(meshLayout.hasAttribute(Attribute.Normal)){
-    shaderdefs.push(['VERTEX_NORMALS',''])
+  if (meshLayout.hasAttribute(Attribute.Normal)) {
+    shaderdefs.push(['VERTEX_NORMALS', ''])
   }
 
-  if(meshLayout.hasAttribute(Attribute.Tangent)){
-    shaderdefs.push(['VERTEX_TANGENTS',''])
+  if (meshLayout.hasAttribute(Attribute.Tangent)) {
+    shaderdefs.push(['VERTEX_TANGENTS', ''])
   }
 
   for (const [name, value] of globalDefines) {
