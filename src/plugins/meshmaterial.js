@@ -4,14 +4,13 @@
 
 import { assert } from '../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
-import { updateTextureSampler } from "../function.js";
 import { RawMaterial } from "../material/index.js";
 import { Affine3 } from "../math/index.js";
 import { Mesh, Attribute } from "../mesh/index.js";
 import { MeshMaterial3D, Object3D } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture } from "../texture/index.js";
-import { PrimitiveTopology, TextureFormat } from '../constants/index.js';
+import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
 
@@ -220,6 +219,58 @@ function createPipelineBitsFromMesh(mesh, object) {
     key |= MeshKey.Skinned
   }
   return key
+}
+
+/**
+ * @param {WebGL2RenderingContext} context
+ * @param {Texture} texture
+ * @param {Sampler} sampler
+ */
+function updateTextureSampler(context, texture, sampler) {
+  const lod = sampler.lod
+  const anisotropyExtenstion = context.getExtension("EXT_texture_filter_anisotropic")
+
+  context.texParameteri(texture.type, context.TEXTURE_MAG_FILTER, sampler.magnificationFilter)
+  context.texParameteri(texture.type, context.TEXTURE_WRAP_S, sampler.wrapS)
+  context.texParameteri(texture.type, context.TEXTURE_WRAP_T, sampler.wrapT)
+  context.texParameteri(texture.type, context.TEXTURE_WRAP_R, sampler.wrapR)
+
+  if (lod) {
+    context.texParameteri(texture.type, context.TEXTURE_MIN_LOD, lod.min)
+    context.texParameteri(texture.type, context.TEXTURE_MAX_LOD, lod.max)
+  }
+
+  if (sampler.mipmapFilter !== undefined) {
+    if (sampler.minificationFilter === TextureFilter.Linear) {
+      if (sampler.mipmapFilter === TextureFilter.Linear) {
+        context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.LINEAR_MIPMAP_LINEAR);
+      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
+        context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.LINEAR_MIPMAP_NEAREST);
+      }
+    } else if (sampler.minificationFilter === TextureFilter.Nearest) {
+      if (sampler.mipmapFilter === TextureFilter.Linear) {
+        context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR);
+      } else if (sampler.mipmapFilter === TextureFilter.Nearest) {
+        context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_NEAREST);
+      }
+    }
+  } else {
+    if (sampler.minificationFilter === TextureFilter.Nearest) {
+      context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.NEAREST)
+    } else if (sampler.minificationFilter === TextureFilter.Linear) {
+      context.texParameteri(texture.type, context.TEXTURE_MIN_FILTER, context.LINEAR)
+    }
+  }
+  if (anisotropyExtenstion) {
+    context.texParameterf(texture.type, anisotropyExtenstion.TEXTURE_MAX_ANISOTROPY_EXT, sampler.anisotropy)
+  }
+
+  if (sampler.compare !== undefined) {
+    context.texParameteri(texture.type, context.TEXTURE_COMPARE_MODE, context.COMPARE_REF_TO_TEXTURE);
+    context.texParameteri(texture.type, context.TEXTURE_COMPARE_FUNC, sampler.compare)
+  } else {
+    context.texParameteri(texture.type, context.TEXTURE_COMPARE_MODE, context.NONE);
+  }
 }
 
 /**
