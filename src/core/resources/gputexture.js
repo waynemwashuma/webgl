@@ -1,4 +1,4 @@
-import { TextureType } from "../../constants/index.js"
+import { TextureFormat, TextureType } from "../../constants/index.js"
 import { WebGLTextureFormat } from "../../function.js"
 
 export class GPUTexture {
@@ -40,6 +40,12 @@ export class GPUTexture {
 
   /**
    * @readonly
+   * @type {TextureFormat}
+   */
+  actualFormat
+
+  /**
+   * @readonly
    * @type {number}
    */
   pixelSize
@@ -48,12 +54,13 @@ export class GPUTexture {
    * @param {WebGLTexture} texture
    * @param {TextureType} type
    * @param {WebGLTextureFormat} format
+   * @param {TextureFormat} actualFormat
    * @param {number} width
    * @param {number} height
    * @param {number} depth
    * @param {number} pixelSize
    */
-  constructor(texture, type, format, width, height, depth, pixelSize){
+  constructor(texture, type, format, actualFormat, width, height, depth, pixelSize){
     this.inner = texture
     this.type = type
     this.format = format
@@ -61,5 +68,6 @@ export class GPUTexture {
     this.height = height
     this.depth = depth
     this.pixelSize = pixelSize
+    this.actualFormat = actualFormat
   }
 }
