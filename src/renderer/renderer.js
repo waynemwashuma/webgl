@@ -137,6 +137,12 @@ export class WebGLRenderer {
 
     this.setViewport(renderDevice, renderTarget)
     camera.update()
+    for (let i = 0; i < objects.length; i++) {
+      /**@type {Object3D} */ (objects[i]).traverseDFS((object)=>{
+        object.update()
+        return true
+      })
+    }
 
     if (renderTarget) {
       const { clearColor, clearDepth, clearStencil } = renderTarget
@@ -162,7 +168,6 @@ export class WebGLRenderer {
       const plugin = /**@type {Plugin} */(this.plugins[i]);
       for (let i = 0; i < objects.length; i++) {
         const object = /**@type {Object3D} */ (objects[i])
-        object.update()
         object.traverseDFS((child) => {
           plugin.renderObject3D(child, renderDevice, this)
           return true
