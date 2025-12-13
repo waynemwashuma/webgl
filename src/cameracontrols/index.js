@@ -2,6 +2,11 @@ import { Affine3, clamp, Vector2, Vector3 } from "../math/index.js"
 import { Camera } from "../objects/index.js"
 
 export class OrbitCameraControls {
+  #targetElement
+  #mousedown
+  #mouseup
+  #mousemove
+  #contextmenu
   elevation = 0
   azimuth = 0
   distance = 5
@@ -21,12 +26,18 @@ export class OrbitCameraControls {
   /**
    * @param {Camera} camera
    */
-  constructor(camera) {
+  constructor(camera, targetElement = document.body) {
     this.camera = camera
-    addEventListener('mousedown', mouseDown.bind(this))
-    addEventListener('mouseup', mouseUp.bind(this))
-    addEventListener('mousemove', mousemove.bind(this))
-    addEventListener('contextmenu', (e) => e.preventDefault())
+    this.#targetElement = targetElement
+    this.#mousedown = mouseDown.bind(this)
+    this.#mouseup = mouseUp.bind(this)
+    this.#mousemove = mousemove.bind(this)
+    this.#contextmenu = (/** @type {MouseEvent} */ e) => e.preventDefault()
+
+    targetElement.addEventListener('mousedown', this.#mousedown)
+    targetElement.addEventListener('mouseup', this.#mouseup)
+    targetElement.addEventListener('mousemove', this.#mousemove)
+    targetElement.addEventListener('contextmenu', this.#contextmenu)
   }
 
   updateOrbit() {
@@ -75,6 +86,14 @@ export class OrbitCameraControls {
   update() {
     this.updateInput()
     this.updateOrbit()
+  }
+
+  dispose(){
+    const targetElement = this.#targetElement
+    targetElement.removeEventListener('mousedown', this.#mousedown)
+    targetElement.removeEventListener('mouseup', this.#mouseup)
+    targetElement.removeEventListener('mousemove', this.#mousemove)
+    targetElement.removeEventListener('contextmenu', this.#contextmenu)
   }
 }
 
