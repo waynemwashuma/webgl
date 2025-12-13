@@ -42,7 +42,7 @@ ambientLight.intensity = 0.15
 
 // camera and camera controls
 const camera = new Camera()
-const cameraControls = new OrbitCameraControls(camera)
+const cameraControls = new OrbitCameraControls(camera, canvas)
 document.body.append(canvas)
 updateView()
 

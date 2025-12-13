@@ -35,7 +35,7 @@ const renderer = new WebGLRenderer({
   ]
 })
 const camera = new Camera()
-const cameraControls = new OrbitCameraControls(camera)
+const cameraControls = new OrbitCameraControls(camera, canvas)
 
 // loaders
 const textureLoader = new TextureLoader()
