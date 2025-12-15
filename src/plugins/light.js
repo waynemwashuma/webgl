@@ -20,7 +20,7 @@ export class LightPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   preprocess(objects, device, renderer) {
-    const directionalLights = new DirectionalLights()
+    const directionalLights = new LightQueue()
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i])
 
@@ -33,7 +33,10 @@ export class LightPlugin extends Plugin {
         return true
       })
     }
-    renderer.updateUBO(device.context, directionalLights.getData())
+    renderer.updateUBO(device.context, {
+      name: "DirectionalLightBlock",
+      data: directionalLights.getData()
+    })
   }
 
   /**
@@ -42,19 +45,22 @@ export class LightPlugin extends Plugin {
   renderObject3D() { }
 }
 
-export class DirectionalLights {
+/**
+ * @template {{pack:()=>number[]}} T
+ */
+export class LightQueue {
   /**
-   * @type {DirectionalLight[]}
+   * @type {T[]}
    */
   lights = []
-  maxNumber = 10
 
   /**
-   * @param {DirectionalLight} light
+   * @param {T} light
    */
   add(light) {
     this.lights.push(light)
   }
+  
   getData() {
     const buffer = [
       this.lights.length,
@@ -62,9 +68,6 @@ export class DirectionalLights {
       ...this.lights.flatMap(light => light.pack())
     ]
 
-    return {
-      name: "DirectionalLightBlock",
-      data: new Float32Array(buffer)
-    }
+    return new Float32Array(buffer)
   }
 }
