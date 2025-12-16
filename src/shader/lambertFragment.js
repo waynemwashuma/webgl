@@ -2,6 +2,7 @@ export const lambertFragment =
   `
   precision mediump float;
 
+  #include <math>
   #include <common>
   #include <light>
   
@@ -27,6 +28,9 @@ export const lambertFragment =
   uniform DirectionalLightBlock {
     DirectionalLights directional_lights;
   };
+  uniform PointLightBlock {
+    PointLights point_lights;
+  };
   uniform sampler2D mainTexture;
   
   out vec4 fragment_color;
@@ -45,6 +49,7 @@ export const lambertFragment =
     #endif
     float opacity = material.color.a;
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
+    int point_light_count = min(point_lights.count,MAX_POINT_LIGHTS);
 
     vec3 ambient = ambient_light.color.rgb * ambient_light.intensity;
     
@@ -54,9 +59,21 @@ export const lambertFragment =
       
       //Remember you set the dir to negative because direction to light is the opposite direction of dir.
       float brightness = calculate_brightness(normal, -light.direction);
-      vec3 diffuse = base_color * light.color.rgb * brightness * light.intensity;
+      vec3 diffuse = light.color.rgb * brightness * light.intensity;
       
       accumulative_diffuse += base_color * diffuse;
+    }
+    
+    for (int i = 0; i < point_light_count; i++) {
+      PointLight light = point_lights.lights[i];
+      vec3 distance_vector = light.position - v_position;
+      float distance = length(distance_vector);
+      vec3 direction = distance_vector / distance;
+      float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
+      float brightness = calculate_brightness(normal, direction);
+      vec3 irradiance = light.color.rgb * attenuation;
+      
+      accumulative_diffuse += base_color * brightness * irradiance;
     }
     
     vec3 final_color = ambient * base_color + accumulative_diffuse;

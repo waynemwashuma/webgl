@@ -2,9 +2,9 @@ export const standardFragment =
   `
   precision mediump float;
 
+  #include <math>
   #include <common>
   #include <light>
-  #include <math>
 
   struct PBRInput {
     float NdotL;
@@ -53,6 +53,9 @@ export const standardFragment =
   };
   uniform DirectionalLightBlock {
     DirectionalLights directional_lights;
+  };
+  uniform PointLightBlock {
+    PointLights point_lights;
   };
   uniform sampler2D mainTexture;
   uniform sampler2D normal_texture;
@@ -189,6 +192,7 @@ export const standardFragment =
     vec3 N = pbr_properties.normal;
     vec3 V = normalize(cam_direction);
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
+    int point_light_count = min(point_lights.count, MAX_POINT_LIGHTS);
 
     vec3 exitance;
     for (int i = 0; i < directional_light_count; i++) {
@@ -197,6 +201,20 @@ export const standardFragment =
       vec3 H = normalize(L + V);
       vec3 irradiance = light.color.rgb * light.intensity;
       PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
+      
+      exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
+    }
+
+    for (int i = 0; i < point_light_count; i++) {
+      PointLight light = point_lights.lights[i];
+      vec3 normal = N;
+      vec3 distance_vector = light.position - v_position;
+      float distance = length(distance_vector);
+      vec3 L = distance_vector / distance;
+      vec3 H = normalize(L + V);
+      PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
+      float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
+      vec3 irradiance = light.color.rgb * attenuation;
       
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
