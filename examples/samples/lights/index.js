@@ -1,5 +1,7 @@
 const directional = new URL("./directional.js", import.meta.url)
+const point = new URL("./point.js", import.meta.url)
 
 export default {
-  "directional": directional
+  "directional": directional,
+  "point": point
 }
