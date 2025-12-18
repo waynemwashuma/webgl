@@ -2,7 +2,7 @@
 import { Texture } from "../texture/index.js"
 import { TextureFormat } from "../constants/index.js"
 import { ImageRenderTarget } from "../rendertarget/index.js"
-import { WebGLRenderDevice } from "../core/index.js"
+import { GPUTexture, WebGLRenderDevice } from "../core/index.js"
 
 export class ImageFrameBuffer {
   /**
@@ -11,7 +11,7 @@ export class ImageFrameBuffer {
   buffer
 
   /**
-   * @type {WebGLTexture[]}
+   * @type {GPUTexture[]}
    */
   colorAttachments = []
   /**
@@ -20,7 +20,7 @@ export class ImageFrameBuffer {
   depthBuffer
 
   /**
-   * @type {WebGLTexture | undefined}
+   * @type {GPUTexture | undefined}
    */
   depthImage
 
@@ -42,7 +42,7 @@ export class ImageFrameBuffer {
         WebGL2RenderingContext.FRAMEBUFFER,
         WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
         color.type,
-        textColor,
+        textColor.inner,
         0
       )
       this.colorAttachments[i] = textColor
@@ -76,7 +76,7 @@ export class ImageFrameBuffer {
         WebGL2RenderingContext.FRAMEBUFFER,
         getFramebufferAttachment(format),
         type,
-        texture,
+        texture.inner,
         0
       )
     }
