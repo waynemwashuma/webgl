@@ -20,7 +20,9 @@ import {
   PhongMaterial,
   StandardMaterial,
   CanvasTarget,
-  SkyboxPlugin
+  SkyboxPlugin,
+  ShadowPlugin,
+  SpotLightShadow
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -29,29 +31,20 @@ const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas, {
   depth: true
 })
-const ambientLight = new AmbientLight()
-const light = new PointLight()
-
-ambientLight.intensity = 0.15
-light.intensity = 1
-
 const renderer = new WebGLRenderer({
   plugins: [
+    new ShadowPlugin(),
     new LightPlugin(),
     new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera(renderTarget)
-const cameraControls = new OrbitCameraControls(camera, canvas)
 
-// loaders
+// assets and loaders
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],
 })
-
-//create objects
 /**@type {[LambertMaterial, PhongMaterial,StandardMaterial]} */
 const materials = [
   new LambertMaterial({
@@ -68,11 +61,7 @@ const materials = [
 ]
 const meshBuilder = new PlaneMeshBuilder()
 const lightMeshBuilder = new UVSphereMeshBuilder()
-lightMeshBuilder.radius = 0.1
-meshBuilder.width = 10
-meshBuilder.height = 10
-
-const day = textureLoader.load({
+const environmentTexture = textureLoader.load({
   paths: [
     "/assets/images/skybox/miramar_right.png",
     "/assets/images/skybox/miramar_left.png",
@@ -83,18 +72,33 @@ const day = textureLoader.load({
   ],
   type: TextureType.TextureCubeMap,
 })
+
+lightMeshBuilder.radius = 0.1
+meshBuilder.width = 10
+meshBuilder.height = 10
+
+// objects
+const ambientLight = new AmbientLight()
+const shadow = new SpotLightShadow()
+const light = new PointLight()
+const camera = new Camera(renderTarget)
+const cameraControls = new OrbitCameraControls(camera, canvas)
 const skyBox = new SkyBox({
-  day
+  day: environmentTexture
 })
-skyBox.transform.orientation.rotateY(Math.PI)
 const ground = new MeshMaterial3D(meshBuilder.build(), materials[0])
 const objects = createObjects()
 const lightHelper = new MeshMaterial3D(lightMeshBuilder.build(), new BasicMaterial({
   color: new Color(1, 0, 0)
 }))
 
+light.intensity = 1
+light.shadow = shadow
+light.radius = 5
 light.add(lightHelper)
 light.transform.position.y = 1
+ambientLight.intensity = 0.15
+skyBox.transform.orientation.rotateY(Math.PI)
 ground.transform.orientation.rotateX(-Math.PI / 2)
 
 //set up the camera
@@ -161,34 +165,36 @@ const settings = {
     g: 0,
     b: 0
   },
-  material: options[0]
+  material: options[0],
+  shadow: true
 }
 
 const controls = new GUI()
-const buildOptionsFolder = controls.addFolder("Settings")
-buildOptionsFolder
+const lightFolder = controls.addFolder("Light")
+const shadowFolder = controls.addFolder("Shadow")
+lightFolder
   .add(light.transform.position, 'x', -10, 10)
   .name("Translate X")
-buildOptionsFolder
+lightFolder
   .add(light.transform.position, 'y', 0, 2)
   .name("Translate Y")
-buildOptionsFolder
+lightFolder
   .add(light.transform.position, 'z', -10, 10)
   .name("Translate Z")
-buildOptionsFolder
+lightFolder
   .add(light, 'intensity', 0, 100)
   .name("Intensity")
-buildOptionsFolder
+lightFolder
   .add(light, 'radius', 0, 10)
   .name("Falloff Radius")
-buildOptionsFolder
+lightFolder
   .add(light, 'decay', 0, 100)
   .name("Decay")
-buildOptionsFolder
+lightFolder
   .add(settings, 'material', options)
   .name("Material")
   .onChange(changeMaterial)
-buildOptionsFolder
+lightFolder
   .addColor(settings, 'color')
   .name('Color')
   .onChange((value) => {
@@ -198,8 +204,22 @@ buildOptionsFolder
       value.b / 255
     )
   })
+shadowFolder
+  .add(settings, 'shadow')
+  .name("Enable Shadow")
+  .onChange(toggleShadows)
+shadowFolder
+  .add(shadow, 'near', 0.01, 1)
+  .name('Near')
+shadowFolder
+  .add(shadow, 'bias', 0, 1)
+  .name('Bias')
+shadowFolder
+  .add(shadow, 'normalBias', 0, 0.005)
+  .name('Normal Bias')
 
-buildOptionsFolder.open()
+shadowFolder.open()
+lightFolder.open()
 /**
  * @param {string} value
  */
@@ -219,5 +239,16 @@ function changeMaterial(value) {
       break;
     default:
       break;
+  }
+}
+
+/**
+ * @param {boolean} value
+ */
+function toggleShadows(value) {
+  if (value) {
+    light.shadow = shadow
+  } else {
+    light.shadow = undefined
   }
 }
