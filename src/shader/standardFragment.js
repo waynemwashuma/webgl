@@ -48,7 +48,6 @@ export const standardFragment =
   uniform MaterialBlock {
     StandardMaterial material;
   };
-  
   uniform AmbientLightBlock {
     AmbientLight ambient_light;
   };
@@ -61,6 +60,12 @@ export const standardFragment =
   uniform SpotLightBlock {
     SpotLights spot_lights;
   };
+  #ifdef MAX_SHADOW_CASTERS
+    uniform ShadowCasterBlock {
+      Shadow shadow_casters[MAX_SHADOW_CASTERS];
+    };
+    uniform sampler2DArray shadow_atlas;
+  #endif
   uniform sampler2D mainTexture;
   uniform sampler2D normal_texture;
   uniform sampler2D occlusion_texture;
@@ -204,9 +209,16 @@ export const standardFragment =
       DirectionalLight light = directional_lights.lights[i];
       vec3 L = -light.direction;
       vec3 H = normalize(L + V);
-      vec3 irradiance = light.color.rgb * light.intensity;
       PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
-      
+      vec3 irradiance = light.color.rgb * light.intensity;
+
+      #ifdef MAX_SHADOW_CASTERS
+        if(light.shadow_index != -1){
+          Shadow shadow = shadow_casters[light.shadow_index];
+          
+          irradiance *= shadow_contribution_2d(shadow, shadow_atlas, v_position, pbr_input.NdotL);
+        }
+      #endif      
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
 
@@ -221,6 +233,14 @@ export const standardFragment =
       float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
       vec3 irradiance = light.color.rgb * attenuation;
       
+      #ifdef MAX_SHADOW_CASTERS
+        if(light.shadow_index != -1){
+          Shadow shadow = shadow_casters[light.shadow_index];
+          
+          irradiance *= shadow_contribution_cube(shadow, shadow_atlas, v_position, pbr_input.NdotL);
+        }
+      #endif
+
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
 
@@ -235,6 +255,14 @@ export const standardFragment =
       float attenuation = attenuate_spot_light(light, L, distance);
       vec3 irradiance = light.color.rgb * attenuation;
       
+      #ifdef MAX_SHADOW_CASTERS
+        if(light.shadow_index != -1){
+          Shadow shadow = shadow_casters[light.shadow_index];
+          
+          irradiance *= shadow_contribution_2d(shadow, shadow_atlas, v_position, pbr_input.NdotL);
+        }
+      #endif
+
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
     }
 
