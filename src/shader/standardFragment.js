@@ -57,6 +57,9 @@ export const standardFragment =
   uniform PointLightBlock {
     PointLights point_lights;
   };
+  uniform SpotLightBlock {
+    SpotLights spot_lights;
+  };
   uniform sampler2D mainTexture;
   uniform sampler2D normal_texture;
   uniform sampler2D occlusion_texture;
@@ -193,6 +196,7 @@ export const standardFragment =
     vec3 V = normalize(cam_direction);
     int directional_light_count = min(directional_lights.count,MAX_DIRECTIONAL_LIGHTS);
     int point_light_count = min(point_lights.count, MAX_POINT_LIGHTS);
+    int spot_light_count = min(spot_lights.count,MAX_SPOT_LIGHTS);
 
     vec3 exitance;
     for (int i = 0; i < directional_light_count; i++) {
@@ -214,6 +218,20 @@ export const standardFragment =
       vec3 H = normalize(L + V);
       PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
       float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
+      vec3 irradiance = light.color.rgb * attenuation;
+      
+      exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
+    }
+
+    for (int i = 0; i < spot_light_count; i++) {
+      SpotLight light = spot_lights.lights[i];
+      vec3 normal = N;
+      vec3 distance_vector = light.position - v_position;
+      float distance = length(distance_vector);
+      vec3 L = distance_vector / distance;
+      vec3 H = normalize(L + V);
+      PBRInput pbr_input = calculate_pbr_input(N, V, L, H);
+      float attenuation = attenuate_spot_light(light, L, distance);
       vec3 irradiance = light.color.rgb * attenuation;
       
       exitance += cook_torrance_BRDF(pbr_properties, pbr_input) * irradiance * pbr_input.NdotL;
