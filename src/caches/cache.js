@@ -4,14 +4,14 @@
 import { ImageRenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
-import { GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
-import { ImageFrameBuffer } from "./framebuffer.js"
+import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice } from "../core/index.js"
 import { WebGLRenderPipeline } from "./renderpipeline.js"
 import { UniformBuffers } from "./uniformbuffers.js"
 import { BufferType, BufferUsage } from "../constants/others.js"
 import { mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
 import { assert } from "../utils/index.js"
 import { getVertexFormatComponentNumber, getVertexFormatComponentSize } from "../constants/mesh.js"
+import { TextureFormat } from "../constants/index.js"
 
 export class Caches {
   uniformBuffers = new UniformBuffers()
@@ -29,7 +29,7 @@ export class Caches {
   renderpipelines = []
 
   /**
-   * @type {Map<ImageRenderTarget, ImageFrameBuffer>}
+   * @type {Map<ImageRenderTarget, FrameBuffer>}
    */
   renderTargets = new Map()
 
@@ -41,7 +41,7 @@ export class Caches {
   /**
    * @param {WebGLRenderDevice} device
    * @param {ImageRenderTarget} target
-   * @returns {ImageFrameBuffer}
+   * @returns {FrameBuffer}
    */
   getFrameBuffer(device, target) {
     const current = this.renderTargets.get(target)
@@ -50,7 +50,46 @@ export class Caches {
       return current
     }
 
-    const newTarget = new ImageFrameBuffer(device, target, this)
+    const framebuffer = device.context.createFramebuffer()
+    const colorAttachments = []
+    let depthBuffer
+
+    device.context.bindFramebuffer(WebGL2RenderingContext.FRAMEBUFFER, framebuffer)
+
+    for (let i = 0; i < target.color.length; i++) {
+      const color = /**@type {Texture}*/ (target.color[i])
+      const textColor = this.getTexture(device, color)
+      device.context.framebufferTexture2D(
+        WebGL2RenderingContext.FRAMEBUFFER,
+        WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
+        color.type,
+        textColor.inner,
+        0
+      )
+      colorAttachments[i] = textColor
+    }
+
+    if (target.internalDepthStencil) {
+      const depth = device.context.createRenderbuffer()
+      const format = target.internalDepthStencil
+
+      device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
+      device.context.renderbufferStorage(
+        WebGL2RenderingContext.RENDERBUFFER,
+        format,
+        target.width,
+        target.height
+      )
+      device.context.framebufferRenderbuffer(
+        WebGL2RenderingContext.FRAMEBUFFER,
+        getFramebufferAttachment(format),
+        WebGL2RenderingContext.RENDERBUFFER,
+        depth
+      )
+      depthBuffer = depth
+    }
+
+    const newTarget = new FrameBuffer(framebuffer, colorAttachments, depthBuffer)
 
     this.renderTargets.set(target, newTarget)
     return newTarget
@@ -197,7 +236,7 @@ export class Caches {
  * @param {Mesh} mesh
  * @param {GPUMesh} gpuMesh
  */
-export function updateVAO(device, layout, mesh, gpuMesh) {
+function updateVAO(device, layout, mesh, gpuMesh) {
   const { indices, attributes } = mesh
   let attrCount
 
@@ -281,5 +320,35 @@ function setVertexAttribute(gl, index, params, stride = 0, offset = 0) {
       break;
     default:
       throw new Error(`Unsupported GlDataType: ${type.toString()}`);
+  }
+}
+
+/**
+ * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
+ * @param {number} format - A value from TextureFormat.
+ * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
+ */
+function getFramebufferAttachment(format) {
+  const context = WebGL2RenderingContext;
+
+  switch (format) {
+    // --- Depth-only formats ---
+    case TextureFormat.Depth16Unorm:
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth32Float:
+      return context.DEPTH_ATTACHMENT;
+
+    // --- Stencil-only format ---
+    case TextureFormat.Stencil8:
+      return context.STENCIL_ATTACHMENT;
+
+    // --- Combined depth + stencil formats ---
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32FloatStencil8:
+      return context.DEPTH_STENCIL_ATTACHMENT;
+
+    // --- Everything else is a color attachment ---
+    default:
+      return context.COLOR_ATTACHMENT0;
   }
 }
