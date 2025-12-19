@@ -137,6 +137,56 @@ export function getWebGLTextureFormat(format) {
 }
 
 /**
+ * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
+ * @param {number} format - A value from TextureFormat.
+ * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
+ */
+export function getFramebufferAttachment(format) {
+  const context = WebGL2RenderingContext;
+
+  switch (format) {
+    // --- Depth-only formats ---
+    case TextureFormat.Depth16Unorm:
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth32Float:
+      return context.DEPTH_ATTACHMENT;
+
+    // --- Stencil-only format ---
+    case TextureFormat.Stencil8:
+      return context.STENCIL_ATTACHMENT;
+
+    // --- Combined depth + stencil formats ---
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32FloatStencil8:
+      return context.DEPTH_STENCIL_ATTACHMENT;
+
+    // --- Everything else is a color attachment ---
+    default:
+      return context.COLOR_ATTACHMENT0;
+  }
+}
+
+
+/**
+ * @param {GLenum} attachment
+ */
+export function mapWebGLAttachmentToBufferBit(attachment) {
+  switch (attachment) {
+      case WebGL2RenderingContext.COLOR_ATTACHMENT0:
+          return WebGL2RenderingContext.COLOR_BUFFER_BIT;
+      case WebGL2RenderingContext.DEPTH_ATTACHMENT:
+          return WebGL2RenderingContext.DEPTH_BUFFER_BIT;
+      case WebGL2RenderingContext.STENCIL_ATTACHMENT:
+          return WebGL2RenderingContext.STENCIL_BUFFER_BIT;
+      case WebGL2RenderingContext.DEPTH_STENCIL_ATTACHMENT:
+          return WebGL2RenderingContext.DEPTH_BUFFER_BIT | WebGLRenderingContext.STENCIL_BUFFER_BIT;
+      default:
+          throw new Error("Unsupported attachment type");
+  }
+}
+
+
+/**
  * Maps a `VertexFormat` variant to WebGL format attributes for use in `vertexAttribPointer` or equivalent functions.
  * @param {VertexFormat} format
  * @returns {WebGLAtttributeParams}

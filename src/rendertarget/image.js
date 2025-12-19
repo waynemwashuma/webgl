@@ -25,18 +25,26 @@ export class ImageRenderTarget extends RenderTarget {
     color = [],
     depth,
     width,
-    height
+    height,
+    internalDepthStencil
   }) {
     super()
     this.width = width
     this.height = height
     this.color = color
     this.depthTexture = depth
+    this.internalDepthStencil = internalDepthStencil
     
     for (const color of this.color) {
       color.data = undefined
       color.width = width
       color.height = height
+    }
+
+    if(this.depthTexture){
+      this.depthTexture.data = undefined
+      this.depthTexture.width = width
+      this.depthTexture.height = height
     }
   }
 }

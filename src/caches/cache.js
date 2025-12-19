@@ -8,7 +8,7 @@ import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice }
 import { WebGLRenderPipeline } from "./renderpipeline.js"
 import { UniformBuffers } from "./uniformbuffers.js"
 import { BufferType, BufferUsage } from "../constants/others.js"
-import { mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
+import { getFramebufferAttachment, getWebGLTextureFormat, mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
 import { assert } from "../utils/index.js"
 import { getVertexFormatComponentNumber, getVertexFormatComponentSize } from "../constants/mesh.js"
 import { TextureFormat } from "../constants/index.js"
@@ -45,12 +45,12 @@ export class Caches {
    */
   getFrameBuffer(device, target) {
     const current = this.renderTargets.get(target)
-
     if (current) {
       return current
     }
 
     const framebuffer = device.context.createFramebuffer()
+    const depthFormat = target.internalDepthStencil || target.depthTexture?.format
     const colorAttachments = []
     let depthBuffer
 
@@ -69,24 +69,26 @@ export class Caches {
       colorAttachments[i] = textColor
     }
 
-    if (target.internalDepthStencil) {
-      const depth = device.context.createRenderbuffer()
-      const format = target.internalDepthStencil
+    if (depthFormat) {
+      const webglFormat = getWebGLTextureFormat(depthFormat)
 
+      assert(webglFormat, "No such texture format exists")
+
+      const depth = device.context.createRenderbuffer()
       device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
       device.context.renderbufferStorage(
         WebGL2RenderingContext.RENDERBUFFER,
-        format,
+        webglFormat.internalFormat,
         target.width,
         target.height
       )
       device.context.framebufferRenderbuffer(
         WebGL2RenderingContext.FRAMEBUFFER,
-        getFramebufferAttachment(format),
+        getFramebufferAttachment(depthFormat),
         WebGL2RenderingContext.RENDERBUFFER,
         depth
       )
-      depthBuffer = depth
+      depthBuffer = /**@type {[WebGLRenderbuffer, TextureFormat]}*/([depth, depthFormat])
     }
 
     const newTarget = new FrameBuffer(framebuffer, colorAttachments, depthBuffer)
@@ -293,18 +295,18 @@ function updateVAO(device, layout, mesh, gpuMesh) {
 }
 
 /**
- * @param {WebGL2RenderingContext} gl
+ * @param {WebGL2RenderingContext} context
  * @param {number} index
  * @param {WebGLAtttributeParams} params
  * @param {number} [stride = 0]
  * @param {number} [offset = 0]
  */
-function setVertexAttribute(gl, index, params, stride = 0, offset = 0) {
+function setVertexAttribute(context, index, params, stride = 0, offset = 0) {
   const { type, size, normalized } = params
-  gl.enableVertexAttribArray(index)
+  context.enableVertexAttribArray(index)
   switch (type) {
     case WebGL2RenderingContext.FLOAT:
-      gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+      context.vertexAttribPointer(index, size, type, normalized, stride, offset);
       break;
     case WebGL2RenderingContext.BYTE:
     case WebGL2RenderingContext.UNSIGNED_BYTE:
@@ -313,42 +315,12 @@ function setVertexAttribute(gl, index, params, stride = 0, offset = 0) {
     case WebGL2RenderingContext.INT:
     case WebGL2RenderingContext.UNSIGNED_INT:
       if (normalized) {
-        gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+        context.vertexAttribPointer(index, size, type, normalized, stride, offset);
       } else {
-        gl.vertexAttribIPointer(index, size, type, stride, offset);
+        context.vertexAttribIPointer(index, size, type, stride, offset);
       }
       break;
     default:
       throw new Error(`Unsupported GlDataType: ${type.toString()}`);
-  }
-}
-
-/**
- * Converts a TextureFormat enum value to the appropriate framebuffer attachment type.
- * @param {number} format - A value from TextureFormat.
- * @returns {number} A GL_* attachment enum, e.g. gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT, etc.
- */
-function getFramebufferAttachment(format) {
-  const context = WebGL2RenderingContext;
-
-  switch (format) {
-    // --- Depth-only formats ---
-    case TextureFormat.Depth16Unorm:
-    case TextureFormat.Depth24Plus:
-    case TextureFormat.Depth32Float:
-      return context.DEPTH_ATTACHMENT;
-
-    // --- Stencil-only format ---
-    case TextureFormat.Stencil8:
-      return context.STENCIL_ATTACHMENT;
-
-    // --- Combined depth + stencil formats ---
-    case TextureFormat.Depth24PlusStencil8:
-    case TextureFormat.Depth32FloatStencil8:
-      return context.DEPTH_STENCIL_ATTACHMENT;
-
-    // --- Everything else is a color attachment ---
-    default:
-      return context.COLOR_ATTACHMENT0;
   }
 }

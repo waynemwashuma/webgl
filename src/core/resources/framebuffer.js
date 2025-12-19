@@ -1,4 +1,5 @@
-import { GPUTexture } from "../index.js"
+import { TextureFormat } from "../../constants/index.js"
+import { GPUTexture } from "./gputexture.js"
 
 export class FrameBuffer {
   /**
@@ -11,14 +12,14 @@ export class FrameBuffer {
    */
   colorAttachments = []
   /**
-   * @type {WebGLRenderbuffer | undefined}
+   * @type {[WebGLRenderbuffer, TextureFormat] | undefined}
    */
   depthBuffer
 
   /**
    * @param {WebGLFramebuffer} frameBuffer
    * @param {GPUTexture[]} colorAttachments
-   * @param {WebGLRenderbuffer | undefined} depthBuffer
+   * @param {[WebGLRenderbuffer, TextureFormat] | undefined} depthBuffer
    */
   constructor(frameBuffer, colorAttachments, depthBuffer) {
     this.buffer = frameBuffer
