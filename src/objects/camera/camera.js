@@ -36,7 +36,9 @@ export class Camera extends Object3D {
 			data: new Float32Array([
 				...this.view,
 				...this.projection.asProjectionMatrix(near, far),
-				...this.transform.position
+				...this.transform.position,
+				this.near,
+				this.far
 			]).buffer
 		}
 	}
