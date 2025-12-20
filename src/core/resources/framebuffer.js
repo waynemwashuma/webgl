@@ -10,7 +10,13 @@ export class FrameBuffer {
   /**
    * @type {GPUTexture[]}
    */
-  colorAttachments = []
+  colorAttachments
+
+  /**
+   * @type {GLenum[]}
+   */
+  drawBuffers
+
   /**
    * @type {[WebGLRenderbuffer, TextureFormat] | undefined}
    */
@@ -19,11 +25,13 @@ export class FrameBuffer {
   /**
    * @param {WebGLFramebuffer} frameBuffer
    * @param {GPUTexture[]} colorAttachments
+   * @param {GLenum[]} drawBuffers
    * @param {[WebGLRenderbuffer, TextureFormat] | undefined} depthBuffer
    */
-  constructor(frameBuffer, colorAttachments, depthBuffer) {
+  constructor(frameBuffer, colorAttachments, drawBuffers, depthBuffer) {
     this.buffer = frameBuffer
     this.colorAttachments = colorAttachments
     this.depthBuffer = depthBuffer
+    this.drawBuffers = drawBuffers
   }
 }
