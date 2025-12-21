@@ -34,7 +34,6 @@ const day = textureLoader.load({
     "/assets/images/skybox/miramar_bottom.png",
     "/assets/images/skybox/miramar_back.png",
     "/assets/images/skybox/miramar_front.png",
-
   ],
   type: TextureType.TextureCubeMap,
 })
