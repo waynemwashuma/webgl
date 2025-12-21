@@ -183,7 +183,9 @@ export class Caches {
       type: texture.type,
       format: texture.format,
       width: texture.width,
-      height: texture.height
+      height: texture.height,
+      depth: texture.depth,
+      
     })
 
     if (texture.data) {
