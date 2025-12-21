@@ -1,7 +1,6 @@
 /**@import { Brand } from '../utils/index.js' */
 /**@import { Defaults } from '../renderer/index.js' */
-/**@import { Caches, WebGLRenderPipelineDescriptor } from '../caches/index.js' */
-
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { assert } from '../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
 import { RawMaterial } from "../material/index.js";
@@ -11,6 +10,7 @@ import { MeshMaterial3D, Object3D } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture } from "../texture/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
+import { Caches } from '../caches/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
 

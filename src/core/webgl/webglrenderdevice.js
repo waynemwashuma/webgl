@@ -1,9 +1,11 @@
-import { TextureFormat, TextureType, BufferUsage, BufferType, getTextureFormatSize } from "../../constants/index.js"
+/**@import { WebGLBufferDescriptor, WebGLRenderPipelineDescriptor, WebGLTextureDescriptor, WebGLWriteTextureDescriptor } from './descriptors.js' */
+import { CullFace, FrontFaceDirection, TextureFormat, TextureType, getTextureFormatSize } from "../../constants/index.js"
 import { assert } from "../../utils/index.js"
-import { convertBufferToTypedArray, getFramebufferAttachment, getWebGLTextureFormat, mapWebGLAttachmentToBufferBit, WebGLTextureFormat } from "../../function.js"
-import { Vector3 } from "../../math/index.js"
+import { getFramebufferAttachment, getWebGLTextureFormat, mapWebGLAttachmentToBufferBit } from "../../function.js"
 import { WebGLExtensions } from "../extensions.js"
+import { WebGLRenderPipeline } from "./renderpipeline.js"
 import { GPUBuffer, GPUTexture } from "../resources/index.js"
+import { allocateTexture2D, allocateCubemap, allocateTexture2DArray, updateTexture2D, updateCubeMap, updateTexture2DArray, createProgramFromSrc } from "./utils.js"
 
 export class WebGLRenderDevice {
   /**
@@ -50,6 +52,33 @@ export class WebGLRenderDevice {
     this.extensions.get("OES_texture_float_linear")
   }
 
+  /**
+   * 
+   * @param {WebGLRenderPipelineDescriptor} descriptor 
+   */
+  createRenderPipeline(descriptor) {
+    const programInfo = createProgramFromSrc(
+      this.context,
+      descriptor.vertex.compile(),
+      descriptor.fragment?.source?.compile() || '',
+      descriptor.vertexLayout
+    )
+
+    assert(programInfo, 'Cannot create webgl render pipeline')
+    
+    return new WebGLRenderPipeline({
+      program: programInfo.program,
+      uniforms: programInfo.uniforms,
+      uniformBlocks: programInfo.uniformBlocks,
+      vertexLayout: descriptor.vertexLayout,
+      topology: descriptor.topology,
+      targets: descriptor.fragment?.targets || [],
+      frontFace: descriptor.frontFace || FrontFaceDirection.CCW,
+      cullFace: descriptor.cullFace || CullFace.Back,
+      depthTest: descriptor.depthTest  || true,
+      depthWrite: descriptor.depthWrite || true
+    })
+  }
   /**
    * @param {WebGLBufferDescriptor} descriptor 
    * @returns {GPUBuffer}
@@ -173,184 +202,3 @@ export class WebGLRenderDevice {
     )
   }
 }
-
-/**
- * @param {WebGL2RenderingContext} context 
- * @param {WebGLTextureDescriptor} descriptor 
- * @param {WebGLTextureFormat} format 
- */
-function allocateTexture2DArray(context, descriptor, format) {
-  context.texStorage3D(
-    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
-    1,
-    format.internalFormat,
-    descriptor.width,
-    descriptor.height,
-    descriptor.depth || 1
-  )
-}
-
-/**
- * @param {WebGL2RenderingContext} context 
- * @param {WebGLTextureDescriptor} descriptor 
- * @param {WebGLTextureFormat} format 
- */
-function allocateTexture2D(context, descriptor, format) {
-  context.texImage2D(
-    WebGL2RenderingContext.TEXTURE_2D,
-    0,
-    format.internalFormat,
-    descriptor.width,
-    descriptor.height,
-    0,
-    format.format,
-    format.dataType,
-    null
-  )
-  context.texParameteri(
-    WebGL2RenderingContext.TEXTURE_2D,
-    WebGL2RenderingContext.TEXTURE_MIN_FILTER,
-    WebGL2RenderingContext.NEAREST
-  )
-  context.texParameteri(
-    WebGL2RenderingContext.TEXTURE_2D,
-    WebGL2RenderingContext.TEXTURE_MAG_FILTER,
-    WebGL2RenderingContext.NEAREST
-  )
-}
-
-/**
- * @param {WebGL2RenderingContext} context 
- * @param {WebGLTextureDescriptor} descriptor 
- * @param {WebGLTextureFormat} format 
- */
-function allocateCubemap(context, descriptor, format) {
-  for (let offset = 0; offset < 6; offset++) {
-    context.texImage2D(
-      WebGL2RenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + offset,
-      0,
-      format.internalFormat,
-      descriptor.width,
-      descriptor.height,
-      0,
-      format.format,
-      format.dataType,
-      null
-    )
-  }
-}
-
-/**
- * @param {WebGL2RenderingContext} context
- * @param {WebGLWriteTextureDescriptor} descriptor
- */
-function updateTexture2D(context, descriptor) {
-  const {
-    texture,
-    data,
-    mipmapLevel = 0,
-    offset = new Vector3(0, 0, 0),
-    size = new Vector3(texture.width, texture.height, texture.depth)
-  } = descriptor
-  const { format, dataType } = texture.format
-
-  context.texSubImage2D(
-    WebGL2RenderingContext.TEXTURE_2D,
-    mipmapLevel,
-    offset.x,
-    offset.y,
-    size.x,
-    size.y,
-    format,
-    dataType,
-    convertBufferToTypedArray(data, dataType)
-  )
-}
-
-/**
- * @param {WebGL2RenderingContext} context
- * @param {WebGLWriteTextureDescriptor} descriptor
- */
-function updateTexture2DArray(context, descriptor) {
-  const {
-    texture,
-    data,
-    mipmapLevel = 0,
-    offset = new Vector3(0, 0, 0),
-    size = new Vector3(texture.width, texture.height, texture.depth)
-  } = descriptor
-  const { format, dataType } = texture.format
-
-  context.texSubImage3D(
-    WebGL2RenderingContext.TEXTURE_2D_ARRAY,
-    mipmapLevel,
-    offset.x,
-    offset.y,
-    offset.z,
-    size.x,
-    size.y,
-    size.z,
-    format,
-    dataType,
-    convertBufferToTypedArray(data, dataType)
-  )
-}
-
-/**
- * @param {WebGL2RenderingContext} gl
- * @param {WebGLWriteTextureDescriptor} descriptor
- */
-function updateCubeMap(gl, descriptor) {
-  const {
-    texture,
-    data,
-    mipmapLevel = 0,
-    offset = new Vector3(0, 0, 0),
-    size = new Vector3(texture.width, texture.height, texture.depth)
-  } = descriptor
-  const { format, dataType } = texture.format
-  const { width, height, pixelSize } = texture
-  const sliceSize = pixelSize * width * height
-  const src = convertBufferToTypedArray(data, dataType)
-
-  for (let i = 0; i < 6; i++) {
-    gl.texSubImage2D(
-      WebGLRenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X + i,
-      mipmapLevel,
-      offset.x,
-      offset.y,
-      size.x,
-      size.y,
-      format,
-      dataType,
-      src,
-      sliceSize * i
-    )
-  }
-}
-
-/**
- * @typedef WebGLBufferDescriptor
- * @property {number} size
- * @property {BufferUsage} usage
- * @property {BufferType} type
- */
-
-/**
- * @typedef WebGLTextureDescriptor
- * @property {TextureType} type
- * @property {TextureFormat} format
- * @property {number} width
- * @property {number} height
- * @property {number} [depth = 1]
- * @property {number} [mipmapCount = 1]
- */
-
-/**
- * @typedef WebGLWriteTextureDescriptor
- * @property {GPUTexture} texture
- * @property {ArrayBufferLike} data
- * @property {number} [mipmapLevel]
- * @property {Vector3} [offset]
- * @property {Vector3} [size]
- */

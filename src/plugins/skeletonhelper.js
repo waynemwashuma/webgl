@@ -1,4 +1,4 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../caches/index.js' */
+/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
 import { Affine3 } from "../math/index.js";
 import { PrimitiveTopology, TextureFormat } from "../constants/index.js";
