@@ -14,7 +14,8 @@ import {
   ImageRenderTarget,
   Color,
   CuboidMeshBuilder,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  CanvasTarget
 } from "webgllis"
 
 // performance monitor
@@ -25,6 +26,7 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
+const canvasTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
@@ -44,8 +46,8 @@ const renderTarget = new ImageRenderTarget({
   internalDepthStencil:TextureFormat.Depth24PlusStencil8
 })
 
-const camera1 = new Camera()
-const camera2 = new Camera()
+const camera1 = new Camera(renderTarget)
+const camera2 = new Camera(canvasTarget)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({

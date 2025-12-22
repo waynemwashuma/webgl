@@ -16,11 +16,13 @@ import {
   TextureType,
   SkyBox,
   UVSphereMeshBuilder,
-  LambertMaterial
+  LambertMaterial,
+  CanvasTarget
 } from "webgllis"
 import { GUI } from "dat.gui"
 
 const canvas = document.createElement('canvas')
+const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const ambientLight = new AmbientLight()
 const light = new DirectionalLight()
@@ -34,7 +36,7 @@ const renderer = new WebGLRenderer({
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 const cameraControls = new OrbitCameraControls(camera, canvas)
 
 // loaders

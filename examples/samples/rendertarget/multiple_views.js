@@ -34,10 +34,10 @@ const renderTarget2 = new CanvasTarget(canvas)
 const renderTarget3 = new CanvasTarget(canvas)
 const renderTarget4 = new CanvasTarget(canvas)
 
-const camera1 = new Camera()
-const camera2 = new Camera()
-const camera3 = new Camera()
-const camera4 = new Camera()
+const camera1 = new Camera(renderTarget1)
+const camera2 = new Camera(renderTarget2)
+const camera3 = new Camera(renderTarget3)
+const camera4 = new Camera(renderTarget4)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
@@ -76,11 +76,6 @@ renderTarget4.viewport.offset.set(0.5, 0.5)
 renderTarget4.viewport.size.set(0.5, 0.5)
 
 //set up the cameras
-camera1.target = renderTarget1
-camera2.target = renderTarget2
-camera3.target = renderTarget3
-camera4.target = renderTarget4
-
 camera1.transform.position.z = 5
 camera2.transform.position.z = 5
 camera3.transform.position.z = 5

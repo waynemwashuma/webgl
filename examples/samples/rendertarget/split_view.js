@@ -29,8 +29,8 @@ const renderer = new WebGLRenderer({
   ]
 })
 
-const camera1 = new Camera()
-const camera2 = new Camera()
+const camera1 = new Camera(renderTarget1)
+const camera2 = new Camera(renderTarget2)
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],
@@ -65,8 +65,6 @@ renderTarget1.scissor = new ViewRectangle()
 renderTarget2.scissor = new ViewRectangle()
 
 //set up the cameras
-camera1.target = renderTarget1
-camera2.target = renderTarget2
 camera1.transform.position.z = 5
 camera2.transform.position.z = 5
 if (

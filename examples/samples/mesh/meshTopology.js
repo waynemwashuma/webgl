@@ -8,7 +8,8 @@ import {
   WebGLRenderDevice,
   PlaneMeshBuilder,
   Mesh,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  CanvasTarget
 } from "webgllis"
 
 // performance monitor
@@ -19,13 +20,14 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
+const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 
 document.body.append(canvas)
 updateView()

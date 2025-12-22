@@ -10,18 +10,20 @@ import {
   WireframeBuilder,
   OrbitCameraControls,
   CuboidMeshBuilder,
-  MeshMaterialPlugin
+  MeshMaterialPlugin,
+  CanvasTarget
 } from "webgllis"
 import { GUI } from "dat.gui"
 
 const canvas = document.createElement('canvas')
+const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 const cameraControls = new OrbitCameraControls(camera, canvas)
 
 const textureLoader = new TextureLoader()

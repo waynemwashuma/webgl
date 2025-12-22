@@ -9,15 +9,26 @@ export class Camera extends Object3D {
 	far = 2000
 
 	/**
-	 * @type {RenderTarget | undefined}
+	 * @type {RenderTarget}
 	 */
 	target
 	/**
 	 * @type {Projection}
 	 */
 	projection = new PerspectiveProjection()
+
+	/**
+	 * @type {Matrix4}
+	 */
 	view = new Matrix4()
 	
+	/**
+	 * @param {RenderTarget} target
+	 */
+	constructor(target){
+		super()
+		this.target = target
+	}
 	/**
 	 * @override
 	 */

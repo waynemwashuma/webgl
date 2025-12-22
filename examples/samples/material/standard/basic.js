@@ -15,10 +15,12 @@ import {
   SkyBox,
   TextureType,
   LightPlugin,
-  AmbientLight
+  AmbientLight,
+  CanvasTarget
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
+const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas)
 const renderer = new WebGLRenderer({
   plugins: [
@@ -26,7 +28,7 @@ const renderer = new WebGLRenderer({
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera()
+const camera = new Camera(renderTarget)
 const cameraControls = new OrbitCameraControls(camera, canvas)
 
 // lights
