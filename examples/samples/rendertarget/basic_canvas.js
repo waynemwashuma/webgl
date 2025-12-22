@@ -18,7 +18,7 @@ import { GUI } from "dat.gui";
 
 const canvas = document.createElement('canvas')
 const renderDevice = new WebGLRenderDevice(canvas)
-const renderTarget = new CanvasTarget()
+const renderTarget = new CanvasTarget(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new MeshMaterialPlugin()

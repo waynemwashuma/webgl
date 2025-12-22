@@ -29,10 +29,10 @@ const renderer = new WebGLRenderer({
   ]
 })
 
-const renderTarget1 = new CanvasTarget()
-const renderTarget2 = new CanvasTarget()
-const renderTarget3 = new CanvasTarget()
-const renderTarget4 = new CanvasTarget()
+const renderTarget1 = new CanvasTarget(canvas)
+const renderTarget2 = new CanvasTarget(canvas)
+const renderTarget3 = new CanvasTarget(canvas)
+const renderTarget4 = new CanvasTarget(canvas)
 
 const camera1 = new Camera()
 const camera2 = new Camera()
