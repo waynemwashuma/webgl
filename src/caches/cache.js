@@ -1,7 +1,7 @@
 /**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
 /**@import { WebGLAtttributeParams } from '../function.js' */
 
-import { ImageRenderTarget } from "../rendertarget/index.js"
+import { CanvasTarget, ImageRenderTarget, RenderTarget } from "../rendertarget/index.js"
 import { Texture } from "../texture/index.js"
 import { Attribute, Mesh } from "../mesh/index.js"
 import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js"
@@ -28,7 +28,7 @@ export class Caches {
   renderpipelines = []
 
   /**
-   * @type {Map<ImageRenderTarget, FrameBuffer>}
+   * @type {Map<RenderTarget, FrameBuffer>}
    */
   renderTargets = new Map()
 
@@ -39,7 +39,7 @@ export class Caches {
 
   /**
    * @param {WebGLRenderDevice} device
-   * @param {ImageRenderTarget} target
+   * @param {RenderTarget} target
    * @returns {FrameBuffer}
    */
   getFrameBuffer(device, target) {
@@ -48,58 +48,81 @@ export class Caches {
       return current
     }
 
-    const framebuffer = device.context.createFramebuffer()
-    const depthFormat = target.internalDepthStencil || target.depthTexture?.format
-    const colorAttachments = []
-    const drawBuffers = target.color.map((texture, offset)=>{
-      if(texture){
-        return WebGL2RenderingContext.COLOR_ATTACHMENT0 + offset
+    if (target instanceof ImageRenderTarget) {
+      const framebuffer = device.context.createFramebuffer()
+      const depthFormat = target.internalDepthStencil || target.depthTexture?.format
+      const colorAttachments = []
+      const drawBuffers = target.color.map((texture, offset) => {
+        if (texture) {
+          return WebGL2RenderingContext.COLOR_ATTACHMENT0 + offset
+        }
+        return WebGL2RenderingContext.NONE
+      })
+      let depthBuffer
+
+      device.context.bindFramebuffer(WebGL2RenderingContext.FRAMEBUFFER, framebuffer)
+
+      for (let i = 0; i < target.color.length; i++) {
+        const color = /**@type {Texture}*/ (target.color[i])
+        const textColor = this.getTexture(device, color)
+        device.context.framebufferTexture2D(
+          WebGL2RenderingContext.FRAMEBUFFER,
+          WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
+          color.type,
+          textColor.inner,
+          0
+        )
+        colorAttachments[i] = textColor
       }
-      return WebGL2RenderingContext.NONE
-    })
-    let depthBuffer
 
-    device.context.bindFramebuffer(WebGL2RenderingContext.FRAMEBUFFER, framebuffer)
+      if (depthFormat) {
+        const webglFormat = getWebGLTextureFormat(depthFormat)
 
-    for (let i = 0; i < target.color.length; i++) {
-      const color = /**@type {Texture}*/ (target.color[i])
-      const textColor = this.getTexture(device, color)
-      device.context.framebufferTexture2D(
-        WebGL2RenderingContext.FRAMEBUFFER,
-        WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
-        color.type,
-        textColor.inner,
-        0
-      )
-      colorAttachments[i] = textColor
-    }
+        assert(webglFormat, "No such texture format exists")
 
-    if (depthFormat) {
-      const webglFormat = getWebGLTextureFormat(depthFormat)
+        const depth = device.context.createRenderbuffer()
+        device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
+        device.context.renderbufferStorage(
+          WebGL2RenderingContext.RENDERBUFFER,
+          webglFormat.internalFormat,
+          target.width,
+          target.height
+        )
+        device.context.framebufferRenderbuffer(
+          WebGL2RenderingContext.FRAMEBUFFER,
+          getFramebufferAttachment(depthFormat),
+          WebGL2RenderingContext.RENDERBUFFER,
+          depth
+        )
+        depthBuffer = /**@type {[WebGLRenderbuffer, TextureFormat]}*/([depth, depthFormat])
+      }
 
-      assert(webglFormat, "No such texture format exists")
-
-      const depth = device.context.createRenderbuffer()
-      device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
-      device.context.renderbufferStorage(
-        WebGL2RenderingContext.RENDERBUFFER,
-        webglFormat.internalFormat,
+      const newTarget = new FrameBuffer(
+        framebuffer, 
+        colorAttachments, 
+        drawBuffers, 
+        depthBuffer,
         target.width,
         target.height
       )
-      device.context.framebufferRenderbuffer(
-        WebGL2RenderingContext.FRAMEBUFFER,
-        getFramebufferAttachment(depthFormat),
-        WebGL2RenderingContext.RENDERBUFFER,
-        depth
+
+      this.renderTargets.set(target, newTarget)
+      return newTarget
+    } else if (target instanceof CanvasTarget) {
+      const frameBuffer = new FrameBuffer(
+        null,
+        [],
+        [WebGL2RenderingContext.BACK],
+        undefined,
+        target.canvas.width,
+        target.canvas.height
       )
-      depthBuffer = /**@type {[WebGLRenderbuffer, TextureFormat]}*/([depth, depthFormat])
+
+      this.renderTargets.set(target, frameBuffer)
+      return frameBuffer
+    } else {
+      throw 'Unsupported render target'
     }
-
-    const newTarget = new FrameBuffer(framebuffer, colorAttachments,drawBuffers, depthBuffer)
-
-    this.renderTargets.set(target, newTarget)
-    return newTarget
   }
 
   /**
@@ -184,7 +207,7 @@ export class Caches {
       width: texture.width,
       height: texture.height,
       depth: texture.depth,
-      
+
     })
 
     if (texture.data) {
