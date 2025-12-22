@@ -7,9 +7,11 @@ import skyBox from "./skybox/index.js"
 import renderTarget from "./rendertarget/index.js"
 import transform from "./transform/index.js"
 import lights from "./lights/index.js"
+import camera from "./camera/index.js"
 
 /**@type {Record<string, any>} */
 export const demos = {
+  "camera": camera,
   "material": material,
   "mesh": mesh,
   "lights": lights,
