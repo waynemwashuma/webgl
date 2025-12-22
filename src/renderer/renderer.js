@@ -9,6 +9,11 @@ import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
 
 export class WebGLRenderer {
+
+  /**
+   * @type {Map<string, unknown>}
+   */
+  resources = new Map()
   /**
    * @readonly
    * @type {WebGLDeviceLimits}
@@ -81,6 +86,23 @@ export class WebGLRenderer {
       .set("math", mathShaderLib)
   }
 
+
+  /**
+   * @template {object} T
+   * @param {T} item
+   */
+  setResource(item){
+    this.resources.set(item.constructor.name, item)
+  }
+
+  /**
+   * @template T
+   * @param {import("../loader/loader.js").Constructor<T>} item
+   * @returns {T | undefined}
+   */
+  getResource(item){
+    return /**@type {T} */ (this.resources.get(item.name))
+  }
   /**
    * @param {{name: any;data: any;}} dataForm
    * @param {WebGL2RenderingContext} context
@@ -105,9 +127,6 @@ export class WebGLRenderer {
     const { clearColor, clearDepth, clearStencil } = renderTarget
     const framebuffer = this.caches.getFrameBuffer(renderDevice, renderTarget)
 
-    framebuffer.setViewport(renderDevice.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-    framebuffer.clear(context, clearColor, clearDepth, clearStencil)
-
     for (let i = 0; i < objects.length; i++) {
       /**@type {Object3D} */ (objects[i]).traverseDFS((object) => {
       object.update()
@@ -122,6 +141,8 @@ export class WebGLRenderer {
       plugin.preprocess(objects, renderDevice, this)
     }
 
+    framebuffer.setViewport(renderDevice.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+    framebuffer.clear(context, clearColor, clearDepth, clearStencil)
     this.updateUBO(context, camera.getData())
 
     for (let i = 0; i < this.plugins.length; i++) {
