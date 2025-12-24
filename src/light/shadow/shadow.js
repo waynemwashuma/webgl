@@ -1,4 +1,3 @@
-import { Matrix4 } from "../../math/index.js"
 import { OrthographicProjection } from "../../objects/index.js"
 
 export class Shadow {
@@ -24,16 +23,6 @@ export class OrthographicShadow extends Shadow {
    * @type {OrthographicProjection}
    */
   projection = new OrthographicProjection()
-
-  /**
-   * @type {Matrix4}
-   */
-  viewMatrix = new Matrix4()
-
-  /**
-   * @type {Matrix4}
-   */
-  projectionMatrix = new Matrix4()
 }
 
 export class SpotLightShadow extends Shadow {

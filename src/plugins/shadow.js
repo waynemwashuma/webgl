@@ -120,16 +120,18 @@ function processDirectionalLight(light, objects, renderer, device, pipelines) {
   // SAFETY: If it is in the light list, it has a shadow.
   const shadow = /**@type {OrthographicShadow}*/ (light.shadow)
   const shadowItem = new ShadowItem()
+  const projection = shadow.projection.asProjectionMatrix(shadow.near, shadow.far)
+  const view = Affine3.toMatrix4(light.transform.world).invert()
 
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
-  Matrix4.multiply(shadow.projectionMatrix, shadow.viewMatrix, shadowItem.matrix)
+  Matrix4.multiply(projection, view, shadowItem.matrix)
 
   renderer.updateUBO(device.context, {
     name: "CameraBlock",
     data: new Float32Array([
-      ...shadow.viewMatrix,
-      ...shadow.projectionMatrix,
+      ...view,
+      ...projection,
       ...light.transform.position,
       shadow.near,
       shadow.far
