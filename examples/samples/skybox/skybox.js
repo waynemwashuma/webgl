@@ -8,7 +8,8 @@ import {
   Camera,
   WebGLRenderDevice,
   MeshMaterialPlugin,
-  CanvasTarget
+  CanvasTarget,
+  SkyboxPlugin
 } from 'webgllis';
 
 // performance monitor
@@ -25,7 +26,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 })
 const renderer = new WebGLRenderer({
   plugins:[
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new SkyboxPlugin()
   ]
 })
 const camera = new Camera(renderTarget)
@@ -73,7 +75,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  skyBox.material.lerp = number
+  skyBox.lerp = number
 
   const next = number + interval * direction
   if (number > 1 || number < 0) {

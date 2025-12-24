@@ -13,7 +13,8 @@ import {
   SkyBox,
   UVSphereMeshBuilder,
   CanvasTarget,
-  BasicMaterial
+  BasicMaterial,
+  SkyboxPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -24,7 +25,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 
 const renderer = new WebGLRenderer({
   plugins: [
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new SkyboxPlugin()
   ]
 })
 const projection = new PerspectiveProjection()

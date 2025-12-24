@@ -22,7 +22,8 @@ import {
   CuboidMeshBuilder,
   BasicMaterial,
   Color,
-  LambertMaterial
+  LambertMaterial,
+  SkyboxPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -35,6 +36,7 @@ const renderer = new WebGLRenderer({
   plugins: [
     new ShadowPlugin(),
     new LightPlugin(),
+    new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })
