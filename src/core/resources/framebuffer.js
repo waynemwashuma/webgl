@@ -97,13 +97,24 @@ export class FrameBuffer {
       scissors.size.x * width,
       scissors.size.y * height
     )
-
     context.viewport(
       viewport.offset.x * width,
       viewport.offset.y * height,
       viewport.size.x * width,
       viewport.size.y * height
     )
+
+    if(context.getParameter(context.DEPTH_BITS) > 0){
+      context.enable(WebGL2RenderingContext.DEPTH_TEST)
+    } else {
+      context.disable(WebGL2RenderingContext.DEPTH_TEST)
+    }
+
+    if(context.getParameter(context.STENCIL_BITS) > 0){
+      context.enable(WebGL2RenderingContext.STENCIL_TEST)
+    } else {
+      context.disable(WebGL2RenderingContext.STENCIL_TEST)
+    }
   }
 
   /**
