@@ -23,7 +23,9 @@ import {
   BasicMaterial,
   Color,
   LambertMaterial,
-  SkyboxPlugin
+  SkyboxPlugin,
+  StandardMaterial,
+  PhongMaterial
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -57,9 +59,20 @@ const skyboxTexture = textureLoader.load({
   ],
   type: TextureType.TextureCubeMap,
 })
-const material = new LambertMaterial({
-  mainTexture:texture
-})
+/**@type {[LambertMaterial, PhongMaterial,StandardMaterial]} */
+const materials = [
+  new LambertMaterial({
+    mainTexture: texture
+  }),
+  new PhongMaterial({
+    mainTexture: texture
+  }),
+  new StandardMaterial({
+    mainTexture: texture,
+    roughness: 0.4,
+    metallic: 0
+  })
+]
 const arrowBuilder = new CuboidMeshBuilder()
 const meshBuilder = new PlaneMeshBuilder()
 
@@ -81,7 +94,7 @@ const lightHelper = new MeshMaterial3D(arrowBuilder.build(), new BasicMaterial({
 const skyBox = new SkyBox({
   day: skyboxTexture
 })
-const ground = new MeshMaterial3D(meshBuilder.build(), material)
+const ground = new MeshMaterial3D(meshBuilder.build(), materials[0])
 const objects = createObjects()
 
 ambientLight.intensity = 0.15
@@ -122,7 +135,7 @@ function createObjects() {
 
   for (let x = -5; x < 5; x++) {
     for (let y = -5; y < 5; y++) {
-      const object = new MeshMaterial3D(sphereMesh, material)
+      const object = new MeshMaterial3D(sphereMesh, materials[0])
 
       object.transform.position.x = x
       object.transform.position.y = 0.5
@@ -152,13 +165,24 @@ function updateView() {
 }
 
 // gui controls
+const options = [
+  'LAMBERT',
+  'PHONG',
+  'STANDARD'
+]
 const settings = {
   x: -90,
   y: 0,
   z: 0,
+  color: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  material: options[0],
   shadow: true,
   shadowWidth: 20,
-  shadowHeight: 20,
+  shadowHeight: 20
 }
 const controls = new GUI()
 const lightFolder = controls.addFolder("Light")
@@ -185,6 +209,23 @@ lightFolder
   .add(settings, 'z', -360, 360)
   .name("Rotate Z")
   .onChange(transformLight)
+lightFolder
+  .add(sun, 'intensity', 0, 100)
+  .name("Intensity")
+  lightFolder
+  .add(settings, 'material', options)
+  .name("Material")
+  .onChange(changeMaterial)
+lightFolder
+  .addColor(settings, 'color')
+  .name('Color')
+  .onChange((value) => {
+    sun.color.set(
+      value.r / 255,
+      value.g / 255,
+      value.b / 255
+    )
+  })
 
 shadowFolder
   .add(settings, 'shadow')
@@ -246,5 +287,27 @@ function toggleShadows(value) {
     sun.shadow = shadow
   } else {
     sun.shadow = undefined
+  }
+}
+
+/**
+ * @param {string} value
+ */
+function changeMaterial(value) {
+  switch (value) {
+    case options[0]:
+      objects.forEach((o) => o.material = materials[0])
+      ground.material = materials[0]
+      break;
+    case options[1]:
+      objects.forEach((o) => o.material = materials[1])
+      ground.material = materials[1]
+      break;
+    case options[2]:
+      objects.forEach((o) => o.material = materials[2])
+      ground.material = materials[2]
+      break;
+    default:
+      break;
   }
 }
