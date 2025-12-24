@@ -1,20 +1,43 @@
 import { Color, Vector3 } from '../math/index.js'
-import { Object3D } from '../objects/object3d.js'
+import { Object3D } from '../objects/index.js'
+import { SpotLightShadow } from './shadow/index.js'
 
 export class SpotLight extends Object3D {
+  /**
+   * @type {number}
+   */
   intensity = 1.0
+  /**
+   * @type {Color}
+   */
   color = new Color()
+  /**
+   * @type {number}
+   */
   range = 1.0
+  /**
+   * @type {number}
+   */
   decay = 2.0
+  /**
+   * @type {number}
+   */
   innerAngle = 0
+  /**
+   * @type {number}
+   */
   outerAngle = Math.PI / 2
+  /**
+   * @type {SpotLightShadow | undefined}
+   */
+  shadow
 
   pack() {
     const direction = this.transform.world.transformWithoutTranslation(
       new Vector3(0, 0, -1)
     )
     const halfInnerAngle = this.innerAngle / 2
-    const HalfOuterAngle = this.outerAngle / 2
+    const halfOuterAngle = this.outerAngle / 2
 
     return [
       ...this.color,
@@ -26,8 +49,8 @@ export class SpotLight extends Object3D {
       this.intensity,
       this.range,
       this.decay,
-      Math.cos(Math.min(halfInnerAngle, HalfOuterAngle)),
-      Math.cos(HalfOuterAngle)
+      Math.cos(Math.min(halfInnerAngle, halfOuterAngle)),
+      Math.cos(halfOuterAngle)
     ]
   }
 }

@@ -22,6 +22,7 @@ export const lightShaderLib = `
   struct SpotLight {
     vec4 color;
     vec3 position;
+    int shadow_index;
     vec3 direction;
     float intensity;
     float distance;
