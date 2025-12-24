@@ -23,7 +23,9 @@ import {
   CuboidMeshBuilder,
   Affine3,
   CanvasTarget,
-  SkyboxPlugin
+  SkyboxPlugin,
+  ShadowPlugin,
+  SpotLightShadow
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -32,29 +34,33 @@ const renderTarget = new CanvasTarget(canvas)
 const renderDevice = new WebGLRenderDevice(canvas,{
   depth:true
 })
-const ambientLight = new AmbientLight()
-const light = new SpotLight()
-
-ambientLight.intensity = 0.15
-light.intensity = 1
-
 const renderer = new WebGLRenderer({
   plugins: [
+    new ShadowPlugin(),
     new LightPlugin(),
     new SkyboxPlugin(),
     new MeshMaterialPlugin()
   ]
 })
-const camera = new Camera(renderTarget)
-const cameraControls = new OrbitCameraControls(camera, canvas)
 
 // loaders
 const textureLoader = new TextureLoader()
+
+//  assets
+const environmentTexture = textureLoader.load({
+  paths: [
+    "/assets/images/skybox/miramar_right.png",
+    "/assets/images/skybox/miramar_left.png",
+    "/assets/images/skybox/miramar_top.png",
+    "/assets/images/skybox/miramar_bottom.png",
+    "/assets/images/skybox/miramar_back.png",
+    "/assets/images/skybox/miramar_front.png",
+  ],
+  type: TextureType.TextureCubeMap,
+})
 const texture = textureLoader.load({
   paths: ["/assets/images/uv.jpg"],
 })
-
-//create objects
 /**@type {[LambertMaterial, PhongMaterial, StandardMaterial]} */
 const materials = [
   new LambertMaterial({
@@ -77,30 +83,30 @@ lightMeshBuilder.depth = 0.5
 meshBuilder.width = 10
 meshBuilder.height = 10
 
-const day = textureLoader.load({
-  paths: [
-    "/assets/images/skybox/miramar_right.png",
-    "/assets/images/skybox/miramar_left.png",
-    "/assets/images/skybox/miramar_top.png",
-    "/assets/images/skybox/miramar_bottom.png",
-    "/assets/images/skybox/miramar_back.png",
-    "/assets/images/skybox/miramar_front.png",
-  ],
-  type: TextureType.TextureCubeMap,
-})
+// objects
+const camera = new Camera(renderTarget)
+const cameraControls = new OrbitCameraControls(camera, canvas)
+
+const ambientLight = new AmbientLight()
+
+const shadow = new SpotLightShadow()
+const light = new SpotLight()
 const skyBox = new SkyBox({
-  day
+  day: environmentTexture
 })
-skyBox.transform.orientation.rotateY(Math.PI)
 const ground = new MeshMaterial3D(meshBuilder.build(), materials[0])
 const objects = createObjects()
 const lightHelper = new MeshMaterial3D(lightMeshBuilder.build(), new BasicMaterial({
   color: new Color(1, 0, 0)
 }))
 
+ambientLight.intensity = 0.15
+skyBox.transform.orientation.rotateY(Math.PI)
+light.intensity = 1
 light.add(lightHelper)
 light.transform.position.y = 1
 light.range = 10
+light.shadow = shadow
 ground.transform.orientation.rotateX(-Math.PI / 2)
 
 //set up the camera
@@ -165,52 +171,54 @@ const settings = {
     g: 0,
     b: 0
   },
-  material: options[0]
+  material: options[0],
+  shadow: true
 }
 
 const controls = new GUI()
-const buildOptionsFolder = controls.addFolder("Settings")
-buildOptionsFolder
+const lightFolder = controls.addFolder("Light")
+const shadowFolder = controls.addFolder("Shadow")
+lightFolder
   .add(light.transform.position, 'x', -10, 10)
   .name("Translate X")
-buildOptionsFolder
+lightFolder
   .add(light.transform.position, 'y', 0, 2)
   .name("Translate Y")
-buildOptionsFolder
+lightFolder
   .add(light.transform.position, 'z', -10, 10)
   .name("Translate Z")
-buildOptionsFolder
+lightFolder
   .add(settings.position, 'x', -1, 1)
   .name("Direction X")
   .onChange(setOrientation)
-buildOptionsFolder
+lightFolder
   .add(settings.position, 'y', -1, 1)
   .name("Direction Y")
   .onChange(setOrientation)
-buildOptionsFolder
+lightFolder
   .add(settings.position, 'z', -1, 1)
   .name("Direction Z")
   .onChange(setOrientation)
-buildOptionsFolder
+lightFolder
   .add(light, 'intensity', 0, 100)
   .name("Intensity")
-buildOptionsFolder
+lightFolder
   .add(light, 'innerAngle', 0, Math.PI / 2)
   .name("Inner Angle")
-buildOptionsFolder
+lightFolder
   .add(light, 'outerAngle', 0, Math.PI / 2)
   .name("Outer Angle")
-buildOptionsFolder
+lightFolder
   .add(light, 'range', 0, 10)
   .name("Range")
-buildOptionsFolder
+lightFolder
   .add(light, 'decay', 0, 100)
   .name("Distance Decay")
-buildOptionsFolder
+lightFolder
   .add(settings, 'material', options)
   .name("Material")
   .onChange(changeMaterial)
-buildOptionsFolder
+lightFolder
   .addColor(settings, 'color')
   .name('Color')
   .onChange((value) => {
@@ -220,8 +228,21 @@ buildOptionsFolder
       value.b / 255
     )
   })
-
-buildOptionsFolder.open()
+shadowFolder
+  .add(settings, 'shadow')
+  .name("Enable Shadow")
+  .onChange(toggleShadows)
+shadowFolder
+  .add(shadow, 'near', 0.1, 1)
+  .name('Near')
+shadowFolder
+  .add(shadow, 'bias', 0, 0.01)
+  .name('Bias')
+shadowFolder
+  .add(shadow, 'normalBias', 0, 0.005)
+  .name('Normal Bias')
+lightFolder.open()
+shadowFolder.open()
 /**
  * @param {string} value
  */
@@ -248,4 +269,15 @@ function setOrientation() {
   const transform = Affine3.lookAt(settings.position.normalize(), Vector3.Zero, Vector3.Y)
   const [_, orientation] = transform.decompose()
   light.transform.orientation.copy(orientation)
+}
+
+/**
+ * @param {boolean} value
+ */
+function toggleShadows(value) {
+  if (value) {
+    light.shadow = shadow
+  } else {
+    light.shadow = undefined
+  }
 }
