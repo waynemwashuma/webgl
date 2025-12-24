@@ -1,38 +1,38 @@
-import { CuboidMeshBuilder } from "../mesh/index.js"
-import { MeshMaterial3D } from "./mesh.js"
-import { SkyBoxMaterial } from "../material/skybox.js"
 import { Texture } from "../texture/index.js"
+import { Object3D } from "./object3d.js"
 
-/**
- * @extends {MeshMaterial3D<SkyBoxMaterial>}
- */
-export class SkyBox extends MeshMaterial3D {
+
+export class SkyBox extends Object3D {
+  /**
+   * @type {number}
+   */
+  lerp
+
+  /**
+   * @type {Texture | undefined}
+   */
+  day
+
+  /**
+   * @type {Texture | undefined}
+   */
+  night
+
+  /**
+   * 
+   * @param {SkyboxOptions} options 
+   */
   constructor(options = {}) {
-    const cuboid = new CuboidMeshBuilder()
-    cuboid.width = 10
-    cuboid.height = 10
-    cuboid.depth = 10
-    super(cuboid.build(), new SkyBoxMaterial(options))
-  }
-
-  /**
-   * @param {number} value
-   */
-  set lerp(value){
-    this.material.lerp = value
-  }
-
-  /**
-   * @param {Texture} value
-   */
-  set day(value){
-    this.material.day = value
-  }
-
-  /**
-   * @param {Texture} value
-   */
-  set night(value){
-    this.material.night = value
+    super()
+    this.lerp = options.lerp || 0
+    this.day = options.day
+    this.night = options.night
   }
 }
+
+/**
+ * @typedef SkyboxOptions
+ * @property {Texture} [day]
+ * @property {Texture} [night]
+ * @property {number} [lerp]
+ */
