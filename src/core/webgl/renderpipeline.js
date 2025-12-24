@@ -1,5 +1,6 @@
 /**@import { RenderTargetDescriptor } from './descriptors.js' */
 import { CullFace, FrontFaceDirection, PrimitiveTopology } from "../../constants/index.js";
+import { CompareFunction } from "../constants.js";
 import { MeshVertexLayout, UniformBufferLayout, Uniform } from "../layouts/index.js";
 
 export class WebGLRenderPipeline {
@@ -13,7 +14,7 @@ export class WebGLRenderPipeline {
     uniformBlocks,
     topology,
     vertexLayout,
-    depthTest,
+    depthCompare,
     depthWrite,
     cullFace,
     frontFace
@@ -24,7 +25,7 @@ export class WebGLRenderPipeline {
     this.vertexLayout = vertexLayout
     this.topology = topology
     this.cullMode = cullFace
-    this.depthTest = depthTest
+    this.depthCompare = depthCompare
     this.depthWrite = depthWrite
     this.frontFace = frontFace
     this.targets = targets
@@ -45,12 +46,7 @@ export class WebGLRenderPipeline {
     }
 
     // depth
-    if (this.depthTest) {
-      gl.enable(gl.DEPTH_TEST)
-    }
-    else {
-      gl.disable(gl.DEPTH_TEST)
-    }
+    gl.depthFunc(this.depthCompare)
     gl.depthMask(this.depthWrite);
 
     // blending
@@ -91,6 +87,6 @@ export class WebGLRenderPipeline {
  * @property {PrimitiveTopology} topology
  * @property {CullFace} cullFace
  * @property {boolean} depthWrite
- * @property {boolean} depthTest
+ * @property {CompareFunction} depthCompare
  * @property {FrontFaceDirection} frontFace
  */
