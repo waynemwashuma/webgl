@@ -26,9 +26,10 @@ export class ImageRenderTarget extends RenderTarget {
     depthTexture,
     width,
     height,
+    depth = 1,
     internalDepthStencil
   }) {
-    super(width, height)
+    super(width, height, depth)
     this.color = color
     this.depthTexture = depthTexture
     this.internalDepthStencil = internalDepthStencil
@@ -37,12 +38,14 @@ export class ImageRenderTarget extends RenderTarget {
       color.data = undefined
       color.width = width
       color.height = height
+      color.depth = depth
     }
 
     if (this.depthTexture) {
       this.depthTexture.data = undefined
       this.depthTexture.width = width
       this.depthTexture.height = height
+      this.depthTexture.depth = depth
     }
   }
 
@@ -87,6 +90,27 @@ export class ImageRenderTarget extends RenderTarget {
       this.depthTexture.height = value
     }
   }
+
+  /**
+   * @override
+   */
+  get depth() {
+    return super.depth
+  }
+
+  /**
+   * @override
+   * @param {number} value
+   */
+  set depth(value) {
+    super.depth = value
+    this.color.forEach((attachment) => {
+      attachment.depth = value
+    })
+    if (this.depthTexture) {
+      this.depthTexture.depth = value
+    }
+  }
 }
 
 /**
@@ -96,4 +120,5 @@ export class ImageRenderTarget extends RenderTarget {
  * @property {TextureFormat} [internalDepthStencil]
  * @property {number} width
  * @property {number} height
+ * @property {number} [depth]
  */
