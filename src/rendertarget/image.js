@@ -19,6 +19,11 @@ export class ImageRenderTarget extends RenderTarget {
   internalDepthStencil
 
   /**
+   * @type {number}
+   */
+  layer
+
+  /**
    * @param {ImageRenderTargetOptions} options
    */
   constructor({
@@ -27,9 +32,11 @@ export class ImageRenderTarget extends RenderTarget {
     width,
     height,
     depth = 1,
+    layer = 0,
     internalDepthStencil
   }) {
     super(width, height, depth)
+    this.layer = layer
     this.color = color
     this.depthTexture = depthTexture
     this.internalDepthStencil = internalDepthStencil
@@ -121,4 +128,5 @@ export class ImageRenderTarget extends RenderTarget {
  * @property {number} width
  * @property {number} height
  * @property {number} [depth]
+ * @property {number} [layer]
  */
