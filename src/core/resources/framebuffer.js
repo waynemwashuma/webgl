@@ -1,7 +1,5 @@
-import { TextureFormat } from "../../constants/index.js"
 import { Color } from "../../math/index.js"
 import { ViewRectangle } from "../../utils/index.js"
-import { WebGLRenderDevice } from "../webgl/webglrenderdevice.js"
 import { GPUTexture } from "./gputexture.js"
 
 export class FrameBuffer {
@@ -29,7 +27,7 @@ export class FrameBuffer {
   drawBuffers
 
   /**
-   * @type {[WebGLRenderbuffer, TextureFormat] | undefined}
+   * @type {GPUTexture | undefined}
    */
   depthBuffer
 
@@ -37,7 +35,7 @@ export class FrameBuffer {
    * @param {WebGLFramebuffer | null} frameBuffer
    * @param {GPUTexture[]} colorAttachments
    * @param {GLenum[]} drawBuffers
-   * @param {[WebGLRenderbuffer, TextureFormat] | undefined} depthBuffer
+   * @param {GPUTexture | undefined} depthBuffer
    * @param {number} width
    * @param {number} height
    */
@@ -114,20 +112,6 @@ export class FrameBuffer {
       context.enable(WebGL2RenderingContext.STENCIL_TEST)
     } else {
       context.disable(WebGL2RenderingContext.STENCIL_TEST)
-    }
-  }
-
-  /**
- * @param {WebGLRenderDevice} device
- * @param {GPUTexture} depthTexture
- */
-  resolveDepthTexture(device, depthTexture) {
-    if (this.depthBuffer) {
-      device.copyRenderBufferToTexture(
-        this.depthBuffer[0],
-        this.depthBuffer[1],
-        depthTexture
-      )
     }
   }
 }

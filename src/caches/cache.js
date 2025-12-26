@@ -7,10 +7,9 @@ import { Attribute, Mesh } from "../mesh/index.js"
 import { FrameBuffer, GPUMesh, GPUTexture, MeshVertexLayout, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js"
 import { UniformBuffers } from "./uniformbuffers.js"
 import { BufferType, BufferUsage } from "../constants/others.js"
-import { getFramebufferAttachment, getWebGLTextureFormat, mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
+import { getFramebufferAttachment, mapToIndicesType, mapVertexFormatToWebGL } from "../function.js"
 import { assert } from "../utils/index.js"
 import { getVertexFormatComponentNumber, getVertexFormatComponentSize } from "../constants/mesh.js"
-import { TextureFormat } from "../constants/index.js"
 
 export class Caches {
   uniformBuffers = new UniformBuffers()
@@ -55,9 +54,11 @@ export class Caches {
       }
     }
 
+    // Flush out any change detection that happened when the target was created
+    target.changed()
+
     if (target instanceof ImageRenderTarget) {
       const framebuffer = device.context.createFramebuffer()
-      const depthFormat = target.internalDepthStencil || target.depthTexture?.format
       const colorAttachments = []
       const drawBuffers = target.color.map((texture, offset) => {
         if (texture) {
@@ -71,37 +72,16 @@ export class Caches {
 
       for (let i = 0; i < target.color.length; i++) {
         const color = /**@type {Texture}*/ (target.color[i])
-        const textColor = this.getTexture(device, color)
-        device.context.framebufferTexture2D(
-          WebGL2RenderingContext.FRAMEBUFFER,
-          WebGL2RenderingContext.COLOR_ATTACHMENT0 + i,
-          color.type,
-          textColor.inner,
-          0
-        )
-        colorAttachments[i] = textColor
+        const texture = this.getTexture(device, color)
+        bindTextureToAttachment(device, color, texture, i)
+        colorAttachments[i] = texture
       }
 
-      if (depthFormat) {
-        const webglFormat = getWebGLTextureFormat(depthFormat)
+      if (target.depthTexture) {
+        const texture = this.getTexture(device, target.depthTexture)
 
-        assert(webglFormat, "No such texture format exists")
-
-        const depth = device.context.createRenderbuffer()
-        device.context.bindRenderbuffer(WebGL2RenderingContext.RENDERBUFFER, depth)
-        device.context.renderbufferStorage(
-          WebGL2RenderingContext.RENDERBUFFER,
-          webglFormat.internalFormat,
-          target.width,
-          target.height
-        )
-        device.context.framebufferRenderbuffer(
-          WebGL2RenderingContext.FRAMEBUFFER,
-          getFramebufferAttachment(depthFormat),
-          WebGL2RenderingContext.RENDERBUFFER,
-          depth
-        )
-        depthBuffer = /**@type {[WebGLRenderbuffer, TextureFormat]}*/([depth, depthFormat])
+        bindTextureToAttachment(device, target.depthTexture, texture, 0)
+        depthBuffer = texture
       }
 
       const newTarget = new FrameBuffer(
@@ -361,4 +341,20 @@ function setVertexAttribute(context, index, params, stride = 0, offset = 0) {
     default:
       throw new Error(`Unsupported GlDataType: ${type.toString()}`);
   }
+}
+
+/**
+ * @param {WebGLRenderDevice} device
+ * @param {Texture} texture
+ * @param {GPUTexture} gpuTexture
+ * @param {number} offset
+ */
+function bindTextureToAttachment(device, texture, gpuTexture, offset) {
+  device.context.framebufferTexture2D(
+    WebGL2RenderingContext.FRAMEBUFFER,
+    getFramebufferAttachment(texture.format) + offset,
+    texture.type,
+    gpuTexture.inner,
+    0
+  )
 }
