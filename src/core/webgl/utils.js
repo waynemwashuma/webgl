@@ -233,7 +233,7 @@ function createProgram(gl, vshader, fshader, vertexLayout) {
  * @returns {Map<string,Uniform>}
  */
 function getActiveUniforms(gl, program) {
-  let texture2d = 0, cubemap = 0, texture2dArray = 0, texture3d = 0
+  let textureUnit = 0
   const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
   const map = new Map()
   for (let i = 0; i < numUniforms; i++) {
@@ -259,31 +259,19 @@ function getActiveUniforms(gl, program) {
       case UniformType.ISampler2D:
       case UniformType.USampler2D:
       case UniformType.Sampler2DShadow:
-        uniform.texture_unit = texture2d
-        texture2d += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
       case UniformType.Sampler2DArray:
       case UniformType.ISampler2DArray:
       case UniformType.USampler2DArray:
       case UniformType.Sampler2DArrayShadow:
-        uniform.texture_unit = texture2dArray
-        texture2dArray += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
       case UniformType.SamplerCube:
       case UniformType.ISamplerCube:
       case UniformType.USamplerCube:
       case UniformType.SamplerCubeShadow:
-        uniform.texture_unit = cubemap
-        cubemap += 1
-        gl.uniform1i(location, uniform.texture_unit)
-        break
       case UniformType.Sampler3D:
       case UniformType.ISampler3D:
       case UniformType.USampler3D:
-        uniform.texture_unit = texture3d
-        texture3d += 1
+        uniform.texture_unit = textureUnit
+        textureUnit += 1
         gl.uniform1i(location, uniform.texture_unit)
         break
     }
