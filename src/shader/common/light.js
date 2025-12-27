@@ -35,6 +35,7 @@ export const lightShaderLib = `
     mat4 space;
     float bias;
     float normal_bias;
+    float layer;
   };
 
   struct DirectionalLights {
@@ -90,7 +91,7 @@ export const lightShaderLib = `
     return 0.0;
   }
 
-  float shadow_contribution_2d(Shadow shadow, sampler2D shadow_atlas, vec3 position, float NdotL){
+  float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
     vec4 clipped_position = shadow.space * vec4(position, 1.0);
     vec3 ndc_position = clipped_position.xyz / clipped_position.w;
     vec3 shadow_map_postion = ndc_position * 0.5 + 0.5;
@@ -101,7 +102,10 @@ export const lightShaderLib = `
     ){
       return 1.0;
     }
-    float shadow_map_depth = texture(shadow_atlas, shadow_map_postion.xy).r;
+    float shadow_map_depth = texture(
+      shadow_atlas,
+      vec3(shadow_map_postion.xy, shadow.layer)
+    ).r;
     float current_depth = shadow_map_postion.z;
     float normal_bias = shadow.normal_bias * (1.0 - NdotL);
     float bias = shadow.bias + normal_bias;

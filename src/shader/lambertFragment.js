@@ -1,6 +1,7 @@
 export const lambertFragment =
   `
   precision mediump float;
+  precision mediump sampler2DArray;
 
   #include <math>
   #include <common>
@@ -39,7 +40,7 @@ export const lambertFragment =
     uniform ShadowCasterBlock {
       Shadow shadow_casters[MAX_SHADOW_CASTERS];
     };
-    uniform sampler2D shadow_atlas;
+    uniform sampler2DArray shadow_atlas;
   #endif
   uniform sampler2D mainTexture;
   out vec4 fragment_color;

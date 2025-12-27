@@ -1,6 +1,7 @@
 export const skyboxFragment =
   `
   precision mediump float;
+  precision mediump sampler2DArray;
 
 	#include <common>
 	
