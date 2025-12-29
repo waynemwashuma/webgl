@@ -47,8 +47,10 @@ export class LightPlugin extends Plugin {
 
     const directionalLightData = directionalLights.getData()
     const spotLightData = spotLights.getData()
+    const pointLightData = pointLights.getData()
     const directionalItems  = new Int32Array(directionalLightData.buffer)
     const spotItems  = new Int32Array(spotLightData.buffer)
+    const pointItems  = new Int32Array(pointLightData.buffer)
 
     for (let i = 0; i < directionalLights.lights.length; i++) {
       const offset = (i * 12) + 8 + 4;
@@ -70,6 +72,16 @@ export class LightPlugin extends Plugin {
         spotItems[offset] = -1
       }
     }
+
+    for (let i = 0; i < pointLights.lights.length; i++) {
+      const offset = (i * 12) + 10 + 4;
+      const item = shadowMap?.inner.get(/**@type {PointLight}*/(pointLights.lights[i]))
+      if(item?.enabled){
+        pointItems[offset] = item.spaceIndex
+      } else {
+        pointItems[offset] = -1
+      }
+    }
     renderer.updateUBO(device.context, {
       name: "DirectionalLightBlock",
       data: directionalLightData
@@ -77,7 +89,7 @@ export class LightPlugin extends Plugin {
 
     renderer.updateUBO(device.context, {
       name: "PointLightBlock",
-      data: pointLights.getData()
+      data: pointLightData
     })
 
     renderer.updateUBO(device.context, {

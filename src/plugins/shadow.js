@@ -1,8 +1,8 @@
 /**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { PrimitiveTopology, TextureFormat, TextureType } from "../constants/index.js";
 import { Shader, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js";
-import { DirectionalLight, OrthographicShadow, SpotLight, SpotLightShadow } from "../light/index.js";
-import { Affine3, Matrix4 } from "../math/index.js";
+import { DirectionalLight, OrthographicShadow, PointLight, SpotLight, SpotLightShadow } from "../light/index.js";
+import { Affine3, Matrix4, Vector3 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection, SkyBox } from "../objects/index.js";
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { ImageRenderTarget } from "../rendertarget/index.js";
@@ -48,7 +48,8 @@ export class ShadowPlugin extends Plugin {
         if (
           (
             object instanceof DirectionalLight ||
-            object instanceof SpotLight
+            object instanceof SpotLight ||
+            object instanceof PointLight
           ) &&
           object.shadow
         ) {
@@ -71,6 +72,11 @@ export class ShadowPlugin extends Plugin {
         area.spaceIndex = i
       } else if (light instanceof SpotLight) {
         const item = processSpotLight(light, objects, renderer, device, this.pipelines, shadowMap)
+
+        blocks[i] = item
+        area.spaceIndex = i
+      } else if (light instanceof PointLight) {
+        const item = processPointLight(light, objects, renderer, device, this.pipelines, shadowMap)
 
         blocks[i] = item
         area.spaceIndex = i
@@ -238,6 +244,114 @@ function processSpotLight(light, objects, renderer, device, pipelines, shadowMap
 }
 
 /**
+ * @param {PointLight} light
+ * @param {Object3D[]} objects
+ * @param {WebGLRenderer} renderer
+ * @param {WebGLRenderDevice} device
+ * @param {Map<number, number>} pipelines
+ * @param {ShadowMap} shadowMap
+ */
+function processPointLight(light, objects, renderer, device, pipelines, shadowMap) {
+  // SAFETY: If it is in the light list, it has a shadow.
+  const shadow = /**@type {SpotLightShadow}*/ (light.shadow)
+  const shadowItem = new ShadowItem()
+  const sides = [
+    [Vector3.X, Vector3.NegY],
+    [Vector3.NegX, Vector3.NegY],
+    [Vector3.Y, Vector3.Z],
+    [Vector3.NegY, Vector3.NegZ],
+    [Vector3.Z, Vector3.NegY],
+    [Vector3.NegZ, Vector3.NegY]
+  ]
+  const projection = new PerspectiveProjection(Math.PI / 2, 1).asProjectionMatrix(
+    shadow.near,
+    light.radius
+  )
+  let layerId = 0
+
+  for (let i = 0; i < sides.length; i++) {
+    const side = /**@type {[Vector3, Vector3]} */ (sides[i])
+    const [renderTarget, layer] = shadowMap.getTarget()
+    const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
+
+    const worldMatrix = light.transform.world
+    const view = Affine3.toMatrix4(new Affine3()
+      .lookAt(side[0], side[1])
+      .translate(new Vector3(
+        worldMatrix.x,
+        worldMatrix.y,
+        worldMatrix.z
+      ))).invert()
+      
+    renderer.updateUBO(device.context, {
+      name: "CameraBlock",
+      data: new Float32Array([
+        ...view,
+        ...projection,
+        ...light.transform.position,
+        shadow.near,
+        light.radius
+      ]).buffer
+    })
+    layerId = layer
+    framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
+    framebuffer.clear(device.context, undefined, 1, undefined)
+    processPointLightSide(objects, renderer, device, pipelines)
+  }
+
+  // Encode clipping planes as they are neccessary for point light shadows
+  // Will be unpacked in the corresponding shader
+  shadowItem.matrix.a = shadow.near;
+  shadowItem.matrix.b = light.radius;
+
+  // We only need the light position for point lights
+  shadowItem.matrix.m = light.transform.world.x
+  shadowItem.matrix.n = light.transform.world.y
+  shadowItem.matrix.o = light.transform.world.z
+  shadowItem.bias = shadow.bias
+  shadowItem.normalBias = shadow.normalBias
+  shadowItem.layer = layerId - 5
+  return shadowItem
+}
+
+/**
+ * @param {Object3D[]} objects
+ * @param {WebGLRenderer} renderer
+ * @param {WebGLRenderDevice} device
+ * @param {Map<number, number>} pipelines
+ */
+function processPointLightSide( objects, renderer, device, pipelines) {
+  for (let i = 0; i < objects.length; i++) {
+    const object = /**@type {Object3D} */ (objects[i]);
+    object.traverseDFS((mesh) => {
+      if (!(mesh instanceof MeshMaterial3D) || mesh instanceof SkyBox) {
+        return true
+      }
+      const gpuMesh = renderer.caches.getMesh(device, mesh.mesh, renderer.attributes)
+      const pipeline = getRenderPipeline(device, renderer, gpuMesh, pipelines)
+      const modelInfo = pipeline.uniforms.get('model')
+      const modeldata = new Float32Array([...Affine3.toMatrix4(mesh.transform.world)])
+
+      pipeline.use(device.context)
+      if (modelInfo) {
+        device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
+      }
+      //drawing
+      device.context.bindVertexArray(gpuMesh.inner)
+      if (gpuMesh.indexType !== undefined) {
+        device.context.drawElements(
+          pipeline.topology,
+          gpuMesh.count,
+          gpuMesh.indexType, 0
+        )
+      } else {
+        device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
+      }
+      return true
+    })
+  }
+}
+/**
  * @param {WebGLRenderDevice} device
  * @param {WebGLRenderer} renderer
  * @param {GPUMesh} mesh
@@ -262,6 +376,7 @@ function getRenderPipeline(device, renderer, mesh, pipelines) {
    * @type {WebGLRenderPipelineDescriptor}
    */
   const descriptor = {
+    //cullFace:CullFace.None,
     depthWrite: true,
     topology: PrimitiveTopology.Triangles,
     vertexLayout: layout,

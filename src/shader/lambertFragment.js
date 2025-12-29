@@ -90,7 +90,15 @@ export const lambertFragment =
       float attenuation = attenuate_point_light(distance, light.radius, light.intensity, light.decay);
       float brightness = calculate_brightness(normal, direction);
       vec3 irradiance = light.color.rgb * attenuation;
-      
+
+      #ifdef MAX_SHADOW_CASTERS
+        if(light.shadow_index != -1){
+          Shadow shadow = shadow_casters[light.shadow_index];
+          
+          irradiance *= shadow_contribution_cube(shadow, shadow_atlas, v_position, brightness);
+        }
+      #endif
+
       total_exitance += base_color * brightness * irradiance;
     }
 

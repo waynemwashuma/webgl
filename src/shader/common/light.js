@@ -17,6 +17,7 @@ export const lightShaderLib = `
     float intensity;
     float radius;
     float decay;
+    int shadow_index;
   };
 
   struct SpotLight {
@@ -91,6 +92,39 @@ export const lightShaderLib = `
     return 0.0;
   }
 
+  vec3 map_cube_from_array_texture_ndc(vec3 direction) {
+    vec3 absolute_direction = abs(direction);
+
+    if (absolute_direction.x >= absolute_direction.y && absolute_direction.x >= absolute_direction.z) {
+      float face = direction.x > 0.0 ? 0.0 : 1.0;
+      float inv = 1.0 / absolute_direction.x;
+      vec2 uv = vec2(
+        direction.x > 0.0 ? -direction.z : direction.z,
+        -direction.y
+      );
+      
+      return vec3(uv * inv, face);
+    } else if (absolute_direction.y >= absolute_direction.x && absolute_direction.y >= absolute_direction.z) {
+      float face = direction.y > 0.0 ? 2.0 : 3.0;
+      float inv = 1.0 / absolute_direction.y;
+      vec2 uv = vec2(
+        direction.x,
+        direction.y > 0.0 ? direction.z : -direction.z
+      );
+
+      return vec3(uv * inv, face);
+    }
+    
+    float face = direction.z > 0.0 ? 4.0 : 5.0;
+    float inv = 1.0 / absolute_direction.z;
+    vec2 uv = vec2(
+      direction.z > 0.0 ? direction.x : -direction.x,
+      -direction.y
+    );
+      
+    return vec3(uv * inv, face);
+  }
+
   float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
     vec4 clipped_position = shadow.space * vec4(position, 1.0);
     vec3 ndc_position = clipped_position.xyz / clipped_position.w;
@@ -111,5 +145,32 @@ export const lightShaderLib = `
     float bias = shadow.bias + normal_bias;
 
     return current_depth - bias > shadow_map_depth ? 0.0 : 1.0;
+  }
+  
+  float shadow_contribution_cube(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
+    // the clipping planes are encoded in the first column of the space matrix
+    vec2 clip_planes = shadow.space[0].xy;
+    vec3 light_position = shadow.space[3].xyz;
+    vec3 direction = position - light_position;
+    float distance = length(direction);
+    vec3 norm_distance = direction / distance;
+    float near = clip_planes.x;
+    float far = clip_planes.y;
+    
+    vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
+    vec2 shadow_uv = ndc_uv.xy * 0.5 + 0.5;
+    float shadow_map_depth = texture(
+      shadow_atlas,
+      vec3(shadow_uv.xy, shadow.layer + ndc_uv.z)
+    ).r;
+    float scale = max(abs(norm_distance.x),max(abs(norm_distance.y), abs(norm_distance.z))); 
+    float view_space_map_depth = linearize_depth(shadow_map_depth, near, far);
+    float map_depth = view_space_map_depth / (scale * far);
+    float current_depth = distance / far;
+    
+    float normal_bias = shadow.normal_bias * (1.0 - NdotL);
+    float bias = shadow.bias + normal_bias;
+
+    return current_depth - bias > map_depth ? 0.0 : 1.0;
   }
 `
