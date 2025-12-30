@@ -2,6 +2,7 @@
 import { WebGLRenderDevice } from "../core/index.js";
 import { Object3D } from "../objects/object3d.js";
 import { abstractClass, abstractMethod } from "../utils/index.js";
+import { RenderItem } from "./core/index.js";
 
 /**
  * @abstract
@@ -34,5 +35,15 @@ export class Plugin {
    */
   renderObject3D(_object, _device, _renderer) {
     abstractMethod(this, Plugin, Plugin.prototype.renderObject3D.name)
+  }
+
+  /**
+   * @param {Object3D} _object
+   * @param {WebGLRenderDevice} _device
+   * @param {WebGLRenderer} _renderer
+   * @returns {RenderItem | undefined}
+   */
+  getRenderItem(_object, _device, _renderer){
+    return
   }
 }

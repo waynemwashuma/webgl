@@ -1,3 +1,4 @@
+/** @import { UniformBinder } from "./core/index.js" */
 import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D, Camera } from "../objects/index.js"
 import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
@@ -6,6 +7,8 @@ import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
+import { View } from "./core/index.js"
+import { Vector3 } from "../math/index.js"
 
 export class WebGLRenderer {
 
@@ -13,11 +16,17 @@ export class WebGLRenderer {
    * @type {Map<string, unknown>}
    */
   resources = new Map()
+
   /**
    * @readonly
    * @type {WebGLDeviceLimits}
    */
   limits
+
+  /**
+   * @type {View[]}
+   */
+  views = []
 
   /**
    * @readonly
@@ -55,6 +64,11 @@ export class WebGLRenderer {
   plugins
 
   /**
+   * @type {Map<string, UniformBinder>}
+   */
+  uniformBinders = new Map()
+
+  /**
    * @param {WebGLRendererOptions} options 
    */
   constructor({ plugins = [] } = {}) {
@@ -85,12 +99,11 @@ export class WebGLRenderer {
       .set("math", mathShaderLib)
   }
 
-
   /**
    * @template {object} T
    * @param {T} item
    */
-  setResource(item){
+  setResource(item) {
     this.resources.set(item.constructor.name, item)
   }
 
@@ -99,7 +112,7 @@ export class WebGLRenderer {
    * @param {import("../loader/loader.js").Constructor<T>} item
    * @returns {T | undefined}
    */
-  getResource(item){
+  getResource(item) {
     return /**@type {T} */ (this.resources.get(item.name))
   }
   /**
@@ -121,10 +134,7 @@ export class WebGLRenderer {
    * @param {Camera} camera
    */
   render(objects, renderDevice, camera) {
-    const { context } = renderDevice
-    const { target: renderTarget } = camera
-    const { clearColor, clearDepth, clearStencil } = renderTarget
-    const framebuffer = this.caches.getFrameBuffer(renderDevice, renderTarget)
+    this.views.length = 0
 
     for (let i = 0; i < objects.length; i++) {
       /**@type {Object3D} */ (objects[i]).traverseDFS((object) => {
@@ -140,19 +150,40 @@ export class WebGLRenderer {
       plugin.preprocess(objects, renderDevice, this)
     }
 
-    framebuffer.setViewport(renderDevice.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-    framebuffer.clear(context, clearColor, clearDepth, clearStencil)
-    this.updateUBO(context, camera.getData())
-
+    const position = new Vector3(
+      camera.transform.world.x,
+      camera.transform.world.y,
+      camera.transform.world.z
+    )
+    const cameraView = new View({
+      renderTarget: camera.target,
+      near: camera.near,
+      far: camera.far,
+      projection: camera.projection.asProjectionMatrix(camera.near, camera.far),
+      view: camera.view,
+      position
+    })
+    this.views.push(cameraView)
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */(this.plugins[i]);
       for (let i = 0; i < objects.length; i++) {
         const object = /**@type {Object3D} */ (objects[i])
         object.traverseDFS((child) => {
-          plugin.renderObject3D(child, renderDevice, this)
+          const item = plugin.getRenderItem(child, renderDevice, this)
+
+          if(item){
+            cameraView.renderList.push(item)
+          }
           return true
         })
       }
+    }
+
+    for (let i = 0; i < this.views.length; i++) {
+      const view = /**@type {View}*/(this.views[i]);
+
+      this.updateUBO(renderDevice.context, view.getData())
+      view.renderItems(renderDevice, this, this.uniformBinders)
     }
   }
 }
