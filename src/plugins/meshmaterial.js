@@ -1,32 +1,33 @@
 /**@import { Brand } from '../utils/index.js' */
 /**@import { Defaults } from '../renderer/index.js' */
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { assert } from '../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
 import { RawMaterial } from "../material/index.js";
-import { Affine3 } from "../math/index.js";
+import { Matrix4 } from "../math/index.js";
 import { Mesh, Attribute } from "../mesh/index.js";
 import { MeshMaterial3D, Object3D } from "../objects/index.js";
-import { Plugin, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture } from "../texture/index.js";
-import { PrimitiveTopology, TextureFilter, TextureFormat, TextureWrap } from '../constants/index.js';
+import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
 import { Caches } from '../caches/index.js';
 import { ShadowMap } from './shadow.js';
 
 export class MeshMaterialPlugin extends Plugin {
 
-  shadowSampler = new Sampler({
-    wrapR: TextureWrap.Clamp,
-    wrapS: TextureWrap.Clamp,
-    wrapT: TextureWrap.Clamp,
-    minificationFilter:TextureFilter.Nearest,
-    magnificationFilter:TextureFilter.Nearest,
-    mipmapFilter:undefined
-  })
+  /**
+   * @private
+   * @type {Map<string,Map<PipelineKey, number>>}
+   */
+  materials = new Map()
+
   /**
    * @override
+   * @param {WebGLRenderer} renderer
    */
-  init() { }
+  init(renderer) {
+    renderer.uniformBinders.set(MeshMaterial3D.name, uploadUniforms)
+  }
 
   /**
    * @override
@@ -34,28 +35,31 @@ export class MeshMaterialPlugin extends Plugin {
   preprocess() { }
 
   /**
-   * @private
-   * @type {Map<string,Map<PipelineKey, number>>}
+   * @override
+   * @param {Object3D} _object
+   * @param {WebGLRenderDevice} _device
+   * @param {WebGLRenderer} _renderer
    */
-  materials = new Map()
+  renderObject3D(_object, _device, _renderer) { }
+
   /**
    * @override
    * @param {Object3D} object
    * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer
    */
-  renderObject3D(object, device, renderer) {
+  getRenderItem(object, device, renderer) {
     if (!(object instanceof MeshMaterial3D)) {
       return
     }
-    const shadowmap = renderer.getResource(ShadowMap)
-    const { caches, attributes, defaults } = renderer
+
+    const { caches, attributes } = renderer
     const { material, mesh, transform } = object
     const gpuMesh = caches.getMesh(device, mesh, attributes)
     const meshBits = createPipelineBitsFromMesh(mesh, object)
     const materialBits = material.getPipelineBits()
     const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipeline = this.getMaterialRenderPipeline(device, caches, material, pipelineKey, () => {
+    const pipelineId = this.getMaterialRenderPipelineId(device, caches, material, pipelineKey, () => {
       const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
@@ -93,52 +97,29 @@ export class MeshMaterialPlugin extends Plugin {
 
       return descriptor
     })
-    const shadowInfo = pipeline.uniforms.get('shadow_atlas')
-    const modelInfo = pipeline.uniforms.get("model")
-    const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
-    const modeldata = new Float32Array([...Affine3.toMatrix4(transform.world)])
-    const ubo = caches.uniformBuffers.get('MaterialBlock')
 
-    pipeline.use(device.context)
+    const uniforms = new MaterialBindGroup({
+      textures: object.material.getTextures(),
+      data: material.getData(),
+    })
 
-    if (ubo) {
-      const materialData = material.getData()
-      ubo.update(device.context, materialData)
-    }
-    uploadTextures(device, material, pipeline.uniforms, caches, defaults)
-
-    if (shadowmap && shadowInfo && shadowInfo.texture_unit !== undefined) {
-      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + shadowInfo.texture_unit)
-
-      const texture = caches.getTexture(device, shadowmap.shadowAtlas)
-      device.context.bindTexture(shadowmap.shadowAtlas.type, texture.inner)
-      updateTextureSampler(device.context, shadowmap.shadowAtlas, this.shadowSampler)
-    }
-    if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && object.skin) {
-      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + boneMatricesInfo.texture_unit)
+    if (object.skin) {
       object.skin.bindMatrix.copy(object.transform.world)
       object.skin.inverseBindMatrix.copy(object.skin.bindMatrix).invert()
       object.skin.updateTexture()
       const texture = caches.getTexture(device, object.skin.boneTexture)
 
-      device.context.bindTexture(object.skin.boneTexture.type, texture.inner)
-      device.context.texParameteri(object.skin.boneTexture.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
+      uniforms.boneTransforms = texture
     }
+    const item = new RenderItem({
+      uniforms,
+      mesh: gpuMesh,
+      pipelineId,
+      tag: MeshMaterial3D.name,
+      transform: transform.world
+    })
 
-    if (modelInfo) {
-      device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
-    }
-
-    //drawing
-    device.context.bindVertexArray(gpuMesh.inner)
-    if (gpuMesh.indexType !== undefined) {
-      device.context.drawElements(pipeline.topology,
-        gpuMesh.count,
-        gpuMesh.indexType, 0
-      )
-    } else {
-      device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
-    }
+    return item
   }
 
   /**
@@ -147,8 +128,9 @@ export class MeshMaterialPlugin extends Plugin {
    * @param {RawMaterial} material
    * @param {PipelineKey} key
    * @param {() => WebGLRenderPipelineDescriptor} compute
+   * @returns {number}
    */
-  getMaterialRenderPipeline(device, caches, material, key, compute) {
+  getMaterialRenderPipelineId(device, caches, material, key, compute) {
     const name = material.constructor.name
     let materialCache = this.materials.get(name)
 
@@ -162,19 +144,92 @@ export class MeshMaterialPlugin extends Plugin {
     const id = materialCache.get(key)
 
     if (id !== undefined) {
-      const pipeline = caches.getRenderPipeline(id)
-      if (pipeline) {
-        return pipeline
-      }
+      return id
     }
+
     const descriptor = compute()
-    const [newRenderPipeline, newId] = caches.createRenderPipeline(device, descriptor)
+    const [_, newId] = caches.createRenderPipeline(device, descriptor)
 
     materialCache.set(key, newId)
-    return newRenderPipeline
+    return newId
   }
 }
 
+class MaterialBindGroup {
+  /**
+   * @type {GPUTexture | undefined} 
+   */
+  boneTransforms
+
+  /**
+   * @type {[string, number, Texture | undefined, Sampler | undefined][]}
+   */
+  textures
+  /**
+   * @type {ArrayBuffer}
+   */
+  data
+  /**
+   * @param {MaterialBindGroupOptions} options 
+   */
+  constructor({
+    textures,
+    data,
+    boneTransforms
+  }) {
+    this.boneTransforms = boneTransforms
+    this.data = data
+    this.textures = textures
+  }
+}
+
+/**
+ * @typedef MaterialBindGroupOptions
+ * @property {[string, number, Texture | undefined, Sampler | undefined][]} textures
+ * @property {ArrayBuffer} data
+ * @property {GPUTexture} [boneTransforms]
+ */
+
+/**
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ * @param {WebGLRenderPipeline} pipeline
+ * @param {MaterialBindGroup} bindGroup
+ * @param {Matrix4} transform
+ */
+function uploadUniforms(device, renderer, pipeline, bindGroup, transform) {
+  const { caches, defaults } = renderer
+  const shadowmap = renderer.getResource(ShadowMap)
+  const shadowInfo = pipeline.uniforms.get('shadow_atlas')
+  const modelInfo = pipeline.uniforms.get("model")
+  const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
+  const materialBuffer = caches.uniformBuffers.get('MaterialBlock')
+
+  if (shadowmap && shadowInfo && shadowInfo.texture_unit !== undefined) {
+    device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + shadowInfo.texture_unit)
+
+    const texture = caches.getTexture(device, shadowmap.shadowAtlas)
+    device.context.bindTexture(shadowmap.shadowAtlas.type, texture.inner)
+    updateTextureSampler(device.context, shadowmap.shadowAtlas, shadowmap.sampler)
+  }
+
+  if (boneMatricesInfo && boneMatricesInfo.texture_unit !== undefined && bindGroup.boneTransforms) {
+    device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + boneMatricesInfo.texture_unit)
+
+    device.context.bindTexture(bindGroup.boneTransforms.type, bindGroup.boneTransforms.inner)
+    device.context.texParameteri(bindGroup.boneTransforms.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
+  }
+
+  if (modelInfo) {
+    device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transform]))
+  }
+
+  if (materialBuffer) {
+    materialBuffer.update(device.context, bindGroup.data)
+  }
+
+  uploadTextures(device, bindGroup.textures, pipeline.uniforms, caches, defaults)
+}
 /**
  * @enum {bigint}
  */
@@ -292,16 +347,13 @@ function updateTextureSampler(context, texture, sampler) {
 }
 
 /**
- * @template {RawMaterial} T
  * @param {WebGLRenderDevice} device
- * @param {T} material 
+ * @param {[string, number, Texture | undefined, Sampler | undefined][]} textures
  * @param {ReadonlyMap<string, Uniform>} uniforms
  * @param {Caches} caches
  * @param {Defaults} defaults
  */
-function uploadTextures(device, material, uniforms, caches, defaults) {
-  const textures = material.getTextures()
-
+function uploadTextures(device, textures, uniforms, caches, defaults) {
   for (let i = 0; i < textures.length; i++) {
     const [name, _, texture = defaults.texture2D, sampler = defaults.textureSampler] =
     /**@type {[string, number, Texture | undefined, Sampler | undefined]}*/(textures[i])

@@ -1,5 +1,5 @@
 /**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { PrimitiveTopology, TextureFormat, TextureType } from "../constants/index.js";
+import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constants/index.js";
 import { Shader, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js";
 import { DirectionalLight, OrthographicShadow, PointLight, SpotLight, SpotLightShadow } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
@@ -7,7 +7,7 @@ import { MeshMaterial3D, Object3D, PerspectiveProjection, SkyBox } from "../obje
 import { Plugin, WebGLRenderer } from "../renderer/index.js";
 import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
-import { Texture } from "../texture/index.js";
+import { Sampler, Texture } from "../texture/index.js";
 import { assert } from "../utils/index.js";
 
 export class ShadowPlugin extends Plugin {
@@ -282,7 +282,7 @@ function processPointLight(light, objects, renderer, device, pipelines, shadowMa
         worldMatrix.y,
         worldMatrix.z
       ))).invert()
-      
+
     renderer.updateUBO(device.context, {
       name: "CameraBlock",
       data: new Float32Array([
@@ -320,7 +320,7 @@ function processPointLight(light, objects, renderer, device, pipelines, shadowMa
  * @param {WebGLRenderDevice} device
  * @param {Map<number, number>} pipelines
  */
-function processPointLightSide( objects, renderer, device, pipelines) {
+function processPointLightSide(objects, renderer, device, pipelines) {
   for (let i = 0; i < objects.length; i++) {
     const object = /**@type {Object3D} */ (objects[i]);
     object.traverseDFS((mesh) => {
@@ -410,9 +410,19 @@ export class ShadowMap {
    * @type {ImageRenderTarget[]}
    */
   targets = []
+
   shadowAtlas = new Texture({
     type: TextureType.Texture2DArray,
     format: TextureFormat.Depth32Float
+  })
+
+  sampler = new Sampler({
+    wrapR: TextureWrap.Clamp,
+    wrapS: TextureWrap.Clamp,
+    wrapT: TextureWrap.Clamp,
+    minificationFilter: TextureFilter.Nearest,
+    magnificationFilter: TextureFilter.Nearest,
+    mipmapFilter: undefined
   })
 
   maxDepth = 10
