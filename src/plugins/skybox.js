@@ -1,15 +1,19 @@
-/**@import { WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../core/index.js' */
 import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
-import { Affine3 } from "../math/index.js";
+import { Matrix4 } from "../math/index.js";
 import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../constants/index.js";
 import { Object3D, SkyBox } from "../objects/index.js";
-import { Plugin, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
 import { skyboxFragment, skyboxVertex } from "../shader/index.js";
 import { CuboidMeshBuilder, Mesh } from "../mesh/index.js";
-import { Sampler, Texture } from "../texture/index.js";
+import { Sampler } from "../texture/index.js";
 
 export class SkyboxPlugin extends Plugin {
 
+  /**
+   * @type {number | undefined}
+   */
+  pipelineId
   /**
    * @type {Mesh}
    */
@@ -27,8 +31,11 @@ export class SkyboxPlugin extends Plugin {
   }
   /**
    * @override
+   * @param {WebGLRenderer} renderer
    */
-  init() { }
+  init(renderer) {
+    renderer.uniformBinders.set(SkyBox.name, uploadUniforms)
+  }
 
   /**
    * @override
@@ -36,65 +43,45 @@ export class SkyboxPlugin extends Plugin {
   preprocess() { }
 
   /**
-   * @type {number | undefined}
+   * @override
+   * @param {Object3D} _object
+   * @param {WebGLRenderDevice} _device
+   * @param {WebGLRenderer} _renderer
    */
-  pipelineId
+  renderObject3D(_object, _device, _renderer) { }
+
   /**
    * @override
    * @param {Object3D} object
    * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer
    */
-  renderObject3D(object, device, renderer) {
+  getRenderItem(object, device, renderer) {
     if (!(object instanceof SkyBox)) {
       return
     }
-    const { caches } = renderer
-    const gpuMesh = caches.getMesh(device, this.cube, renderer.attributes)
-    const pipeline = this.getRenderPipeline(device, renderer)
-    const modelInfo = pipeline.uniforms.get("model")
-    const dayInfo = pipeline.uniforms.get("day")
-    const nightInfo = pipeline.uniforms.get("night")
-    const lerpInfo = pipeline.uniforms.get("lerp")
-
-    pipeline.use(device.context)
-
-    if (modelInfo) {
-      const modeldata = new Float32Array([...Affine3.toMatrix4(object.transform.world)])
-
-      device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
-    }
-
-    if (object.day && dayInfo && dayInfo.texture_unit !== undefined) {
-      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + dayInfo.texture_unit)
+    const mesh = renderer.caches.getMesh(device, this.cube, renderer.attributes)
+    const uniforms = new SkyBoxGroup(object.lerp)
+    
+    if (object.day) {
+      const dayTex = renderer.caches.getTexture(device, object.day)
       
-      const texture = caches.getTexture(device, object.day)
-      device.context.bindTexture(object.day.type, texture.inner)
-      updateTextureSampler(device.context, object.day, renderer.defaults.textureSampler)
+      uniforms.day = dayTex
     }
-
-    if (object.night && nightInfo && nightInfo.texture_unit !== undefined) {
-      device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + nightInfo.texture_unit)
-
-      const texture = caches.getTexture(device, object.night)
-      device.context.bindTexture(object.night.type, texture.inner)
-      updateTextureSampler(device.context, object.night, renderer.defaults.textureSampler)
+    if (object.night) {
+      const nightTex = renderer.caches.getTexture(device, object.night)
+      
+      uniforms.night = nightTex
     }
-
-    if(lerpInfo){
-      device.context.uniform1f(lerpInfo.location, object.lerp)
-    }
-
-    //drawing
-    device.context.bindVertexArray(gpuMesh.inner)
-    if (gpuMesh.indexType !== undefined) {
-      device.context.drawElements(pipeline.topology,
-        gpuMesh.count,
-        gpuMesh.indexType, 0
-      )
-    } else {
-      device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
-    }
+    const item = new RenderItem({
+      pipelineId: this.getRenderPipeline(device, renderer),
+      uniforms,
+      tag: SkyBox.name,
+      transform: object.transform.world,
+      mesh
+    })
+    
+    return item
   }
 
   /**
@@ -102,15 +89,10 @@ export class SkyboxPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   getRenderPipeline(device, renderer) {
-    const { caches, includes, defines: globalDefines } = renderer
-    if (this.pipelineId) {
-      const pipeline = caches.getRenderPipeline(this.pipelineId)
-
-      if (pipeline) {
-        return pipeline
-      }
+    if (this.pipelineId !== undefined) {
+      return this.pipelineId
     }
-
+    const { caches, includes, defines: globalDefines } = renderer
     /**
      * @type {WebGLRenderPipelineDescriptor}
      */
@@ -141,16 +123,78 @@ export class SkyboxPlugin extends Plugin {
       descriptor.vertex.includes.set(name, value)
       descriptor.fragment?.source?.includes?.set(name, value)
     }
-    const [newRenderPipeline, newId] = caches.createRenderPipeline(device, descriptor)
+
+    const [_, newId] = caches.createRenderPipeline(device, descriptor)
 
     this.pipelineId = newId
-    return newRenderPipeline
+    return newId
+  }
+}
+
+export class SkyBoxGroup {
+  /**
+   * @type {GPUTexture | undefined}
+   */
+  day
+  /**
+   * @type {GPUTexture | undefined}
+   */
+  night
+  /**
+   * @type {number}
+   */
+  lerp = 0
+
+  /**
+   * @param {number} lerp
+   * @param {GPUTexture} [day]
+   * @param {GPUTexture} [night]
+   */
+  constructor(lerp, day, night) {
+    this.day = day
+    this.night = night
+    this.lerp = lerp
+  }
+}
+
+/**
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ * @param {WebGLRenderPipeline} pipeline
+ * @param {SkyBoxGroup} bindGroup
+ * @param {Matrix4} transform
+ */
+function uploadUniforms(device, renderer, pipeline, bindGroup, transform) {
+  const { day, night, lerp } = bindGroup
+  const modelInfo = pipeline.uniforms.get("model")
+  const dayInfo = pipeline.uniforms.get("day")
+  const nightInfo = pipeline.uniforms.get("night")
+  const lerpInfo = pipeline.uniforms.get("lerp")
+
+  if (modelInfo) {
+    device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transform]))
+  }
+
+  if (day && dayInfo && dayInfo.texture_unit !== undefined) {
+    device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + dayInfo.texture_unit)
+    device.context.bindTexture(day.type, day.inner)
+    updateTextureSampler(device.context, day, renderer.defaults.textureSampler)
+  }
+
+  if (night && nightInfo && nightInfo.texture_unit !== undefined) {
+    device.context.activeTexture(WebGL2RenderingContext.TEXTURE0 + nightInfo.texture_unit)
+    device.context.bindTexture(night.type, night.inner)
+    updateTextureSampler(device.context, night, renderer.defaults.textureSampler)
+  }
+
+  if (lerpInfo) {
+    device.context.uniform1f(lerpInfo.location, lerp)
   }
 }
 
 /**
  * @param {WebGL2RenderingContext} context
- * @param {Texture} texture
+ * @param {GPUTexture} texture
  * @param {Sampler} sampler
  */
 function updateTextureSampler(context, texture, sampler) {
