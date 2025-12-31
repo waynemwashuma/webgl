@@ -44,10 +44,6 @@ export class CameraPlugin extends Plugin {
       renderer.views.push(cameraView)
     }
   }
-  /**
-   * @override
-   */
-  renderObject3D(){}
 }
 
 /**

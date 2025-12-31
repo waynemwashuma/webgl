@@ -24,7 +24,6 @@ export class SkeletonHelperPlugin extends Plugin {
    */
   pipelineId
   /**
-   * @override
    * @param {Object3D} object
    * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer

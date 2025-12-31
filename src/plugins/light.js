@@ -97,11 +97,6 @@ export class LightPlugin extends Plugin {
       data: spotLightData
     })
   }
-
-  /**
-   * @override
-   */
-  renderObject3D() { }
 }
 
 /**

@@ -36,14 +36,6 @@ export class MeshMaterialPlugin extends Plugin {
 
   /**
    * @override
-   * @param {Object3D} _object
-   * @param {WebGLRenderDevice} _device
-   * @param {WebGLRenderer} _renderer
-   */
-  renderObject3D(_object, _device, _renderer) { }
-
-  /**
-   * @override
    * @param {Object3D} object
    * @param {WebGLRenderDevice} device
    * @param {WebGLRenderer} renderer

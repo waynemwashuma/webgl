@@ -98,11 +98,6 @@ export class ShadowPlugin extends Plugin {
     renderer.setResource(new ShadowMap(maxShadows))
     renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
   }
-
-  /**
-   * @override
-   */
-  renderObject3D() { }
 }
 
 /**

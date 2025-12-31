@@ -32,15 +32,6 @@ export class Plugin {
    * @param {Object3D} _object
    * @param {WebGLRenderDevice} _device
    * @param {WebGLRenderer} _renderer
-   */
-  renderObject3D(_object, _device, _renderer) {
-    abstractMethod(this, Plugin, Plugin.prototype.renderObject3D.name)
-  }
-
-  /**
-   * @param {Object3D} _object
-   * @param {WebGLRenderDevice} _device
-   * @param {WebGLRenderer} _renderer
    * @returns {RenderItem | undefined}
    */
   getRenderItem(_object, _device, _renderer){
