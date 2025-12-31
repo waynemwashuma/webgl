@@ -77,7 +77,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   sphere.transform.orientation.multiply(rotation)
-  renderer.render([sphere, directionalLight, ambientLight],renderDevice, camera)
+  renderer.render([sphere, directionalLight, ambientLight, camera],renderDevice)
   stats.end()
 
   requestAnimationFrame(update)

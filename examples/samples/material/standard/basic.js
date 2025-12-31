@@ -98,7 +98,7 @@ function update() {
   object2.transform.orientation
     .rotateX(Math.PI / 1000)
     .rotateY(Math.PI / 1000)
-  renderer.render([object1, object2, skyBox, ambientLight, directionalLight], renderDevice, camera)
+  renderer.render([object1, object2, skyBox, ambientLight, directionalLight, camera], renderDevice)
   cameraControls.update()
 
   requestAnimationFrame(update)

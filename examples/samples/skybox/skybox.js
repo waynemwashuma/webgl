@@ -92,7 +92,7 @@ function update() {
   }
 
   camera.transform.orientation.multiply(rotation)
-  renderer.render([skyBox],renderDevice, camera)
+  renderer.render([skyBox, camera],renderDevice)
   stats.end()
   
   requestAnimationFrame(update)

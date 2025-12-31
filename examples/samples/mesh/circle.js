@@ -59,7 +59,7 @@ requestAnimationFrame(update)
 
 function update() {
   cameraControls.update()
-  renderer.render([object], renderDevice, camera)
+  renderer.render([object, camera], renderDevice)
   requestAnimationFrame(update)
 }
 

@@ -78,7 +78,7 @@ function update() {
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)
   )
 
-  renderer.render([skyBox, object], renderDevice, camera)
+  renderer.render([skyBox, object, camera], renderDevice)
   requestAnimationFrame(update)
 }
 

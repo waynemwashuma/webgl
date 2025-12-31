@@ -137,7 +137,7 @@ function createObjects() {
 
 function update() {
   cameraControls.update()
-  renderer.render([ground, ...objects, light, ambientLight, skyBox], renderDevice, camera)
+  renderer.render([ground, ...objects, light, ambientLight, skyBox, camera], renderDevice)
   requestAnimationFrame(update)
 }
 

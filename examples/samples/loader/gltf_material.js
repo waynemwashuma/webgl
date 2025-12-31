@@ -92,7 +92,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([model, skyBox, ambientLight, directionalLight], renderDevice, camera)
+  renderer.render([model, skyBox, ambientLight, directionalLight, camera], renderDevice)
   cameraControls.update()
   stats.end()
   requestAnimationFrame(update)

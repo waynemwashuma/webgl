@@ -81,7 +81,7 @@ function createObjects() {
 
 function update() {
   cameraControls.update()
-  renderer.render([ground, ...objects], renderDevice, camera)
+  renderer.render([ground, ...objects, camera], renderDevice)
   requestAnimationFrame(update)
 }
 

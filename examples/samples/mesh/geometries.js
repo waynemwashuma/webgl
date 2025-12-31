@@ -89,7 +89,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   objects.forEach(object => object.transform.orientation.multiply(rotation))
-  renderer.render(objects,renderDevice, camera)
+  renderer.render([...objects, camera],renderDevice)
   stats.end()
 
   requestAnimationFrame(update)

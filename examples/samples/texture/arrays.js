@@ -125,7 +125,7 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([object1],renderDevice, camera)
+  renderer.render([object1, camera], renderDevice)
   stats.end()
 
   requestAnimationFrame(update)

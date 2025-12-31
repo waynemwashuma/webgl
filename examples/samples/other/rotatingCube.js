@@ -24,8 +24,8 @@ stats.dom.removeAttribute('style')
 stats.dom.classList.add('performance-monitor')
 
 const canvas = document.createElement('canvas')
-const renderDevice = new WebGLRenderDevice(canvas,{
-  depth:true
+const renderDevice = new WebGLRenderDevice(canvas, {
+  depth: true
 })
 const renderTarget = new CanvasTarget(canvas)
 const renderer = new WebGLRenderer({
@@ -74,7 +74,7 @@ requestAnimationFrame(update)
 function update() {
   stats.begin()
   box.transform.orientation.multiply(rotation)
-  renderer.render([box, ambientLight, directionalLight], renderDevice, camera)
+  renderer.render([box, ambientLight, directionalLight, camera], renderDevice)
   stats.end()
 
   requestAnimationFrame(update)

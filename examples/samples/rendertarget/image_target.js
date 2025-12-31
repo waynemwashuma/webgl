@@ -106,8 +106,8 @@ requestAnimationFrame(update)
 
 function update() {
   stats.begin()
-  renderer.render([object1], renderDevice, camera1)
-  renderer.render([skyBox, object2], renderDevice, camera2)
+  renderer.render([object1, camera1], renderDevice)
+  renderer.render([skyBox, object2, camera2], renderDevice)
 
   object1.transform.orientation.multiply(
     Quaternion.fromEuler(Math.PI / 1000, Math.PI / 1000, 0)

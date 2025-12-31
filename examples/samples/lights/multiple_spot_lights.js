@@ -173,7 +173,7 @@ function createLights() {
 function update() {
   cameraControls.update()
   lights.transform.orientation.rotateY(0.01)
-  renderer.render([ground, ...objects, sun, lights, ambientLight, skyBox], renderDevice, camera)
+  renderer.render([ground, ...objects, sun, lights, ambientLight, skyBox, camera], renderDevice)
   requestAnimationFrame(update)
 }
 

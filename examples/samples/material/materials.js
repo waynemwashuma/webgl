@@ -108,7 +108,7 @@ function update() {
 
   stats.begin()
   objects.forEach(object => object.transform.orientation.multiply(rotation))
-  renderer.render([...objects, ambientLight, directionalLight], renderDevice, camera)
+  renderer.render([...objects, ambientLight, directionalLight, camera], renderDevice)
   stats.end()
   requestAnimationFrame(update)
 }

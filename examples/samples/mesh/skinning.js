@@ -116,7 +116,7 @@ function update() {
   }
 
   if (objects.length > 0) {
-    renderer.render(objects, renderDevice, camera)
+    renderer.render([...objects, camera], renderDevice, )
   }
 
   stats.end()
