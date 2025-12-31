@@ -16,7 +16,8 @@ import {
   CuboidMeshBuilder,
   MeshMaterialPlugin,
   CanvasTarget,
-  SkyboxPlugin
+  SkyboxPlugin,
+  CameraPlugin
 } from "webgllis"
 
 // performance monitor
@@ -34,7 +35,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 const renderer = new WebGLRenderer({
   plugins:[
     new SkyboxPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 

@@ -13,7 +13,8 @@ import {
   LightPlugin,
   AmbientLight,
   CanvasTarget,
-  SkyboxPlugin
+  SkyboxPlugin,
+  CameraPlugin
 } from 'webgllis';
 
 // performance monitor
@@ -33,6 +34,7 @@ const renderer = new WebGLRenderer({
     new LightPlugin(),
     new SkyboxPlugin(),
     new MeshMaterialPlugin(),
+    new CameraPlugin(),
   ]
 })
 

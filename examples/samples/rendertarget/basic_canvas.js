@@ -13,7 +13,8 @@ import {
   SkyBox,
   CuboidMeshBuilder,
   MeshMaterialPlugin,
-  SkyboxPlugin
+  SkyboxPlugin,
+  CameraPlugin
 } from "webgllis"
 import { GUI } from "dat.gui";
 
@@ -25,7 +26,8 @@ const renderTarget = new CanvasTarget(canvas)
 const renderer = new WebGLRenderer({
   plugins:[
     new SkyboxPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

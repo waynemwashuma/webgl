@@ -11,7 +11,8 @@ import {
   UVSphereMeshBuilder,
   CanvasTarget,
   BasicMaterial,
-  OrthographicProjection
+  OrthographicProjection,
+  CameraPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -22,7 +23,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 
 const renderer = new WebGLRenderer({
   plugins: [
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const projection = new OrthographicProjection()

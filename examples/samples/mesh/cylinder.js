@@ -11,7 +11,8 @@ import {
   OrbitCameraControls,
   CylinderMeshBuilder,
   MeshMaterialPlugin,
-  CanvasTarget
+  CanvasTarget,
+  CameraPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -22,7 +23,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 })
 const renderer = new WebGLRenderer({
   plugins:[
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

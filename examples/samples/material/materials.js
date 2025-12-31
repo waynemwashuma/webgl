@@ -16,7 +16,8 @@ import {
   NormalMaterial,
   AmbientLight,
   LightPlugin,
-  CanvasTarget
+  CanvasTarget,
+  CameraPlugin
 } from "webgllis"
 
 // performance monitor
@@ -34,7 +35,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

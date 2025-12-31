@@ -13,7 +13,8 @@ import {
   Texture,
   basicVertex,
   Sampler,
-  CanvasTarget
+  CanvasTarget,
+  CameraPlugin
 } from 'webgllis';
 
 // Material to view the texture array
@@ -89,7 +90,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 })
 const renderer = new WebGLRenderer({
   plugins:[
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

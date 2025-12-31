@@ -17,7 +17,8 @@ import {
   LightPlugin,
   AmbientLight,
   CanvasTarget,
-  SkyboxPlugin
+  SkyboxPlugin,
+  CameraPlugin
 } from "webgllis"
 
 const canvas = document.createElement('canvas')
@@ -29,7 +30,8 @@ const renderer = new WebGLRenderer({
   plugins: [
     new LightPlugin(),
     new SkyboxPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

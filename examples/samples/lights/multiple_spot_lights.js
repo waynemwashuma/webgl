@@ -25,7 +25,8 @@ import {
   Vector3,
   BasicMaterial,
   Color,
-  Object3D
+  Object3D,
+  CameraPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -39,7 +40,8 @@ const renderer = new WebGLRenderer({
     new ShadowPlugin(),
     new LightPlugin(),
     new SkyboxPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 

@@ -22,7 +22,8 @@ import {
   CanvasTarget,
   SkyboxPlugin,
   ShadowPlugin,
-  SpotLightShadow
+  SpotLightShadow,
+  CameraPlugin
 } from "webgllis"
 import { GUI } from "dat.gui"
 
@@ -36,7 +37,8 @@ const renderer = new WebGLRenderer({
     new ShadowPlugin(),
     new LightPlugin(),
     new SkyboxPlugin(),
-    new MeshMaterialPlugin()
+    new MeshMaterialPlugin(),
+    new CameraPlugin()
   ]
 })
 
