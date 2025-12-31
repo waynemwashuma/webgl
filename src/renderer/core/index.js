@@ -43,6 +43,11 @@ export class View {
   far
 
   /**
+   * @type {string}
+   */
+  tag
+
+  /**
    * @param {ViewOptions} options
    */
   constructor({
@@ -51,11 +56,13 @@ export class View {
     projection,
     view,
     near,
-    far
+    far,
+    tag
   }) {
     this.renderTarget = renderTarget
     this.near = near
     this.far = far
+    this.tag = tag
     this.projectionMatrix = projection
     this.viewMatrix = view
     this.viewPosition = position
@@ -166,6 +173,7 @@ export class RenderItem {
  * @property {Matrix4} view
  * @property {number} near
  * @property {number} far
+ * @property {string} tag
  */
 
 /**

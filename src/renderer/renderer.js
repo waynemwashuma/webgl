@@ -69,6 +69,11 @@ export class WebGLRenderer {
   uniformBinders = new Map()
 
   /**
+   * @type {Map<string, ViewFiller>}
+   */
+  viewFiller = new Map()
+
+  /**
    * @param {WebGLRendererOptions} options 
    */
   constructor({ plugins = [] } = {}) {
@@ -93,6 +98,7 @@ export class WebGLRenderer {
 
       plugin.init(this)
     }
+    this.viewFiller.set(Camera.name, fillCameraView)
     this.includes
       .set("common", commonShaderLib)
       .set("light", lightShaderLib)
@@ -115,6 +121,7 @@ export class WebGLRenderer {
   getResource(item) {
     return /**@type {T} */ (this.resources.get(item.name))
   }
+
   /**
    * @param {{name: any;data: any;}} dataForm
    * @param {WebGL2RenderingContext} context
@@ -137,10 +144,12 @@ export class WebGLRenderer {
     this.views.length = 0
 
     for (let i = 0; i < objects.length; i++) {
-      /**@type {Object3D} */ (objects[i]).traverseDFS((object) => {
-      object.update()
-      return true
-    })
+      const object = /**@type {Object3D} */ (objects[i])
+
+      object.traverseDFS((object) => {
+        object.update()
+        return true
+      })
     }
     camera.update()
 
@@ -161,21 +170,18 @@ export class WebGLRenderer {
       far: camera.far,
       projection: camera.projection.asProjectionMatrix(camera.near, camera.far),
       view: camera.view,
-      position
+      position,
+      tag: Camera.name
     })
-    this.views.push(cameraView)
-    for (let i = 0; i < this.plugins.length; i++) {
-      const plugin = /**@type {Plugin} */(this.plugins[i]);
-      for (let i = 0; i < objects.length; i++) {
-        const object = /**@type {Object3D} */ (objects[i])
-        object.traverseDFS((child) => {
-          const item = plugin.getRenderItem(child, renderDevice, this)
 
-          if(item){
-            cameraView.renderList.push(item)
-          }
-          return true
-        })
+    this.views.push(cameraView)
+
+    for (let i = 0; i < this.views.length; i++) {
+      const view = /** @type {View} */ (this.views[i]);
+      const fill = this.viewFiller.get(view.tag)
+
+      if (fill) {
+        fill(renderDevice, this, objects, this.plugins, view)
       }
     }
 
@@ -184,6 +190,36 @@ export class WebGLRenderer {
 
       this.updateUBO(renderDevice.context, view.getData())
       view.renderItems(renderDevice, this, this.uniformBinders)
+    }
+  }
+}
+
+/**
+ * @callback ViewFiller
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ * @param {readonly Object3D[]} objects
+ * @param {readonly Plugin[]} plugins
+ * @param {View} view
+ * @return {void}
+ */
+
+/**
+ * @type {ViewFiller}
+ */
+function fillCameraView(device, renderer, objects, plugins, view) {
+  for (let i = 0; i < plugins.length; i++) {
+    const plugin = /**@type {Plugin} */(plugins[i]);
+    for (let i = 0; i < objects.length; i++) {
+      const object = /**@type {Object3D} */ (objects[i])
+      object.traverseDFS((child) => {
+        const item = plugin.getRenderItem(child, device, renderer)
+
+        if (item) {
+          view.renderList.push(item)
+        }
+        return true
+      })
     }
   }
 }
