@@ -4,7 +4,6 @@
 import { assert } from '../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
 import { RawMaterial } from "../material/index.js";
-import { Matrix4 } from "../math/index.js";
 import { Mesh, Attribute } from "../mesh/index.js";
 import { MeshMaterial3D, Object3D } from "../objects/index.js";
 import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
@@ -187,13 +186,11 @@ class MaterialBindGroup {
  * @param {WebGLRenderer} renderer
  * @param {WebGLRenderPipeline} pipeline
  * @param {MaterialBindGroup} bindGroup
- * @param {Matrix4} transform
  */
-function uploadUniforms(device, renderer, pipeline, bindGroup, transform) {
+function uploadUniforms(device, renderer, pipeline, bindGroup) {
   const { caches, defaults } = renderer
   const shadowmap = renderer.getResource(ShadowMap)
   const shadowInfo = pipeline.uniforms.get('shadow_atlas')
-  const modelInfo = pipeline.uniforms.get("model")
   const boneMatricesInfo = pipeline.uniforms.get("bone_transforms")
   const materialBuffer = caches.uniformBuffers.get('MaterialBlock')
 
@@ -210,10 +207,6 @@ function uploadUniforms(device, renderer, pipeline, bindGroup, transform) {
 
     device.context.bindTexture(bindGroup.boneTransforms.type, bindGroup.boneTransforms.inner)
     device.context.texParameteri(bindGroup.boneTransforms.type, WebGL2RenderingContext.TEXTURE_MIN_FILTER, WebGL2RenderingContext.LINEAR)
-  }
-
-  if (modelInfo) {
-    device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transform]))
   }
 
   if (materialBuffer) {

@@ -86,13 +86,22 @@ export class View {
       const uniformBinder = uniformBinders.get(tag)
       const pipeline = renderer.caches.getRenderPipeline(pipelineId)
 
-      if (!uniformBinder || !pipeline) {
+      if (!pipeline) {
         continue
       }
 
-      pipeline.use(device.context)
-      uniformBinder(device, renderer, pipeline, uniforms, Affine3.toMatrix4(transform))
+      const modelInfo = pipeline.uniforms.get("model")
+      const transformMatrix = Affine3.toMatrix4(transform)
 
+      pipeline.use(device.context)
+
+      if (modelInfo) {
+        device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transformMatrix]))
+      }
+
+      if (uniformBinder) {
+        uniformBinder(device, renderer, pipeline, uniforms, transformMatrix)
+      }
       device.context.bindVertexArray(mesh.inner)
       if (mesh.indexType !== undefined) {
         device.context.drawElements(pipeline.topology,
