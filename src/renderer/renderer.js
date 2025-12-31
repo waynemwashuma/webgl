@@ -1,6 +1,6 @@
 /** @import { UniformBinder } from "./core/index.js" */
 import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
-import { Object3D, Camera } from "../objects/index.js"
+import { Object3D } from "../objects/index.js"
 import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { assert } from '../utils/index.js'
@@ -136,14 +136,10 @@ export class WebGLRenderer {
 
   /**
    * @param {Object3D[]} objects
-   * @param {WebGLRenderDevice} renderDevice 
-   * @param {Camera} camera
+   * @param {WebGLRenderDevice} renderDevice
    */
-  render(objects, renderDevice, camera) {
+  render(objects, renderDevice) {
     this.views.length = 0
-
-    // Hack: Will ensure that camera is provided as part of the objects for camera plugin
-    objects = [...objects, camera]
 
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i])
