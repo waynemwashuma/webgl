@@ -1,10 +1,12 @@
 /**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
+/** @import { ViewFiller } from "../renderer/index.js" */
+import { View } from "../renderer/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constants/index.js";
-import { Shader, WebGLRenderDevice, WebGLRenderPipeline } from "../core/index.js";
-import { DirectionalLight, OrthographicShadow, PointLight, SpotLight, SpotLightShadow } from "../light/index.js";
+import { Shader, WebGLRenderDevice } from "../core/index.js";
+import { DirectionalLight, PointLight, SpotLight } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
-import { MeshMaterial3D, Object3D, PerspectiveProjection, SkyBox } from "../objects/index.js";
-import { Plugin, WebGLRenderer } from "../renderer/index.js";
+import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
+import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
 import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
 import { Sampler, Texture } from "../texture/index.js";
@@ -14,15 +16,25 @@ export class ShadowPlugin extends Plugin {
 
   /**
    * Layout hash is the key, pipeline id the value
-   * @private
+   * @package
    * @type {Map<number, number>}
    */
+  // TODO: Refactor into a resource `ShadowPipelines`
   pipelines = new Map()
 
   /**
-   * @type {Object3D[]}
+   * @override
+   * @param {WebGLRenderer} renderer
    */
-  lights = []
+  init(renderer) {
+    const maxShadows = 10
+    renderer.setResource(new ShadowMap(maxShadows))
+    renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
+    renderer.viewFiller
+      .set(DirectionalLight.name, fillShadowCameraView.bind(this))
+      .set(PointLight.name, fillShadowCameraView.bind(this))
+      .set(SpotLight.name, fillShadowCameraView.bind(this))
+  }
 
   /**
    * @override
@@ -39,48 +51,31 @@ export class ShadowPlugin extends Plugin {
     assert(shadowMap, "Shadow map not set up.")
 
     shadowMap.reset()
-    this.lights = []
-
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i]);
 
       object.traverseDFS((object) => {
-        if (
-          (
-            object instanceof DirectionalLight ||
-            object instanceof SpotLight ||
-            object instanceof PointLight
-          ) &&
-          object.shadow
-        ) {
-          this.lights.push(object)
+        const area = shadowMap.getOrSet(object)
+        const items = object instanceof DirectionalLight ?
+          buildDirectionalShadowPass(object, shadowMap) :
+          object instanceof SpotLight ?
+            buildSpotShadowPass(object, shadowMap) :
+            object instanceof PointLight ?
+              buildPointShadowPass(object, shadowMap) :
+              undefined
+
+        if (!items) {
+          return true
         }
+
+        area.enabled = true
+        area.spaceIndex = blocks.length
+        blocks.push(items[0])
+        items[1].forEach(e => e.order = -100)
+        renderer.views.push(...items[1])
+
         return true
       })
-    }
-
-    for (let i = 0; i < this.lights.length; i++) {
-      const light = /**@type {Object3D} */ (this.lights[i]);
-      const area = shadowMap.getOrSet(light)
-
-      area.enabled = true
-
-      if (light instanceof DirectionalLight) {
-        const item = processDirectionalLight(light, objects, renderer, device, this.pipelines, shadowMap)
-
-        blocks[i] = item
-        area.spaceIndex = i
-      } else if (light instanceof SpotLight) {
-        const item = processSpotLight(light, objects, renderer, device, this.pipelines, shadowMap)
-
-        blocks[i] = item
-        area.spaceIndex = i
-      } else if (light instanceof PointLight) {
-        const item = processPointLight(light, objects, renderer, device, this.pipelines, shadowMap)
-
-        blocks[i] = item
-        area.spaceIndex = i
-      }
     }
 
     renderer.updateUBO(context, {
@@ -88,167 +83,89 @@ export class ShadowPlugin extends Plugin {
       data: new Float32Array(blocks.flatMap(item => item.pack()))
     })
   }
-
-  /**
-   * @override
-   * @param {WebGLRenderer} renderer
-   */
-  init(renderer) {
-    const maxShadows = 10
-    renderer.setResource(new ShadowMap(maxShadows))
-    renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
-  }
 }
 
 /**
  * @param {DirectionalLight} light
- * @param {Object3D[]} objects
- * @param {WebGLRenderer} renderer
- * @param {WebGLRenderDevice} device
- * @param {Map<number, number>} pipelines
  * @param {ShadowMap} shadowMap
+ * @returns {[ShadowItem, View[]] | undefined}
  */
-function processDirectionalLight(light, objects, renderer, device, pipelines, shadowMap) {
-  const [renderTarget, layer] = shadowMap.getTarget()
-  // SAFETY: If it is in the light list, it has a shadow.
-  const shadow = /**@type {OrthographicShadow}*/ (light.shadow)
-  const shadowItem = new ShadowItem()
-  const projection = shadow.projection.asProjectionMatrix(shadow.near, shadow.far)
-  const view = Affine3.toMatrix4(light.transform.world).invert()
-  const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
+function buildDirectionalShadowPass(light, shadowMap) {
+  const shadow = light.shadow
 
-  framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-  framebuffer.clear(device.context, undefined, 1, undefined)
+  if (!shadow) return
+
+  const [renderTarget, layer] = shadowMap.getTarget()
+  const shadowItem = new ShadowItem()
+  const projectionMatrix = shadow.projection.asProjectionMatrix(shadow.near, shadow.far)
+  const viewMatrix = Affine3.toMatrix4(light.transform.world).invert()
+  const view = new View({
+    renderTarget,
+    position: light.transform.position,
+    projection: projectionMatrix,
+    view: viewMatrix,
+    near: shadow.near,
+    far: shadow.far,
+    tag: DirectionalLight.name
+  })
+
+
   shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
-  Matrix4.multiply(projection, view, shadowItem.matrix)
+  Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
-  renderer.updateUBO(device.context, {
-    name: "CameraBlock",
-    data: new Float32Array([
-      ...view,
-      ...projection,
-      ...light.transform.position,
-      shadow.near,
-      shadow.far
-    ]).buffer
-  })
-  for (let i = 0; i < objects.length; i++) {
-    const object = /**@type {Object3D} */ (objects[i]);
-    object.traverseDFS((mesh) => {
-      if (!(mesh instanceof MeshMaterial3D) || mesh instanceof SkyBox) {
-        return true
-      }
-      const gpuMesh = renderer.caches.getMesh(device, mesh.mesh, renderer.attributes)
-      const pipeline = getRenderPipeline(device, renderer, gpuMesh, pipelines)
-      const modelInfo = pipeline.uniforms.get('model')
-      const modeldata = new Float32Array([...Affine3.toMatrix4(mesh.transform.world)])
-
-      pipeline.use(device.context)
-      if (modelInfo) {
-        device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
-      }
-      //drawing
-      device.context.bindVertexArray(gpuMesh.inner)
-      if (gpuMesh.indexType !== undefined) {
-        device.context.drawElements(
-          pipeline.topology,
-          gpuMesh.count,
-          gpuMesh.indexType, 0
-        )
-      } else {
-        device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
-      }
-      return true
-    })
-  }
-
-  return shadowItem
+  return [shadowItem, [view]]
 }
 
 /**
  * @param {SpotLight} light
- * @param {Object3D[]} objects
- * @param {WebGLRenderer} renderer
- * @param {WebGLRenderDevice} device
- * @param {Map<number, number>} pipelines
  * @param {ShadowMap} shadowMap
+ * @returns {[ShadowItem, View[]] | undefined}
  */
-function processSpotLight(light, objects, renderer, device, pipelines, shadowMap) {
+function buildSpotShadowPass(light, shadowMap) {
+  const shadow = light.shadow
+
+  if (!shadow) {
+    return
+  }
   const [renderTarget, layer] = shadowMap.getTarget()
-  // SAFETY: If it is in the light list, it has a shadow.
-  const shadow = /**@type {SpotLightShadow}*/ (light.shadow)
   const shadowItem = new ShadowItem()
-  const view = Affine3.toMatrix4(light.transform.world).invert()
-  const projection = new PerspectiveProjection(light.outerAngle, 1).asProjectionMatrix(
+  const viewMatrix = Affine3.toMatrix4(light.transform.world).invert()
+  const projectionMatrix = new PerspectiveProjection(light.outerAngle, 1).asProjectionMatrix(
     shadow.near,
     light.range
   )
-  const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
-
-  framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-  framebuffer.clear(device.context, undefined, 1, undefined)
+  const view = new View({
+    renderTarget,
+    position: light.transform.position,
+    projection: projectionMatrix,
+    view: viewMatrix,
+    near: shadow.near,
+    far: light.range,
+    tag: SpotLight.name
+  })
 
   shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
-  Matrix4.multiply(projection, view, shadowItem.matrix)
+  Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
-  renderer.updateUBO(device.context, {
-    name: "CameraBlock",
-    data: new Float32Array([
-      ...view,
-      ...projection,
-      ...light.transform.position,
-      shadow.near,
-      light.range
-    ]).buffer
-  })
-  for (let i = 0; i < objects.length; i++) {
-    const object = /**@type {Object3D} */ (objects[i]);
-    object.traverseDFS((mesh) => {
-      if (!(mesh instanceof MeshMaterial3D) || mesh instanceof SkyBox) {
-        return true
-      }
-      const gpuMesh = renderer.caches.getMesh(device, mesh.mesh, renderer.attributes)
-      const pipeline = getRenderPipeline(device, renderer, gpuMesh, pipelines)
-      const modelInfo = pipeline.uniforms.get('model')
-      const modeldata = new Float32Array([...Affine3.toMatrix4(mesh.transform.world)])
-
-      pipeline.use(device.context)
-      if (modelInfo) {
-        device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
-      }
-      //drawing
-      device.context.bindVertexArray(gpuMesh.inner)
-      if (gpuMesh.indexType !== undefined) {
-        device.context.drawElements(
-          pipeline.topology,
-          gpuMesh.count,
-          gpuMesh.indexType, 0
-        )
-      } else {
-        device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
-      }
-      return true
-    })
-  }
-
-  return shadowItem
+  return [shadowItem, [view]]
 }
 
 /**
  * @param {PointLight} light
- * @param {Object3D[]} objects
- * @param {WebGLRenderer} renderer
- * @param {WebGLRenderDevice} device
- * @param {Map<number, number>} pipelines
  * @param {ShadowMap} shadowMap
+ * @returns {[ShadowItem, View[]] | undefined}
+ * 
  */
-function processPointLight(light, objects, renderer, device, pipelines, shadowMap) {
-  // SAFETY: If it is in the light list, it has a shadow.
-  const shadow = /**@type {SpotLightShadow}*/ (light.shadow)
+function buildPointShadowPass(light, shadowMap) {
+  const shadow = light.shadow
+
+  if (!shadow) {
+    return
+  }
   const shadowItem = new ShadowItem()
   const sides = [
     [Vector3.X, Vector3.NegY],
@@ -258,40 +175,37 @@ function processPointLight(light, objects, renderer, device, pipelines, shadowMa
     [Vector3.Z, Vector3.NegY],
     [Vector3.NegZ, Vector3.NegY]
   ]
-  const projection = new PerspectiveProjection(Math.PI / 2, 1).asProjectionMatrix(
+  const projectionMatrix = new PerspectiveProjection(Math.PI / 2, 1).asProjectionMatrix(
     shadow.near,
     light.radius
   )
+  const views = []
   let layerId = 0
 
   for (let i = 0; i < sides.length; i++) {
     const side = /**@type {[Vector3, Vector3]} */ (sides[i])
     const [renderTarget, layer] = shadowMap.getTarget()
-    const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
 
     const worldMatrix = light.transform.world
-    const view = Affine3.toMatrix4(new Affine3()
+    const viewMatrix = Affine3.toMatrix4(new Affine3()
       .lookAt(side[0], side[1])
       .translate(new Vector3(
         worldMatrix.x,
         worldMatrix.y,
         worldMatrix.z
-      ))).invert()
+      )))
+      .invert()
 
-    renderer.updateUBO(device.context, {
-      name: "CameraBlock",
-      data: new Float32Array([
-        ...view,
-        ...projection,
-        ...light.transform.position,
-        shadow.near,
-        light.radius
-      ]).buffer
-    })
     layerId = layer
-    framebuffer.setViewport(device.context, renderTarget.viewport, renderTarget.scissor || renderTarget.viewport)
-    framebuffer.clear(device.context, undefined, 1, undefined)
-    processPointLightSide(objects, renderer, device, pipelines)
+    views.push(new View({
+      renderTarget,
+      view: viewMatrix,
+      projection: projectionMatrix,
+      position: light.transform.position,
+      near: shadow.near,
+      far: light.radius,
+      tag: PointLight.name
+    }))
   }
 
   // Encode clipping planes as they are neccessary for point light shadows
@@ -306,62 +220,23 @@ function processPointLight(light, objects, renderer, device, pipelines, shadowMa
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
   shadowItem.layer = layerId - 5
-  return shadowItem
+
+  return [shadowItem, views]
 }
 
-/**
- * @param {Object3D[]} objects
- * @param {WebGLRenderer} renderer
- * @param {WebGLRenderDevice} device
- * @param {Map<number, number>} pipelines
- */
-function processPointLightSide(objects, renderer, device, pipelines) {
-  for (let i = 0; i < objects.length; i++) {
-    const object = /**@type {Object3D} */ (objects[i]);
-    object.traverseDFS((mesh) => {
-      if (!(mesh instanceof MeshMaterial3D) || mesh instanceof SkyBox) {
-        return true
-      }
-      const gpuMesh = renderer.caches.getMesh(device, mesh.mesh, renderer.attributes)
-      const pipeline = getRenderPipeline(device, renderer, gpuMesh, pipelines)
-      const modelInfo = pipeline.uniforms.get('model')
-      const modeldata = new Float32Array([...Affine3.toMatrix4(mesh.transform.world)])
-
-      pipeline.use(device.context)
-      if (modelInfo) {
-        device.context.uniformMatrix4fv(modelInfo.location, false, modeldata)
-      }
-      //drawing
-      device.context.bindVertexArray(gpuMesh.inner)
-      if (gpuMesh.indexType !== undefined) {
-        device.context.drawElements(
-          pipeline.topology,
-          gpuMesh.count,
-          gpuMesh.indexType, 0
-        )
-      } else {
-        device.context.drawArrays(pipeline.topology, 0, gpuMesh.count)
-      }
-      return true
-    })
-  }
-}
 /**
  * @param {WebGLRenderDevice} device
  * @param {WebGLRenderer} renderer
  * @param {GPUMesh} mesh
- * @returns {WebGLRenderPipeline}
  * @param {Map<number, number>} pipelines
+ * @returns {number}
  */
-function getRenderPipeline(device, renderer, mesh, pipelines) {
+function getRenderPipelineId(device, renderer, mesh, pipelines) {
   const { caches, includes, defines: globalDefines } = renderer
   const pipelineid = pipelines.get(mesh.layoutHash)
 
   if (pipelineid !== undefined) {
-    const pipeline = renderer.caches.getRenderPipeline(pipelineid)
-
-    assert(pipeline, "Invalid pipeline id for the shadow variant.")
-    return pipeline
+    return pipelineid
   }
 
   const layout = caches.getMeshVertexLayout(mesh.layoutHash)
@@ -389,10 +264,36 @@ function getRenderPipeline(device, renderer, mesh, pipelines) {
     descriptor.vertex.includes.set(name, value)
     descriptor.fragment?.source?.includes?.set(name, value)
   }
-  const [newRenderPipeline, newId] = caches.createRenderPipeline(device, descriptor)
+  const [_, newId] = caches.createRenderPipeline(device, descriptor)
 
   pipelines.set(mesh.layoutHash, newId)
-  return newRenderPipeline
+  return newId
+}
+
+/**
+ * @this {ShadowPlugin}
+ * @type {ViewFiller}
+ */
+function fillShadowCameraView(device, renderer, objects, _plugins, view) {
+  for (let i = 0; i < objects.length; i++) {
+    const object = /**@type {Object3D} */ (objects[i])
+    object.traverseDFS((child) => {
+      if (!(child instanceof MeshMaterial3D)) {
+        return true
+      }
+      const gpuMesh = renderer.caches.getMesh(device, child.mesh, renderer.attributes)
+      const item = new RenderItem({
+        pipelineId: getRenderPipelineId(device, renderer, gpuMesh, this.pipelines),
+        transform: child.transform.world,
+        mesh: gpuMesh,
+        uniforms: {},
+        tag: ""
+      })
+
+      view.renderList.push(item)
+      return true
+    })
+  }
 }
 
 export class ShadowMap {
