@@ -165,6 +165,9 @@ export class WebGLRenderer {
       }
     }
 
+    this.views.sort((a, b)=>{
+      return a.order - b.order
+    })
     for (let i = 0; i < this.views.length; i++) {
       const view = /**@type {View}*/(this.views[i]);
 
