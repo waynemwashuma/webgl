@@ -8,7 +8,6 @@ import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
 import { View } from "./core/index.js"
-import { Vector3 } from "../math/index.js"
 
 export class WebGLRenderer {
 
@@ -98,7 +97,7 @@ export class WebGLRenderer {
 
       plugin.init(this)
     }
-    this.viewFiller.set(Camera.name, fillCameraView)
+
     this.includes
       .set("common", commonShaderLib)
       .set("light", lightShaderLib)
@@ -143,6 +142,9 @@ export class WebGLRenderer {
   render(objects, renderDevice, camera) {
     this.views.length = 0
 
+    // Hack: Will ensure that camera is provided as part of the objects for camera plugin
+    objects = [...objects, camera]
+
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i])
 
@@ -151,30 +153,12 @@ export class WebGLRenderer {
         return true
       })
     }
-    camera.update()
 
     for (let i = 0; i < this.plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (this.plugins[i]);
 
       plugin.preprocess(objects, renderDevice, this)
     }
-
-    const position = new Vector3(
-      camera.transform.world.x,
-      camera.transform.world.y,
-      camera.transform.world.z
-    )
-    const cameraView = new View({
-      renderTarget: camera.target,
-      near: camera.near,
-      far: camera.far,
-      projection: camera.projection.asProjectionMatrix(camera.near, camera.far),
-      view: camera.view,
-      position,
-      tag: Camera.name
-    })
-
-    this.views.push(cameraView)
 
     for (let i = 0; i < this.views.length; i++) {
       const view = /** @type {View} */ (this.views[i]);
@@ -203,26 +187,6 @@ export class WebGLRenderer {
  * @param {View} view
  * @return {void}
  */
-
-/**
- * @type {ViewFiller}
- */
-function fillCameraView(device, renderer, objects, plugins, view) {
-  for (let i = 0; i < plugins.length; i++) {
-    const plugin = /**@type {Plugin} */(plugins[i]);
-    for (let i = 0; i < objects.length; i++) {
-      const object = /**@type {Object3D} */ (objects[i])
-      object.traverseDFS((child) => {
-        const item = plugin.getRenderItem(child, device, renderer)
-
-        if (item) {
-          view.renderList.push(item)
-        }
-        return true
-      })
-    }
-  }
-}
 
 /**
  * @typedef WebGLRendererOptions
