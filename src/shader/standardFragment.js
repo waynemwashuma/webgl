@@ -4,6 +4,7 @@ export const standardFragment =
   precision mediump sampler2DArray;
 
   #include <math>
+  #include <color>
   #include <common>
   #include <light>
 
@@ -74,14 +75,6 @@ export const standardFragment =
   uniform sampler2D emissive_texture;
 
   out vec4 fragment_color;
-  
-  vec3 quick_sRGB_to_linear(vec3 color) {
-    return pow(color, vec3(2.2));
-  }
-  
-  vec3 quick_linear_to_sRGB(vec3 color) {
-    return pow(color, 1.0 / vec3(2.2));
-  }
   
   vec3 fresnel_schlick(float HdotV, vec3 F0){
     return F0 + (1.0 - F0) * pow(clamp(1.0 - HdotV, 0.0, 1.0), 5.0);

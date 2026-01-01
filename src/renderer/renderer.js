@@ -1,7 +1,7 @@
 /** @import { UniformBinder } from "./core/index.js" */
 import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D } from "../objects/index.js"
-import { commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
+import { colorShaderLib, commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
 import { Sampler, Texture } from "../texture/index.js"
 import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
@@ -100,6 +100,7 @@ export class WebGLRenderer {
 
     this.includes
       .set("common", commonShaderLib)
+      .set("color", colorShaderLib)
       .set("light", lightShaderLib)
       .set("math", mathShaderLib)
   }
