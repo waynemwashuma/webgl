@@ -275,6 +275,8 @@ function getRenderPipelineId(device, renderer, mesh, pipelines) {
  * @type {ViewFiller}
  */
 function fillShadowCameraView(device, renderer, objects, _plugins, view) {
+  /**@type {RenderItem[]} */
+  const opaqueStage = []
   for (let i = 0; i < objects.length; i++) {
     const object = /**@type {Object3D} */ (objects[i])
     object.traverseDFS((child) => {
@@ -290,10 +292,11 @@ function fillShadowCameraView(device, renderer, objects, _plugins, view) {
         tag: ""
       })
 
-      view.renderList.push(item)
+      opaqueStage.push(item)
       return true
     })
   }
+  view.renderStage.opaque = opaqueStage
 }
 
 export class ShadowMap {

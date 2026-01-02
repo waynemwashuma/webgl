@@ -5,9 +5,9 @@ import { RenderTarget } from "../../rendertarget/index.js"
 
 export class View {
   /**
-   * @type {RenderItem[]}
+   * @type {RenderStages}
    */
-  renderList = []
+  renderStage = new RenderStages()
   /**
    * @type {number}
    */
@@ -74,43 +74,46 @@ export class View {
    * @param {Map<string, UniformBinder>} uniformBinders
    */
   renderItems(device, renderer, uniformBinders) {
-    const { renderList, renderTarget } = this
+    const { renderStage: renderPhases, renderTarget } = this
     const { clearColor, clearDepth, clearStencil, viewport, scissor } = renderTarget
     const framebuffer = renderer.caches.getFrameBuffer(device, renderTarget)
+    const opaquePhase = renderPhases.opaque
 
     framebuffer.setViewport(device.context, viewport, scissor || viewport)
     framebuffer.clear(device.context, clearColor, clearDepth, clearStencil)
 
-    for (let i = 0; i < renderList.length; i++) {
-      const { pipelineId, tag, mesh, uniforms, transform } = /**@type {RenderItem} */(renderList[i])
-      const uniformBinder = uniformBinders.get(tag)
-      const pipeline = renderer.caches.getRenderPipeline(pipelineId)
-
-      if (!pipeline) {
-        continue
-      }
-
-      const modelInfo = pipeline.uniforms.get("model")
-      const transformMatrix = Affine3.toMatrix4(transform)
-
-      pipeline.use(device.context)
-
-      if (modelInfo) {
-        device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transformMatrix]))
-      }
-
-      if (uniformBinder) {
-        uniformBinder(device, renderer, pipeline, uniforms, transformMatrix)
-      }
-      device.context.bindVertexArray(mesh.inner)
-      if (mesh.indexType !== undefined) {
-        device.context.drawElements(pipeline.topology,
-          mesh.count,
-          mesh.indexType,
-          0
-        )
-      } else {
-        device.context.drawArrays(pipeline.topology, 0, mesh.count)
+    if(opaquePhase){
+      for (let i = 0; i < opaquePhase.length; i++) {
+        const { pipelineId, tag, mesh, uniforms, transform } = /**@type {RenderItem} */(opaquePhase[i])
+        const uniformBinder = uniformBinders.get(tag)
+        const pipeline = renderer.caches.getRenderPipeline(pipelineId)
+        
+        if (!pipeline) {
+          continue
+        }
+        
+        const modelInfo = pipeline.uniforms.get("model")
+        const transformMatrix = Affine3.toMatrix4(transform)
+        
+        pipeline.use(device.context)
+        
+        if (modelInfo) {
+          device.context.uniformMatrix4fv(modelInfo.location, false, new Float32Array([...transformMatrix]))
+        }
+        
+        if (uniformBinder) {
+          uniformBinder(device, renderer, pipeline, uniforms, transformMatrix)
+        }
+        device.context.bindVertexArray(mesh.inner)
+        if (mesh.indexType !== undefined) {
+          device.context.drawElements(pipeline.topology,
+            mesh.count,
+            mesh.indexType,
+            0
+          )
+        } else {
+          device.context.drawArrays(pipeline.topology, 0, mesh.count)
+        }
       }
     }
   }
@@ -129,6 +132,12 @@ export class View {
   }
 }
 
+export class RenderStages {
+  /**
+   * @type {RenderItem[] | undefined}
+   */
+  opaque
+}
 export class RenderItem {
 
   /**

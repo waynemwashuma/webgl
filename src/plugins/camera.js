@@ -1,4 +1,4 @@
-/** @import { ViewFiller } from "../renderer/index.js"; */
+/** @import { RenderItem, ViewFiller } from "../renderer/index.js"; */
 import { Plugin, View, WebGLRenderer } from "../renderer/index.js";
 import { WebGLRenderDevice } from "../core/index.js";
 import { Camera, Object3D } from "../objects/index.js";
@@ -50,6 +50,8 @@ export class CameraPlugin extends Plugin {
  * @type {ViewFiller}
  */
 function fillCameraView(device, renderer, objects, plugins, view) {
+  /**@type {RenderItem[]} */
+  const opaqueStage = []
   for (let i = 0; i < plugins.length; i++) {
     const plugin = /**@type {Plugin} */(plugins[i]);
     for (let i = 0; i < objects.length; i++) {
@@ -58,10 +60,13 @@ function fillCameraView(device, renderer, objects, plugins, view) {
         const item = plugin.getRenderItem(child, device, renderer)
 
         if (item) {
-          view.renderList.push(item)
+          // we only support opaque items for now.
+          opaqueStage.push(item)
         }
         return true
       })
     }
   }
+
+  view.renderStage.opaque = opaqueStage
 }
