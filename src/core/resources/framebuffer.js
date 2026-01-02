@@ -1,3 +1,4 @@
+import { hasDepthComponent, hasStencilComponent } from "../../constants/texture.js"
 import { Color } from "../../math/index.js"
 import { ViewRectangle } from "../../utils/index.js"
 import { GPUTexture } from "./gputexture.js"
@@ -102,16 +103,25 @@ export class FrameBuffer {
       viewport.size.y * height
     )
 
-    if(context.getParameter(context.DEPTH_BITS) > 0){
+    if(this.buffer){
+      if(this.depthBuffer){
+        if(hasDepthComponent(this.depthBuffer.actualFormat)){
+          context.enable(WebGL2RenderingContext.DEPTH_TEST)
+        } else {
+          context.disable(WebGL2RenderingContext.DEPTH_TEST)
+        }
+        if(hasStencilComponent(this.depthBuffer.actualFormat)){
+          context.enable(WebGL2RenderingContext.STENCIL_TEST)
+        }else {
+          context.disable(WebGL2RenderingContext.STENCIL_TEST)
+        }
+      } else {
+        context.disable(WebGL2RenderingContext.DEPTH_TEST)
+        context.disable(WebGL2RenderingContext.STENCIL_TEST)
+      }
+    } else {
       context.enable(WebGL2RenderingContext.DEPTH_TEST)
-    } else {
-      context.disable(WebGL2RenderingContext.DEPTH_TEST)
-    }
-
-    if(context.getParameter(context.STENCIL_BITS) > 0){
       context.enable(WebGL2RenderingContext.STENCIL_TEST)
-    } else {
-      context.disable(WebGL2RenderingContext.STENCIL_TEST)
     }
   }
 }

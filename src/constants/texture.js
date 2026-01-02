@@ -150,3 +150,34 @@ export function getTextureFormatSize(format) {
       throw new Error(`Unknown or unsupported texture format: ${format}`);
   }
 }
+
+/**
+ * @param {TextureFormat} format
+ */
+export function hasDepthComponent(format) {
+  switch (format) {
+    case TextureFormat.Depth16Unorm:
+    case TextureFormat.Depth24Plus:
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32Float:
+    case TextureFormat.Depth32FloatStencil8:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Checks if a format has a stencil component
+ * @param {TextureFormat} format
+ */
+export function hasStencilComponent(format) {
+  switch (format) {
+    case TextureFormat.Stencil8:
+    case TextureFormat.Depth24PlusStencil8:
+    case TextureFormat.Depth32FloatStencil8:
+      return true;
+    default:
+      return false;
+  }
+}
