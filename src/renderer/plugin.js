@@ -15,9 +15,7 @@ export class Plugin {
   /**
    * @param {WebGLRenderer} _renderer
    */
-  init( _renderer){
-    abstractMethod(this, Plugin, Plugin.prototype.init.name)
-  }
+  init( _renderer){}
 
   /**
    * @param {Object3D[]} _objects

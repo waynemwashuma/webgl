@@ -12,11 +12,6 @@ export class SkeletonHelperPlugin extends Plugin {
   /**
    * @override
    */
-  init() { }
-
-  /**
-   * @override
-   */
   preprocess() { }
 
   /**
