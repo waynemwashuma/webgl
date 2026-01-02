@@ -1,7 +1,7 @@
 /** @import { WebGLRenderer } from "./renderer.js" */
 import { WebGLRenderDevice } from "../core/index.js";
 import { Object3D } from "../objects/object3d.js";
-import { abstractClass, abstractMethod } from "../utils/index.js";
+import { abstractClass } from "../utils/index.js";
 import { RenderItem } from "./core/index.js";
 
 /**
@@ -22,9 +22,7 @@ export class Plugin {
    * @param {WebGLRenderDevice} _device
    * @param {WebGLRenderer} _renderer
    */
-  preprocess(_objects, _device, _renderer) {
-    abstractMethod(this, Plugin, Plugin.prototype.preprocess.name)
-  }
+  preprocess(_objects, _device, _renderer) {}
 
   /**
    * @param {Object3D} _object
