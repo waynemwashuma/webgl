@@ -3,3 +3,6 @@ dist
 docs
 *.txt
 *.code-workspace
+
+.env
+.astro

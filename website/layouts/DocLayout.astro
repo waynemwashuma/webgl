@@ -1,0 +1,384 @@
+---
+interface Tab {
+  label: string;
+  href?: string;
+  children?: Tab[];
+}
+
+interface Props {
+  title?: string;
+  tabs?: Tab[];
+}
+
+const { title = 'WebGLLIS', tabs = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #000000;
+        --panel: #0a0a0a;
+        --text: #f3f4f6;
+        --muted: #b6b8bd;
+        --border: #22252b;
+        --accent: #ffffff;
+        --accent-secondary: #c9ced6;
+        --code-bg: #050505;
+        --code-text: #f2f3f5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .shell {
+        min-height: 100vh;
+      }
+
+      .menu-toggle {
+        position: fixed;
+        top: 0.9rem;
+        left: 0.9rem;
+        width: 2.8rem;
+        height: 2.8rem;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.32rem;
+        padding: 0;
+        border: 1px solid #2f333b;
+        border-radius: 8px;
+        background: #111318;
+        color: var(--text);
+        z-index: 1000;
+      }
+
+      .menu-toggle span {
+        width: 1.25rem;
+        height: 2px;
+        background: var(--text);
+        border-radius: 3px;
+        transition: transform 150ms ease, opacity 150ms ease;
+      }
+
+      aside {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        padding: 1.25rem 1rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        box-shadow: none;
+        overflow-y: auto;
+        z-index: 900;
+      }
+
+      .tabs-title {
+        margin: 0 0 0.75rem;
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-secondary);
+      }
+
+      .tabs {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+      }
+
+      .tabs > li {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+      }
+
+      .tabs a {
+        display: block;
+        width: 100%;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid #2f333b;
+        border-radius: 0;
+        text-decoration: none;
+        color: var(--text);
+        background: linear-gradient(180deg, #171a20 0%, #111318 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        font-size: 0.92rem;
+        font-weight: 600;
+        transition: transform 120ms ease, color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+      }
+
+      .tab-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid #2f333b;
+        border-radius: 0;
+        color: var(--text);
+        background: linear-gradient(180deg, #171a20 0%, #111318 100%);
+        font-size: 0.92rem;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .tab-toggle .chevron {
+        color: var(--muted);
+        transition: transform 140ms ease;
+      }
+
+      .tab-toggle[aria-expanded="true"] .chevron {
+        transform: rotate(90deg);
+      }
+
+      .tabs a:hover {
+        color: #22c55e;
+        border-color: #4a5060;
+        background: linear-gradient(180deg, #1f242d 0%, #171b22 100%);
+        transform: translateY(-1px);
+      }
+
+      .tabs a.is-active,
+      .subtabs a.is-active {
+        color: #79b8ff;
+        border-color: #2f5f8f;
+        background: #101a24;
+      }
+
+      .tabs a:active {
+        transform: translateY(0);
+        background: #12151b;
+      }
+
+      .subtabs {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+      }
+
+      .subtabs a {
+        font-size: 0.88rem;
+        padding: 0.56rem 0.9rem;
+        color: var(--muted);
+        background: #0d0f13;
+        border-top: 0;
+        border-left: 1px solid #2f333b;
+        border-right: 1px solid #2f333b;
+      }
+
+      .subtabs li:last-child a {
+        border-bottom: 1px solid #2f333b;
+      }
+
+      .subtabs[hidden] {
+        display: none;
+      }
+
+      .subtabs a:hover {
+        color: #22c55e;
+      }
+
+      main {
+        max-width: 980px;
+        margin: 1rem 1rem 1rem 280px;
+        padding: 2rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+      }
+
+      h1 {
+        margin-top: 0;
+      }
+
+      h2 {
+        margin-top: 2rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--accent);
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      code {
+        font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      }
+
+      pre {
+        padding: 1rem;
+        border-radius: 10px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        overflow-x: auto;
+      }
+
+      pre code {
+        color: inherit;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      a:hover {
+        color: var(--accent-secondary);
+      }
+
+      @media (max-width: 900px) {
+        .menu-toggle {
+          display: inline-flex;
+        }
+
+        aside {
+          transform: translateX(-100%);
+          transition: transform 180ms ease;
+          box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+          border-radius: 0 12px 12px 0;
+        }
+
+        body.menu-open aside {
+          transform: translateX(0);
+        }
+
+        body.menu-open .menu-toggle span:nth-child(1) {
+          transform: translateY(6px) rotate(45deg);
+        }
+
+        body.menu-open .menu-toggle span:nth-child(2) {
+          opacity: 0;
+        }
+
+        body.menu-open .menu-toggle span:nth-child(3) {
+          transform: translateY(-6px) rotate(-45deg);
+        }
+
+        .tabs {
+          flex-direction: column;
+        }
+
+        main {
+          margin: 4.8rem 1rem 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <aside id="site-sidebar" aria-label="Sidebar navigation">
+        <p class="tabs-title">Navigation</p>
+        {tabs.length > 0 && (
+          <ul class="tabs">
+            {tabs.map((tab, index) => (
+              <li>
+                {tab.children && tab.children.length > 0 ? (
+                  <button class="tab-toggle" type="button" aria-expanded={index === 0 ? "true" : "false"}>
+                    <span>{tab.label}</span>
+                    <span class="chevron">›</span>
+                  </button>
+                ) : (
+                  <a href={tab.href || "#"}>{tab.label}</a>
+                )}
+                {tab.children && tab.children.length > 0 && (
+                  <ul class="subtabs" hidden={index !== 0}>
+                    {tab.children.map((child) => (
+                      <li>
+                        <a href={child.href || "#"}>{child.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <slot name="sidebar" />
+      </aside>
+      <main>
+        <slot />
+      </main>
+    </div>
+    <script>
+      const button = document.getElementById("menu-toggle");
+      button?.addEventListener("click", () => {
+        const open = document.body.classList.toggle("menu-open");
+        button.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+
+      const setPanelState = (toggle, panel, expanded) => {
+        toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+        panel.hidden = !expanded;
+        panel.querySelectorAll("a").forEach((link) => {
+          link.tabIndex = expanded ? 0 : -1;
+        });
+      };
+
+      document.querySelectorAll(".tab-toggle").forEach((toggle) => {
+        const panel = toggle.nextElementSibling;
+        if (!(panel instanceof HTMLElement)) return;
+        const initiallyExpanded = toggle.getAttribute("aria-expanded") === "true";
+        setPanelState(toggle, panel, initiallyExpanded);
+
+        toggle.addEventListener("click", () => {
+          const expanded = toggle.getAttribute("aria-expanded") === "true";
+          setPanelState(toggle, panel, !expanded);
+        });
+      });
+
+      const navLinks = Array.from(document.querySelectorAll("aside a"));
+      const applyActiveLink = () => {
+        const hash = window.location.hash || "#webgllis";
+        navLinks.forEach((link) => {
+          link.classList.toggle("is-active", link.getAttribute("href") === hash);
+        });
+      };
+
+      applyActiveLink();
+      window.addEventListener("hashchange", applyActiveLink);
+    </script>
+  </body>
+</html>
