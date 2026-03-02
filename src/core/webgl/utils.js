@@ -206,13 +206,12 @@ function createProgram(gl, vshader, fshader, vertexLayout) {
     return null
   }
   gl.validateProgram(program)
-  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+  const info = gl.getProgramInfoLog(program)?.trim()
+  if (info) {
     console.log(`Program could not be validated: 
     ========================================
-    ${gl.getProgramInfoLog(program)}
+    ${info}
     `);
-    gl.deleteProgram(program)
-    return null
   }
 
   gl.useProgram(program)
