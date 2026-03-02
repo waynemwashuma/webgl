@@ -17,6 +17,23 @@ export const sidebarTabs: NavTab[] = [
     ]
   },
   {
+    label: "Guide",
+    href: "/guide",
+    children: [
+      { label: "Overview", href: "/guide" },
+      { label: "Installation", href: "/guide/installation" },
+      { label: "First Scene", href: "/guide/first-scene" },
+      { label: "Camera and Controls", href: "/guide/camera-and-controls" },
+      { label: "Materials and Lighting", href: "/guide/materials-and-lighting" },
+      { label: "Textures and Assets", href: "/guide/textures-and-assets" },
+      { label: "Render Targets and Views", href: "/guide/render-targets-and-views" },
+      { label: "Scene Graph and Transforms", href: "/guide/scene-graph-and-transforms" },
+      { label: "Plugins and Render Pipeline", href: "/guide/plugins-and-render-pipeline" },
+      { label: "API Map", href: "/guide/api-map" },
+      { label: "Troubleshooting", href: "/guide/troubleshooting" }
+    ]
+  },
+  {
     label: "Examples",
     href: "/examples",
     children: [{ label: "Overview", href: "/examples" }]

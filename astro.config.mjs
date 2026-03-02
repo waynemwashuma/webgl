@@ -1,6 +1,8 @@
 import { defineConfig } from "astro/config";
 import path from "node:path";
 import { loadEnv } from "vite";
+import remarkGfm from "remark-gfm";
+import remarkGithubBlockquoteAlert from "remark-github-blockquote-alert";
 
 const env = loadEnv("", process.cwd(), "");
 
@@ -18,5 +20,11 @@ export default defineConfig({
         "@components": path.resolve("./website/components"),
       }
     }
-  }
+  },
+  markdown: {
+    remarkPlugins: [
+      remarkGfm,
+      remarkGithubBlockquoteAlert,
+    ],
+  },
 });

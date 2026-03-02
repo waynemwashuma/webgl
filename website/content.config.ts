@@ -1,4 +1,5 @@
 import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -71,6 +72,17 @@ const examples = defineCollection({
   })
 });
 
+const guide = defineCollection({
+  loader: glob({
+    pattern: "**/*.md",
+    base: "./content/guide"
+  }),
+  schema: z.object({
+    title: z.string()
+  })
+});
+
 export const collections = {
-  examples
+  examples,
+  guide
 };

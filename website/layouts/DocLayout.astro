@@ -10,7 +10,7 @@ interface Props {
   tabs?: Tab[];
 }
 
-const { title = 'WebGLLIS', tabs = [] } = Astro.props;
+const { title = "WebGLLIS", tabs = [] } = Astro.props;
 ---
 
 <!doctype html>
@@ -20,6 +20,71 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <style is:global>
+      .markdown-alert {
+        padding: 1rem 1.2rem;
+        margin: 1.25rem 0;
+        border-left: 4px solid;
+        border-radius: 8px;
+        background-color: #161b22;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .markdown-alert-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        font-size: 1.5rem;
+        font-weight: 1000;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+      }
+
+      .markdown-alert p {
+        margin: 0.5rem 0 0;
+      }
+
+      .markdown-alert strong {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+      }
+      /* NOTE */
+      .markdown-alert-note {
+        border-color: #2f81f7;
+        background-color: rgba(47, 129, 247, 0.15);
+      }
+
+      /* TIP */
+      .markdown-alert-tip {
+        border-color: #3fb950;
+        background-color: rgba(63, 185, 80, 0.15);
+      }
+
+      /* IMPORTANT */
+      .markdown-alert-important {
+        border-color: #a371f7;
+        background-color: rgba(163, 113, 247, 0.15);
+      }
+
+      /* WARNING */
+      .markdown-alert-warning {
+        border-color: #d29922;
+        background-color: rgba(210, 153, 34, 0.15);
+      }
+
+      /* CAUTION */
+      .markdown-alert-caution {
+        border-color: #f85149;
+        background-color: rgba(248, 81, 73, 0.15);
+      }
+    </style>
     <style>
       :root {
         color-scheme: dark;
@@ -73,7 +138,9 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
         height: 2px;
         background: var(--text);
         border-radius: 3px;
-        transition: transform 150ms ease, opacity 150ms ease;
+        transition:
+          transform 150ms ease,
+          opacity 150ms ease;
       }
 
       aside {
@@ -128,7 +195,11 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         font-size: 0.92rem;
         font-weight: 600;
-        transition: transform 120ms ease, color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+        transition:
+          transform 120ms ease,
+          color 120ms ease,
+          border-color 120ms ease,
+          background-color 120ms ease;
       }
 
       .tab-toggle {
@@ -306,38 +377,51 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
   </head>
   <body>
     <div class="shell">
-      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-sidebar">
+      <button
+        class="menu-toggle"
+        id="menu-toggle"
+        type="button"
+        aria-label="Toggle menu"
+        aria-expanded="false"
+        aria-controls="site-sidebar"
+      >
         <span></span>
         <span></span>
         <span></span>
       </button>
       <aside id="site-sidebar" aria-label="Sidebar navigation">
         <p class="tabs-title">Navigation</p>
-        {tabs.length > 0 && (
-          <ul class="tabs">
-            {tabs.map((tab, index) => (
-              <li>
-                {tab.children && tab.children.length > 0 ? (
-                  <button class="tab-toggle" type="button" aria-expanded={index === 0 ? "true" : "false"}>
-                    <span>{tab.label}</span>
-                    <span class="chevron">›</span>
-                  </button>
-                ) : (
-                  <a href={tab.href || "#"}>{tab.label}</a>
-                )}
-                {tab.children && tab.children.length > 0 && (
-                  <ul class="subtabs" hidden={index !== 0}>
-                    {tab.children.map((child) => (
-                      <li>
-                        <a href={child.href || "#"}>{child.label}</a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        {
+          tabs.length > 0 && (
+            <ul class="tabs">
+              {tabs.map((tab, index) => (
+                <li>
+                  {tab.children && tab.children.length > 0 ? (
+                    <button
+                      class="tab-toggle"
+                      type="button"
+                      aria-expanded={index === 0 ? "true" : "false"}
+                    >
+                      <span>{tab.label}</span>
+                      <span class="chevron">›</span>
+                    </button>
+                  ) : (
+                    <a href={tab.href || "#"}>{tab.label}</a>
+                  )}
+                  {tab.children && tab.children.length > 0 && (
+                    <ul class="subtabs" hidden={index !== 0}>
+                      {tab.children.map((child) => (
+                        <li>
+                          <a href={child.href || "#"}>{child.label}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )
+        }
         <slot name="sidebar" />
       </aside>
       <main>
@@ -362,7 +446,8 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
       document.querySelectorAll(".tab-toggle").forEach((toggle) => {
         const panel = toggle.nextElementSibling;
         if (!(panel instanceof HTMLElement)) return;
-        const initiallyExpanded = toggle.getAttribute("aria-expanded") === "true";
+        const initiallyExpanded =
+          toggle.getAttribute("aria-expanded") === "true";
         setPanelState(toggle, panel, initiallyExpanded);
 
         toggle.addEventListener("click", () => {
