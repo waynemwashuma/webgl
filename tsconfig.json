@@ -1,7 +1,8 @@
 {
   "include": [
     "./src",
-    "./examples"
+    "./examples",
+    "./website"
   ],
   "compilerOptions": {
 
@@ -26,13 +27,18 @@
     "module": "es2022",
     "moduleResolution": "node",
     "target": "es2022",
+    "baseUrl": ".",
     "noEmit": true,
     "checkJs": true,
     "skipLibCheck":true,
     "paths":{
       "webgllis":["./src/index.js"],
       "dat.gui":["./node_modules/@types/dat.gui","./libs/dat.gui.module.js"],
-      "stats.js":["./node_modules/@types/stats.js","./libs/stats.module.js"]
+      "stats.js":["./node_modules/@types/stats.js","./libs/stats.module.js"],
+      "@configs": ["./website/config/index.ts"],
+      "@configs/*": ["./website/config/*"],
+      "@layouts/*": ["./website/layouts/*"],
+      "@components/*": ["./website/components/*"]
     },
     "types": ["astro/client"]
   }

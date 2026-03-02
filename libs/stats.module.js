@@ -3,7 +3,7 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-var Stats = function () {
+export const Stats = function () {
 
 	var mode = 0;
 

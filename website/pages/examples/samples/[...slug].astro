@@ -1,0 +1,17 @@
+---
+import { getCollection } from "astro:content";
+import Example from "@layouts/Example.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("examples");
+
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+---
+
+<Example title={entry.data.title} source={entry.data.source} />

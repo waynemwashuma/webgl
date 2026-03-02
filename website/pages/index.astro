@@ -1,22 +1,9 @@
 ---
-import DocLayout from "../layouts/DocLayout.astro";
+import { sidebarTabs } from "@configs";
+import DocLayout from "@layouts/DocLayout.astro";
 import Content from "../../README.md";
-
-const tabs = [
-  {
-    label: "Introduction",
-    href: "#webgllis",
-    children: [
-      { label: "Top", href: "#webgllis" },
-      { label: "Features", href: "#features" },
-      { label: "Who This Is For", href: "#who-this-is-for" },
-      { label: "Getting Started", href: "#getting-started" },
-      { label: "Core Usage Flow", href: "#core-usage-flow" }
-    ]
-  }
-];
 ---
 
-<DocLayout title="WebGLLIS" tabs={tabs}>
+<DocLayout title="WebGLLIS" tabs={sidebarTabs}>
   <Content />
 </DocLayout>

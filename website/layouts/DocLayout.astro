@@ -164,6 +164,7 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
       }
 
       .tabs a.is-active,
+      .tab-toggle.is-active,
       .subtabs a.is-active {
         color: #79b8ff;
         border-color: #2f5f8f;
@@ -370,10 +371,40 @@ const { title = 'WebGLLIS', tabs = [] } = Astro.props;
       });
 
       const navLinks = Array.from(document.querySelectorAll("aside a"));
+      const normalizePath = (value) => {
+        if (!value) return "/";
+        const trimmed = value.replace(/\/+$/, "");
+        return trimmed === "" ? "/" : trimmed;
+      };
+
       const applyActiveLink = () => {
-        const hash = window.location.hash || "#webgllis";
+        const currentPath = normalizePath(window.location.pathname);
+        const currentHash = window.location.hash;
+
         navLinks.forEach((link) => {
-          link.classList.toggle("is-active", link.getAttribute("href") === hash);
+          const href = link.getAttribute("href") || "";
+          let isActive = false;
+
+          if (href.startsWith("#")) {
+            const hash = currentHash || "#webgllis";
+            isActive = currentPath === "/" && href === hash;
+          } else {
+            isActive = normalizePath(href) === currentPath;
+          }
+
+          link.classList.toggle("is-active", isActive);
+        });
+
+        document.querySelectorAll(".tab-toggle").forEach((toggle) => {
+          const panel = toggle.nextElementSibling;
+          if (!(panel instanceof HTMLElement)) return;
+          const hasActiveChild = panel.querySelector("a.is-active") !== null;
+          if (hasActiveChild) {
+            setPanelState(toggle, panel, true);
+            toggle.classList.add("is-active");
+          } else {
+            toggle.classList.remove("is-active");
+          }
         });
       };
 
