@@ -25,7 +25,8 @@ jobs:
       - run: npm ci
       - run: "npm run build"
         env:
-          URL: ${{ steps.deployment.outputs.page_url }}
+          URL: ${{ vars.URL }}
+          URL_BASE: ${{ vars.URL_BASE }}
 
 
       - name: Setup Pages

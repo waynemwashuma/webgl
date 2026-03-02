@@ -8,7 +8,8 @@ const env = loadEnv("", process.cwd(), "");
 
 export default defineConfig({
   srcDir: "./website",
-  site: env.URL || "",
+  site: env.URL || undefined,
+  base: env.URL_BASE || undefined,
   publicDir: "./assets",
   outDir: "./dist/website",
   vite: {
