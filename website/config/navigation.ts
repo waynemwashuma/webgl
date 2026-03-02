@@ -1,10 +1,12 @@
+import { withBase } from "../utils/url";
+
 export interface NavTab {
   label: string;
   href?: string;
   children?: NavTab[];
 }
 
-export const sidebarTabs: NavTab[] = [
+const tabs: NavTab[] = [
   {
     label: "Introduction",
     href: "/#webgllis",
@@ -39,3 +41,13 @@ export const sidebarTabs: NavTab[] = [
     children: [{ label: "Overview", href: "/examples" }]
   }
 ];
+
+function mapTabLinks(tab: NavTab): NavTab {
+  return {
+    ...tab,
+    href: tab.href ? withBase(tab.href) : undefined,
+    children: tab.children?.map(mapTabLinks),
+  };
+}
+
+export const sidebarTabs: NavTab[] = tabs.map(mapTabLinks);

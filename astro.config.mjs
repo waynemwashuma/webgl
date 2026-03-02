@@ -3,6 +3,7 @@ import path from "node:path";
 import { loadEnv } from "vite";
 import remarkGfm from "remark-gfm";
 import remarkGithubBlockquoteAlert from "remark-github-blockquote-alert";
+import remarkLinkBase from "./website/plugins/remark-link-base.js";
 
 const env = loadEnv("", process.cwd(), "");
 
@@ -26,6 +27,7 @@ export default defineConfig({
     remarkPlugins: [
       remarkGfm,
       remarkGithubBlockquoteAlert,
+      [remarkLinkBase, { base: env.URL_BASE || "/" }],
     ],
   },
 });

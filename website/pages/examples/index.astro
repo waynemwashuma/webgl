@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import DocLayout from "@layouts/DocLayout.astro";
 import { sidebarTabs } from "@configs";
+import { withBase } from "../../utils/url";
 
 const entries = await getCollection("examples");
 const splitCamelCase = (value: string) => value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
@@ -39,8 +40,8 @@ const categories = Object.entries(groupedExamples);
       <h2>{formatCategory(category)}</h2>
       <div class="examples-grid">
         {categoryExamples.map((example) => (
-          <a class="example-card" href={`/examples/${example.slug}`}>
-            <img src="/images/uv.jpg" alt="" loading="lazy" />
+          <a class="example-card" href={withBase(`/examples/${example.slug}`)}>
+            <img src={withBase("/images/uv.jpg")} alt="" loading="lazy" />
             <span>{example.title}</span>
           </a>
         ))}
