@@ -23,11 +23,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - run: npm ci
-      - run: "npm run build"
+      - run: |
+          npm run build -- \
+          --site "${{steps.pages.outputs.origin}}" \
+          --base "${{steps.pages.outputs.base_path}}"
         env:
-          URL: ${{ vars.URL }}
-          URL_BASE: ${{ vars.URL_BASE }}
-
+          NODE_ENV: production
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

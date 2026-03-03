@@ -1,16 +1,12 @@
 import { defineConfig } from "astro/config";
 import path from "node:path";
-import { loadEnv } from "vite";
 import remarkGfm from "remark-gfm";
 import remarkGithubBlockquoteAlert from "remark-github-blockquote-alert";
 import remarkLinkBase from "./website/plugins/remark-link-base.js";
 
-const env = loadEnv("", process.cwd(), "");
-
 export default defineConfig({
+  output:'static',
   srcDir: "./website",
-  site: env.URL || undefined,
-  base: env.URL_BASE || undefined,
   publicDir: "./assets",
   outDir: "./dist/website",
   vite: {
@@ -27,7 +23,7 @@ export default defineConfig({
     remarkPlugins: [
       remarkGfm,
       remarkGithubBlockquoteAlert,
-      [remarkLinkBase, { base: env.URL_BASE || "/" }],
+      remarkLinkBase,
     ],
   },
 });
