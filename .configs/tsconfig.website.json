@@ -1,0 +1,33 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [
+    "../website/**/*",
+    "../astro.config.mjs"
+  ],
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@configs": [
+        "./website/config/index.ts"
+      ],
+      "@configs/*": [
+        "./website/config/*"
+      ],
+      "@layouts/*": [
+        "./website/layouts/*"
+      ],
+      "@components/*": [
+        "./website/components/*"
+      ]
+    },
+    "types": [
+      "astro/client",
+      "node"
+    ],
+    "composite": true,
+    "noEmit": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".."
+  }
+}

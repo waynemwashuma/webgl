@@ -1,45 +1,11 @@
 {
-  "include": [
-    "./src",
-    "./examples",
-    "./website"
-  ],
-  "compilerOptions": {
-
-    // type checking
-    "strict": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictBuiltinIteratorReturn": true,
-    "noImplicitReturns":true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noFallthroughCasesInSwitch":true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitOverride": true,
-    "noImplicitAny": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-
-    // module resolution
-    "module": "es2022",
-    "moduleResolution": "node",
-    "target": "es2022",
-    "baseUrl": ".",
-    "noEmit": true,
-    "checkJs": true,
-    "skipLibCheck":true,
-    "paths":{
-      "webgllis":["./src/index.js"],
-      "dat.gui":["./node_modules/@types/dat.gui","./libs/dat.gui.module.js"],
-      "stats.js":["./node_modules/@types/stats.js","./libs/stats.module.js"],
-      "@configs": ["./website/config/index.ts"],
-      "@configs/*": ["./website/config/*"],
-      "@layouts/*": ["./website/layouts/*"],
-      "@components/*": ["./website/components/*"]
+  "files": [],
+  "references": [
+    {
+      "path": "./.configs/tsconfig.lib.json"
     },
-    "types": ["astro/client"]
-  }
+    {
+      "path": "./.configs/tsconfig.website.json"
+    }
+  ]
 }
