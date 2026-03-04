@@ -6,7 +6,9 @@ export class OrbitCameraControls {
   #mousedown
   #mouseup
   #mousemove
+  #pointercancel
   #contextmenu
+  #blur
   elevation = 0
   azimuth = 0
   distance = 5
@@ -32,12 +34,17 @@ export class OrbitCameraControls {
     this.#mousedown = mouseDown.bind(this)
     this.#mouseup = mouseUp.bind(this)
     this.#mousemove = mousemove.bind(this)
+    this.#pointercancel = cancelInput.bind(this)
     this.#contextmenu = (/** @type {MouseEvent} */ e) => e.preventDefault()
+    this.#blur = cancelInput.bind(this)
 
-    targetElement.addEventListener('mousedown', this.#mousedown)
-    targetElement.addEventListener('mouseup', this.#mouseup)
-    targetElement.addEventListener('mousemove', this.#mousemove)
+    targetElement.addEventListener('pointerdown', this.#mousedown)
+    targetElement.addEventListener('pointerup', this.#mouseup)
+    targetElement.addEventListener('pointermove', this.#mousemove)
+    targetElement.addEventListener('pointercancel', this.#pointercancel)
+    targetElement.addEventListener('lostpointercapture', this.#pointercancel)
     targetElement.addEventListener('contextmenu', this.#contextmenu)
+    window.addEventListener('blur', this.#blur)
   }
 
   updateOrbit() {
@@ -81,6 +88,7 @@ export class OrbitCameraControls {
     Vector2.rotate(input, -this.azimuth, input)
     this.offset.x += input.x
     this.offset.z += input.y
+    this.mouseDelta.set(0, 0)
   }
 
   update() {
@@ -90,19 +98,27 @@ export class OrbitCameraControls {
 
   dispose(){
     const targetElement = this.#targetElement
-    targetElement.removeEventListener('mousedown', this.#mousedown)
-    targetElement.removeEventListener('mouseup', this.#mouseup)
-    targetElement.removeEventListener('mousemove', this.#mousemove)
+    targetElement.removeEventListener('pointerdown', this.#mousedown)
+    targetElement.removeEventListener('pointerup', this.#mouseup)
+    targetElement.removeEventListener('pointermove', this.#mousemove)
+    targetElement.removeEventListener('pointercancel', this.#pointercancel)
+    targetElement.removeEventListener('lostpointercapture', this.#pointercancel)
     targetElement.removeEventListener('contextmenu', this.#contextmenu)
+    window.removeEventListener('blur', this.#blur)
   }
 }
 
 /**
  * @this {OrbitCameraControls}
- * @param {MouseEvent} event
+ * @param {PointerEvent} event
  */
 function mouseDown(event) {
   event.preventDefault()
+  this.mousePosition.set(event.clientX, event.clientY)
+  this.mouseDelta.set(0, 0)
+  if (event.currentTarget instanceof Element) {
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
   switch (event.button) {
     case 0:
       this.keys.add('mouseleft')
@@ -115,10 +131,13 @@ function mouseDown(event) {
 
 /**
  * @this {OrbitCameraControls}
- * @param {MouseEvent} event
+ * @param {PointerEvent} event
  */
 function mouseUp(event) {
   event.preventDefault()
+  if (event.currentTarget instanceof Element) {
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+  }
   switch (event.button) {
     case 0:
       this.keys.delete('mouseleft')
@@ -131,7 +150,15 @@ function mouseUp(event) {
 
 /**
  * @this {OrbitCameraControls}
- * @param {MouseEvent} event
+ */
+function cancelInput() {
+  this.keys.clear()
+  this.mouseDelta.set(0, 0)
+}
+
+/**
+ * @this {OrbitCameraControls}
+ * @param {PointerEvent} event
  */
 function mousemove(event) {
   this.mouseDelta.copy(this.mousePosition)
