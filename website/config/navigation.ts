@@ -9,13 +9,13 @@ export interface NavTab {
 const tabs: NavTab[] = [
   {
     label: "Introduction",
-    href: "/#webgllis",
+    href: "#webgllis",
     children: [
-      { label: "Top", href: "/#webgllis" },
-      { label: "Features", href: "/#features" },
-      { label: "Who This Is For", href: "/#who-this-is-for" },
-      { label: "Getting Started", href: "/#getting-started" },
-      { label: "Core Usage Flow", href: "/#core-usage-flow" }
+      { label: "Top", href: "#webgllis" },
+      { label: "Features", href: "#features" },
+      { label: "Who This Is For", href: "#who-this-is-for" },
+      { label: "Getting Started", href: "#getting-started" },
+      { label: "Core Usage Flow", href: "#core-usage-flow" }
     ]
   },
   {
