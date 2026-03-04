@@ -30,11 +30,18 @@ export class OrbitCameraControls {
   mousePosition = new Vector2()
   mouseDelta = new Vector2()
   /**
+   * @type {Map<number, Vector2>}
+   */
+  touchPointers = new Map()
+  /**
    * @param {Camera} camera
    */
   constructor(camera, targetElement = document.body) {
     this.camera = camera
     this.#targetElement = targetElement
+    if (targetElement instanceof HTMLElement) {
+      targetElement.style.touchAction = 'none'
+    }
     this.#mousedown = mouseDown.bind(this)
     this.#mouseup = mouseUp.bind(this)
     this.#mousemove = mousemove.bind(this)
@@ -123,6 +130,11 @@ function mouseDown(event) {
   event.preventDefault()
   this.mousePosition.set(event.clientX, event.clientY)
   this.mouseDelta.set(0, 0)
+
+  if (event.pointerType === 'touch') {
+    this.touchPointers.set(event.pointerId, new Vector2(event.clientX, event.clientY))
+  }
+
   if (event.currentTarget instanceof Element) {
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
@@ -142,6 +154,9 @@ function mouseDown(event) {
  */
 function mouseUp(event) {
   event.preventDefault()
+  if (event.pointerType === 'touch') {
+    this.touchPointers.delete(event.pointerId)
+  }
   if (event.currentTarget instanceof Element) {
     event.currentTarget.releasePointerCapture?.(event.pointerId)
   }
@@ -161,6 +176,7 @@ function mouseUp(event) {
 function cancelInput() {
   this.keys.clear()
   this.mouseDelta.set(0, 0)
+  this.touchPointers.clear()
 }
 
 /**
@@ -168,6 +184,49 @@ function cancelInput() {
  * @param {PointerEvent} event
  */
 function mousemove(event) {
+  if (event.pointerType === 'touch') {
+    const pointer = this.touchPointers.get(event.pointerId)
+    if (!pointer) return
+    event.preventDefault()
+
+    const prevX = pointer.x
+    const prevY = pointer.y
+    pointer.set(event.clientX, event.clientY)
+
+    if (this.touchPointers.size === 1) {
+      this.azimuth += -(event.clientX - prevX) * this.sensitivity
+      this.elevation += (event.clientY - prevY) * this.sensitivity
+      this.elevation = clamp(this.elevation, this.minElevation, this.maxElevation)
+      return
+    }
+
+    if (this.touchPointers.size >= 2) {
+      const entries = /**@type {[[number, Vector2], [number, Vector2]]}*/([...this.touchPointers.entries()])
+      const [id1, p1] = entries[0]
+      const [id2, p2] = entries[1]
+
+      const prevP1X = id1 === event.pointerId ? prevX : p1.x
+      const prevP1Y = id1 === event.pointerId ? prevY : p1.y
+      const prevP2X = id2 === event.pointerId ? prevX : p2.x
+      const prevP2Y = id2 === event.pointerId ? prevY : p2.y
+
+      const prevCenterX = (prevP1X + prevP2X) * 0.5
+      const prevCenterY = (prevP1Y + prevP2Y) * 0.5
+      const currCenterX = (p1.x + p2.x) * 0.5
+      const currCenterY = (p1.y + p2.y) * 0.5
+
+      applyPanFromScreenDelta(this, currCenterX - prevCenterX, currCenterY - prevCenterY)
+
+      const prevDistance = Math.hypot(prevP1X - prevP2X, prevP1Y - prevP2Y)
+      const currDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y)
+      if (prevDistance > 0 && currDistance > 0) {
+        this.distance *= prevDistance / currDistance
+        this.distance = clamp(this.distance, this.minDistance, this.maxDistance)
+      }
+    }
+    return
+  }
+
   this.mouseDelta.copy(this.mousePosition)
   this.mousePosition.set(event.clientX, event.clientY)
   this.mouseDelta.subtract(this.mousePosition).reverse()
@@ -181,4 +240,19 @@ function mouseWheel(event) {
   event.preventDefault()
   this.distance *= Math.exp(event.deltaY * this.zoomSensitivity)
   this.distance = clamp(this.distance, this.minDistance, this.maxDistance)
+}
+
+/**
+ * @param {OrbitCameraControls} controls
+ * @param {number} deltaX
+ * @param {number} deltaY
+ */
+function applyPanFromScreenDelta(controls, deltaX, deltaY) {
+  const input = Vector2.set(
+    -controls.moveSensitivity * deltaX,
+    -controls.moveSensitivity * deltaY
+  )
+  Vector2.rotate(input, -controls.azimuth, input)
+  controls.offset.x += input.x
+  controls.offset.z += input.y
 }
