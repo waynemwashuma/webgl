@@ -1,21 +1,38 @@
 ---
+import { withBase } from "../utils/url";
+import packageJson from "../../package.json";
+
 interface Props {
   source: string;
   title?: string;
 }
 
 const { source, title = "Example" } = Astro.props;
+const isProd = import.meta.env.PROD;
+
+const datGuiVersion = packageJson.dependencies["dat.gui"].replace(/^[^\d]*/, "");
+const statsVersion = packageJson.dependencies["stats.js"].replace(/^[^\d]*/, "");
+const datGuiUrl = isProd
+  ? `https://cdn.jsdelivr.net/npm/dat.gui@${datGuiVersion}/build/dat.gui.module.js`
+  : "/node_modules/dat.gui/build/dat.gui.module.js";
+const statsUrl = isProd
+  ? `https://cdn.jsdelivr.net/npm/stats.js@${statsVersion}/src/Stats.js`
+  : "/node_modules/stats.js/src/Stats.js";
+
 const importMap = JSON.stringify({
   imports: {
-    webgllis: "/src/index.js",
-    "dat.gui": "/node_modules/dat.gui/build/dat.gui.module.js",
-    "stats.js": "/node_modules/stats.js/src/Stats.js",
+    webgllis: isProd ? withBase("/vendor/webgllis/index.module.js") : "/src/index.js",
+    "dat.gui": datGuiUrl,
+    "stats.js": statsUrl,
   },
 });
-const runnerScript = `import Stats from "stats.js";
-window.Stats = Stats;
 
-${source}`;
+const rewriteAssetLiterals = (script: string): string =>
+  script.replace(/(["'`])\/?assets\/([^"'`]+)\1/g, (_, _quote: string, rest: string) => {
+    return '`' + withBase(`/${rest}`) + '`';
+  });
+const runnerScript = isProd? rewriteAssetLiterals(source) : source
+
 ---
 
 <!doctype html>

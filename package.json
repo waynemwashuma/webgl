@@ -28,9 +28,9 @@
     "dev": "astro dev",
     "test": "node test",
     "tsc": "tsc -b tsconfig.json",
-    "build-website": "astro build",
+    "build-website": "npm run build-src && astro build && node scripts/stage-webgllis.mjs",
     "build-src": "rollup --config rollup.config.js",
-    "build": "npm run build-src && npm run build-website"
+    "build": "npm run build-website"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.13",
