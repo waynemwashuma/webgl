@@ -1,3 +1,4 @@
+import Stats from "stats.js";
 import {
   MeshMaterial3D,
   TextureWrap,

@@ -22,6 +22,7 @@
     "allowUnusedLabels": false,
     "module": "es2022",
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "target": "es2022",
     "baseUrl": "..",
     "checkJs": true,
@@ -29,12 +30,6 @@
     "paths": {
       "webgllis": [
         "./src/index.js"
-      ],
-      "dat.gui": [
-        "./node_modules/@types/dat.gui"
-      ],
-      "stats.js": [
-        "./node_modules/@types/stats.js"
       ]
     },
     "composite": true,

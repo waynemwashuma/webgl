@@ -1,4 +1,5 @@
 import { GUI } from 'dat.gui';
+import Stats from "stats.js";
 import {
   MeshMaterial3D,
   WebGLRenderer,
