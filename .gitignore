@@ -1,8 +1,10 @@
 node_modules
 dist
 docs
+
 *.txt
 *.code-workspace
+*.tsbuildinfo
 
 .env
 .astro

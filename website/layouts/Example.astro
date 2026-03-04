@@ -8,11 +8,11 @@ const { source, title = "Example" } = Astro.props;
 const importMap = JSON.stringify({
   imports: {
     webgllis: "/src/index.js",
-    "dat.gui": "/libs/dat.gui.module.js",
-    "stats.js": "/libs/stats.module.js",
+    "dat.gui": "/node_modules/dat.gui/build/dat.gui.module.js",
+    "stats.js": "/node_modules/stats.js/src/Stats.js",
   },
 });
-const runnerScript = `import { Stats } from "stats.js";
+const runnerScript = `import Stats from "stats.js";
 window.Stats = Stats;
 
 ${source}`;

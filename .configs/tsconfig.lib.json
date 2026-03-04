@@ -1,7 +1,8 @@
 {
   "include": [
     "../src",
-    "../examples"
+    "../examples",
+    "../libs/wimaMath"
   ],
   "compilerOptions": {
     "strict": true,
@@ -30,12 +31,10 @@
         "./src/index.js"
       ],
       "dat.gui": [
-        "./node_modules/@types/dat.gui",
-        "./libs/dat.gui.module.js"
+        "./node_modules/@types/dat.gui"
       ],
       "stats.js": [
-        "./node_modules/@types/stats.js",
-        "./libs/stats.module.js"
+        "./node_modules/@types/stats.js"
       ]
     },
     "composite": true,

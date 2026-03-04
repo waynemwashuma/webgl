@@ -42,5 +42,9 @@
     "rollup": "^4.52.5",
     "typescript": "^5.9.3",
     "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "dat.gui": "^0.7.9",
+    "stats.js": "^0.17.0"
   }
 }
