@@ -7,17 +7,21 @@ export class OrbitCameraControls {
   #mouseup
   #mousemove
   #pointercancel
+  #wheel
   #contextmenu
   #blur
   elevation = 0
   azimuth = 0
   distance = 5
+  minDistance = 0.01
+  maxDistance = Infinity
   tideLocked = true
   offset = new Vector3()
   minElevation = -Math.PI / 2
   maxElevation = Math.PI / 2
   sensitivity = 0.02
   moveSensitivity = 0.002
+  zoomSensitivity = 0.001
   camera
   /**
    * @type {Set<string>}
@@ -35,6 +39,7 @@ export class OrbitCameraControls {
     this.#mouseup = mouseUp.bind(this)
     this.#mousemove = mousemove.bind(this)
     this.#pointercancel = cancelInput.bind(this)
+    this.#wheel = mouseWheel.bind(this)
     this.#contextmenu = (/** @type {MouseEvent} */ e) => e.preventDefault()
     this.#blur = cancelInput.bind(this)
 
@@ -43,6 +48,7 @@ export class OrbitCameraControls {
     targetElement.addEventListener('pointermove', this.#mousemove)
     targetElement.addEventListener('pointercancel', this.#pointercancel)
     targetElement.addEventListener('lostpointercapture', this.#pointercancel)
+    targetElement.addEventListener('wheel', this.#wheel, { passive: false })
     targetElement.addEventListener('contextmenu', this.#contextmenu)
     window.addEventListener('blur', this.#blur)
   }
@@ -103,6 +109,7 @@ export class OrbitCameraControls {
     targetElement.removeEventListener('pointermove', this.#mousemove)
     targetElement.removeEventListener('pointercancel', this.#pointercancel)
     targetElement.removeEventListener('lostpointercapture', this.#pointercancel)
+    targetElement.removeEventListener('wheel', this.#wheel)
     targetElement.removeEventListener('contextmenu', this.#contextmenu)
     window.removeEventListener('blur', this.#blur)
   }
@@ -164,4 +171,14 @@ function mousemove(event) {
   this.mouseDelta.copy(this.mousePosition)
   this.mousePosition.set(event.clientX, event.clientY)
   this.mouseDelta.subtract(this.mousePosition).reverse()
+}
+
+/**
+ * @this {OrbitCameraControls}
+ * @param {WheelEvent} event
+ */
+function mouseWheel(event) {
+  event.preventDefault()
+  this.distance *= Math.exp(event.deltaY * this.zoomSensitivity)
+  this.distance = clamp(this.distance, this.minDistance, this.maxDistance)
 }
