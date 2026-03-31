@@ -1,6 +1,6 @@
 //@ts-nocheck
 
-import { lerp } from './functions/index.js'
+import { lerp } from 'hisabati'
 
 /**
  * A color manipulation class.

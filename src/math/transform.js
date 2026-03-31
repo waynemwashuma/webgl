@@ -1,4 +1,4 @@
-import { Vector3, Quaternion, Affine3 } from "../../libs/wimaMath/index.js"
+import { Vector3, Quaternion, Affine3 } from "hisabati"
 
 export class Transform3D {
   constructor() {

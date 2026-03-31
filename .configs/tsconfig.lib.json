@@ -2,7 +2,7 @@
   "include": [
     "../src",
     "../examples",
-    "../libs/wimaMath"
+    "../libs/color.js"
   ],
   "compilerOptions": {
     "strict": true,
@@ -21,7 +21,7 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "module": "es2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "target": "es2022",
     "baseUrl": "..",
