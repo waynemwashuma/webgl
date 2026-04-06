@@ -257,21 +257,6 @@ export class GLTFLoader extends Loader {
       })
     })
 
-    sceneEntities.forEach((object) => {
-      object.traverseDFS((innerObject) => {
-        if (
-          innerObject instanceof MeshMaterial3D &&
-          innerObject.skin
-        ) {
-
-          // something is wrong when you are parsing it
-          // TODO: Remove when you figure what is wrong with the gltf inverse bind matrix
-          innerObject.skin.setBindPose()
-        }
-        return true
-      })
-    })
-
 
     destination.add(...sceneEntities)
   }
@@ -308,7 +293,7 @@ async function loadBuffers(base, uris) {
     uris.map(async (buffer) => {
       const url = buffer.uri.startsWith('data') ?
         buffer.uri :
-        new URL(buffer.uri, base).pathname
+        new URL(buffer.uri, base).href
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Failed to fetch buffer`);
       return await response.arrayBuffer();
@@ -477,7 +462,7 @@ class GLTFScene {
         .filter((node) => typeof node == "number")
     }
 
-    if (name === "string") {
+    if (typeof name === "string") {
       scene.name = name
     } else {
       scene.name = ''
@@ -904,7 +889,7 @@ class GLFTSampler {
     }
 
     if (typeof wrapT === 'number') {
-      result.wrapS = wrapT
+      result.wrapT = wrapT
     }
 
     if (typeof name === 'string') {
@@ -1355,9 +1340,9 @@ class GLTFPrimitive {
       }
     }
     if (typeof mode === "number") {
-      this.mode = mapPrimitiveMode(mode)
+      primitive.mode = mapPrimitiveMode(mode)
     } else {
-      this.mode = GLTFPrimitiveMode.Triangles
+      primitive.mode = GLTFPrimitiveMode.Triangles
     }
     return primitive
   }
@@ -1415,11 +1400,11 @@ class GLTFPBRetallicRoughness {
 
     const result = new GLTFPBRetallicRoughness()
 
-    if (metallicFactor) {
+    if (typeof metallicFactor === 'number') {
       result.metallicFactor = metallicFactor
     }
 
-    if (roughnessFactor) {
+    if (typeof roughnessFactor === 'number') {
       result.roughnessFactor = roughnessFactor
     }
 
@@ -1628,6 +1613,7 @@ function mapComponentType(value) {
     case 0x1401: return GLTFComponentType.UnsignedByte;
     case 0x1402: return GLTFComponentType.Short;
     case 0x1403: return GLTFComponentType.UnsignedShort;
+    case 0x1404: return GLTFComponentType.Int;
     case 0x1405: return GLTFComponentType.UnsignedInt;
     case 0x1406: return GLTFComponentType.Float;
     default:
@@ -1918,7 +1904,7 @@ function parseMeshObject(mesh, meshes, geometries, materials) {
   }
   const root = new Object3D()
   for (let i = 0; i < geometry.length; i++) {
-    const item = /**@type {[Mesh,number | undefined]}*/(geometry[0])
+    const item = /**@type {[Mesh,number | undefined]}*/(geometry[i])
     const material = item[1] !== undefined ? materials[item[1]] : defaultMaterial
     const object = new MeshMaterial3D(item[0], material || defaultMaterial)
 
@@ -1978,6 +1964,14 @@ function parseSkin(gltfSkin, gltf, entityMap) {
   const bindPose = convertToInverseBindPose(bindPoseData)
   const skin = new Skin()
 
+  if (bindPose.length !== gltfSkin.joints.length) {
+    console.warn(
+      "GLTF skin inverse bind matrix count does not match joint count",
+      bindPose.length,
+      gltfSkin.joints.length
+    )
+  }
+
   skin.inverseBindPose = bindPose
   skin.bones = gltfSkin.joints.map(joint => {
     const entity = entityMap.get(joint)
@@ -2005,10 +1999,12 @@ function convertToInverseBindPose(poseData) {
   )
 
   for (let offset = 0; offset < data.length; offset += 16) {
+    // glTF stores matrices in column-major order. Affine3 expects the same
+    // 3x4 affine components, with translation coming from the last column.
     const affine = new Affine3(
-      data[offset + 0], data[offset + 4], data[offset + 8], data[offset + 11],
-      data[offset + 1], data[offset + 5], data[offset + 9], data[offset + 12],
-      data[offset + 2], data[offset + 6], data[offset + 10], data[offset + 13],
+      data[offset + 0], data[offset + 4], data[offset + 8], data[offset + 12],
+      data[offset + 1], data[offset + 5], data[offset + 9], data[offset + 13],
+      data[offset + 2], data[offset + 6], data[offset + 10], data[offset + 14],
     )
 
     results.push(affine)
