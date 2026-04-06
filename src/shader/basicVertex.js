@@ -61,10 +61,28 @@ export const basicVertex =
       v_uv = uv;
     #endif
     #ifdef VERTEX_NORMALS
-      v_normal = normal_matrix * normal;
+      #ifdef SKINNED
+        vec3 skeleton_space_normal =
+          (mat3(boneMat0) * normal) * joint_weight.x +
+          (mat3(boneMat1) * normal) * joint_weight.y +
+          (mat3(boneMat2) * normal) * joint_weight.z +
+          (mat3(boneMat3) * normal) * joint_weight.w;
+        v_normal = normal_matrix * skeleton_space_normal;
+      #else
+        v_normal = normal_matrix * normal;
+      #endif
     #endif
     #ifdef VERTEX_TANGENTS
-      v_tangent = normal_matrix * tangent;
+      #ifdef SKINNED
+        vec3 skeleton_space_tangent =
+          (mat3(boneMat0) * tangent) * joint_weight.x +
+          (mat3(boneMat1) * tangent) * joint_weight.y +
+          (mat3(boneMat2) * tangent) * joint_weight.z +
+          (mat3(boneMat3) * tangent) * joint_weight.w;
+        v_tangent = normal_matrix * skeleton_space_tangent;
+      #else
+        v_tangent = normal_matrix * tangent;
+      #endif
     #endif
     cam_direction = camera.cam_position - world_space_position;
     gl_Position = camera.projection * camera.view * vec4(world_space_position, 1.0);
