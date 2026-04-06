@@ -37,7 +37,7 @@ export class Object3D {
       const child = /**@type {Object3D}*/(children[i]);
 
       const index = this.children.indexOf(child)
-      if (index === -1) return
+      if (index === -1) continue
 
       child.parent = undefined
       this.children.splice(index, 1)
