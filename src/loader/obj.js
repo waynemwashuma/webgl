@@ -65,6 +65,8 @@ async function loadOBJ(data) {
   const uvs = []
   const normals = []
   const faces = []
+  let includeUVs = true
+  let includeNormals = true
 
   const lines = data.split("\n")
 
@@ -94,12 +96,18 @@ async function loadOBJ(data) {
             .split("/")
             .map(x => x ? parseInt(x) : undefined);
 
+          if (v === undefined) {
+            throw new Error("OBJ faces must always reference a position index.")
+          }
+
           return {
             v: v !== undefined ? v - 1 : undefined,   // OBJ is 1-based → shift to 0-based
             vt: vt !== undefined ? vt - 1 : undefined,
             vn: vn !== undefined ? vn - 1 : undefined
           };
         });
+        includeUVs &&= face.every(vertex => vertex.vt !== undefined)
+        includeNormals &&= face.every(vertex => vertex.vn !== undefined)
         faces.push(face);
         break;
       }
@@ -110,12 +118,14 @@ async function loadOBJ(data) {
     positions,
     uvs,
     normals,
-    triangles: faces
+    triangles: faces,
+    includeUVs,
+    includeNormals
   })
 }
 
 /**
- * @param {{ positions: any; uvs: any; normals: any; triangles: any; }} data
+ * @param {{ positions: any; uvs: any; normals: any; triangles: any; includeUVs: boolean; includeNormals: boolean; }} data
  */
 function buildBuffers(data) {
   const positions = [];
@@ -129,28 +139,45 @@ function buildBuffers(data) {
       const vertex3 = triangle[i + 1]
 
       positions.push(...data.positions[vertex1.v])
-      normals.push(...data.normals[vertex1.vn])
-      uvs.push(...data.uvs[vertex1.vt])
+      if (data.includeNormals && vertex1.vn !== undefined) {
+        normals.push(...data.normals[vertex1.vn])
+      }
+      if (data.includeUVs && vertex1.vt !== undefined) {
+        uvs.push(...data.uvs[vertex1.vt])
+      }
 
       positions.push(...data.positions[vertex2.v])
-      normals.push(...data.normals[vertex2.vn])
-      uvs.push(...data.uvs[vertex2.vt])
+      if (data.includeNormals && vertex2.vn !== undefined) {
+        normals.push(...data.normals[vertex2.vn])
+      }
+      if (data.includeUVs && vertex2.vt !== undefined) {
+        uvs.push(...data.uvs[vertex2.vt])
+      }
 
       positions.push(...data.positions[vertex3.v])
-      normals.push(...data.normals[vertex3.vn])
-      uvs.push(...data.uvs[vertex3.vt])
+      if (data.includeNormals && vertex3.vn !== undefined) {
+        normals.push(...data.normals[vertex3.vn])
+      }
+      if (data.includeUVs && vertex3.vt !== undefined) {
+        uvs.push(...data.uvs[vertex3.vt])
+      }
     }
   }
 
-  // This does not properly account for when some faces lack attributes
-  // // It should lack the attribute for all faces if missing in some faces
-  // Also, position should be required.
+  const attributes = new Map([
+    [Attribute.Position.name, new DataView(new Float32Array(positions).buffer)]
+  ])
+
+  if (data.includeUVs && uvs.length > 0) {
+    attributes.set(Attribute.UV.name, new DataView(new Float32Array(uvs).buffer))
+  }
+
+  if (data.includeNormals && normals.length > 0) {
+    attributes.set(Attribute.Normal.name, new DataView(new Float32Array(normals).buffer))
+  }
+
   return {
-    attributes: new Map([
-      [Attribute.Position.name, new DataView(new Float32Array(positions).buffer)],
-      [Attribute.UV.name, new DataView(new Float32Array(uvs).buffer)],
-      [Attribute.Normal.name, new DataView(new Float32Array(normals).buffer)]
-    ]),
+    attributes,
     count: positions.length / 3
   };
 }
