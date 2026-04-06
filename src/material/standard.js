@@ -192,7 +192,7 @@ export class StandardMaterial extends Material {
       ['metallic_texture', 0, this.metallicTexture, this.metallicSampler],
       ['roughness_texture', 0, this.roughnessTexture, this.roughnessSampler],
       ['occlusion_texture', 0, this.occlusionTexture, this.occlusionSampler],
-      ['emissive_texture', 0, this.occlusionTexture, this.occlusionSampler]
+      ['emissive_texture', 0, this.emissiveTexture, this.emissiveSampler]
     ]
   }
 }

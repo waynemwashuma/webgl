@@ -141,6 +141,7 @@ export const standardFragment =
     properties.opacity = material.color.a;
     properties.metallic = material.metallic;
     properties.roughness = material.roughness;
+    properties.ambient_occlusion = 1.0;
 
     #ifdef VERTEX_UVS
       vec4 albedo_texture_color = texture(mainTexture,v_uv);
@@ -156,7 +157,7 @@ export const standardFragment =
       vec4 occlusion_texture_color = texture(occlusion_texture,v_uv);
       properties.ambient_occlusion = mix(1.0,occlusion_texture_color.r, material.ambient_occlusion_strength);
       
-      vec4 emissive_texture_color = texture(mainTexture,v_uv);
+      vec4 emissive_texture_color = texture(emissive_texture,v_uv);
       properties.emissive *= emissive_texture_color.rgb;  
     #endif
 
@@ -197,7 +198,7 @@ export const standardFragment =
     int point_light_count = min(point_lights.count, MAX_POINT_LIGHTS);
     int spot_light_count = min(spot_lights.count,MAX_SPOT_LIGHTS);
 
-    vec3 exitance;
+    vec3 exitance = vec3(0.0);
     for (int i = 0; i < directional_light_count; i++) {
       DirectionalLight light = directional_lights.lights[i];
       vec3 L = -light.direction;
