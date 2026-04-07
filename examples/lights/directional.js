@@ -19,6 +19,7 @@ import {
   UVSphereMeshBuilder,
   CanvasTarget,
   OrthographicShadow,
+  PCFShadowFilter,
   CuboidMeshBuilder,
   BasicMaterial,
   Color,
@@ -88,6 +89,17 @@ arrowBuilder.depth = 1
 const ambientLight = new AmbientLight()
 const sun = new DirectionalLight()
 const shadow = new OrthographicShadow()
+const shadowFilterSettings = {
+  mode: 'None',
+  get radius() {
+    return shadow.filterMode instanceof PCFShadowFilter ? shadow.filterMode.radius : 1
+  },
+  set radius(value) {
+    if (shadow.filterMode instanceof PCFShadowFilter) {
+      shadow.filterMode.radius = value
+    }
+  }
+}
 const camera = new Camera(renderTarget)
 const cameraControls = new OrbitCameraControls(camera, canvas)
 const lightHelper = new MeshMaterial3D(arrowBuilder.build(), new BasicMaterial({
@@ -111,6 +123,7 @@ shadow.projection.left = -10
 shadow.projection.right = 10
 shadow.bias = 0.002
 shadow.far = 20
+shadow.filterMode = undefined
 lightHelper.transform.position.z -= 0.5
 sun.add(lightHelper)
 
@@ -189,6 +202,10 @@ const settings = {
 const controls = new GUI()
 const lightFolder = controls.addFolder("Light")
 const shadowFolder = controls.addFolder("Shadows")
+/**
+ * @type {import("dat.gui").GUIController<object>}
+ */
+let shadowRadiusControl
 
 lightFolder
   .add(sun.transform.position, 'x', -10, 10)
@@ -253,6 +270,14 @@ shadowFolder
 shadowFolder
   .add(shadow, 'normalBias', 0, 0.005)
   .name('Normal Bias')
+shadowFolder
+  .add(shadowFilterSettings, 'mode', ['None', 'PCF'])
+  .name('Shadow Filter')
+  .onChange(updateShadowFilterMode)
+shadowRadiusControl = shadowFolder
+  .add(shadowFilterSettings, 'radius', 0, 4, 0.1)
+  .name('PCF Radius')
+updateShadowFilterControls()
 lightFolder.open()
 shadowFolder.open()
 
@@ -279,6 +304,19 @@ function updateShadowWidth(value){
 function updateShadowHeight(value){
   shadow.projection.top = value / 2
   shadow.projection.bottom = -value / 2
+}
+
+function updateShadowFilterControls() {
+  const enabled = shadow.filterMode !== undefined
+  shadowRadiusControl.domElement.style.display = enabled ? '' : 'none'
+}
+
+/**
+ * @param {string} value
+ */
+function updateShadowFilterMode(value) {
+  shadow.filterMode = value === 'PCF' ? new PCFShadowFilter() : undefined
+  updateShadowFilterControls()
 }
 
 /**

@@ -3,7 +3,7 @@
 import { View } from "../renderer/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constants/index.js";
 import { Shader, WebGLRenderDevice } from "../core/index.js";
-import { DirectionalLight, PointLight, SpotLight } from "../light/index.js";
+import { DirectionalLight, PCFShadowFilter, PointLight, SpotLight } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
 import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
@@ -11,6 +11,23 @@ import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
 import { Sampler, Texture } from "../texture/index.js";
 import { assert } from "../utils/index.js";
+
+const SHADOW_ITEM_BYTE_SIZE = 96
+
+/**
+ * @param {ShadowItem} item
+ * @param {import("../light/index.js").ShadowFilteringModes} mode
+ */
+function packShadowMode(item, mode) {
+  if (typeof mode === "undefined") {
+    item.mode = 0
+  } else if (mode instanceof PCFShadowFilter) {
+    item.mode = 1
+    item.pcfRadius = mode.radius
+  }else {
+    throw new Error("Invalid shadow filtering mode")
+  }
+}
 
 export class ShadowPlugin extends Plugin {
 
@@ -78,9 +95,17 @@ export class ShadowPlugin extends Plugin {
       })
     }
 
+    const data = new ArrayBuffer(blocks.length * SHADOW_ITEM_BYTE_SIZE)
+    const view = new DataView(data)
+
+    for (let i = 0; i < blocks.length; i++) {
+      // SAFETY: The array is dense
+      /**@type {ShadowItem}*/(blocks[i]).write(view, i * SHADOW_ITEM_BYTE_SIZE)
+    }
+
     renderer.updateUBO(context, {
       name: "ShadowCasterBlock",
-      data: new Float32Array(blocks.flatMap(item => item.pack()))
+      data
     })
   }
 }
@@ -113,6 +138,7 @@ function buildDirectionalShadowPass(light, shadowMap) {
   shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
+  packShadowMode(shadowItem,shadow.filterMode)
   Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
   return [shadowItem, [view]]
@@ -149,6 +175,7 @@ function buildSpotShadowPass(light, shadowMap) {
   shadowItem.layer = layer
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
+  packShadowMode(shadowItem, shadow.filterMode)
   Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
   return [shadowItem, [view]]
@@ -219,6 +246,7 @@ function buildPointShadowPass(light, shadowMap) {
   shadowItem.matrix.o = light.transform.world.z
   shadowItem.bias = shadow.bias
   shadowItem.normalBias = shadow.normalBias
+  packShadowMode(shadowItem, shadow.filterMode)
   shadowItem.layer = layerId - 5
 
   return [shadowItem, views]
@@ -396,14 +424,30 @@ export class ShadowItem {
   matrix = new Matrix4()
   bias = 0.001
   normalBias = 0
+  /**
+   * 0 = hard compare, 1 = PCF.
+   * @type {number}
+   */
+  mode = 0
+  pcfRadius = 0
   layer = 0
-  pack() {
-    return [
-      ...this.matrix,
-      this.bias,
-      this.normalBias,
-      this.layer,
-      0
-    ]
+  /**
+   * @param {DataView} view
+   * @param {number} offset
+   */
+  write(view, offset) {
+    let i = 0
+    for (const value of this.matrix) {
+      view.setFloat32(offset + (i * 4), value, true)
+      i++
+    }
+    view.setFloat32(offset + 64, this.bias, true)
+    view.setFloat32(offset + 68, this.normalBias, true)
+    view.setFloat32(offset + 72, this.layer, true)
+    view.setUint32(offset + 76, this.mode >>> 0, true)
+    view.setFloat32(offset + 80, this.pcfRadius, true)
+    view.setFloat32(offset + 84, 0, true)
+    view.setFloat32(offset + 88, 0, true)
+    view.setFloat32(offset + 92, 0, true)
   }
 }

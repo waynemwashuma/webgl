@@ -25,6 +25,7 @@ import {
   CanvasTarget,
   SkyboxPlugin,
   ShadowPlugin,
+  PCFShadowFilter,
   SpotLightShadow,
   CameraPlugin
 } from "webgllis"
@@ -92,6 +93,17 @@ const cameraControls = new OrbitCameraControls(camera, canvas)
 const ambientLight = new AmbientLight()
 
 const shadow = new SpotLightShadow()
+const shadowFilterSettings = {
+  mode: 'None',
+  get radius() {
+    return shadow.filterMode instanceof PCFShadowFilter ? shadow.filterMode.radius : 1
+  },
+  set radius(value) {
+    if (shadow.filterMode instanceof PCFShadowFilter) {
+      shadow.filterMode.radius = value
+    }
+  }
+}
 const light = new SpotLight()
 const skyBox = new SkyBox({
   day: environmentTexture
@@ -109,6 +121,7 @@ light.add(lightHelper)
 light.transform.position.y = 1
 light.range = 10
 light.shadow = shadow
+shadow.filterMode = undefined
 ground.transform.orientation.rotateX(-Math.PI / 2)
 
 //set up the camera
@@ -176,10 +189,13 @@ const settings = {
   material: options[0],
   shadow: true
 }
-
 const controls = new GUI()
 const lightFolder = controls.addFolder("Light")
 const shadowFolder = controls.addFolder("Shadow")
+/**
+ * @type {import("dat.gui").GUIController<object>}
+ */
+let shadowRadiusControl
 lightFolder
   .add(light.transform.position, 'x', -10, 10)
   .name("Translate X")
@@ -243,6 +259,14 @@ shadowFolder
 shadowFolder
   .add(shadow, 'normalBias', 0, 0.005)
   .name('Normal Bias')
+shadowFolder
+  .add(shadowFilterSettings, 'mode', ['None', 'PCF'])
+  .name('Shadow Filter')
+  .onChange(updateShadowFilterMode)
+shadowRadiusControl = shadowFolder
+  .add(shadowFilterSettings, 'radius', 0, 4, 0.1)
+  .name('PCF Radius')
+updateShadowFilterControls()
 lightFolder.open()
 shadowFolder.open()
 /**
@@ -282,4 +306,17 @@ function toggleShadows(value) {
   } else {
     light.shadow = undefined
   }
+}
+
+function updateShadowFilterControls() {
+  const enabled = typeof shadow.filterMode !== "undefined"
+  shadowRadiusControl.domElement.style.display = enabled ? '' : 'none'
+}
+
+/**
+ * @param {string} value
+ */
+function updateShadowFilterMode(value) {
+  shadow.filterMode = value === 'PCF' ? new PCFShadowFilter() : undefined
+  updateShadowFilterControls()
 }

@@ -37,6 +37,11 @@ export const lightShaderLib = `
     float bias;
     float normal_bias;
     float layer;
+    uint mode;
+    float pcf_radius;
+    float _padding0;
+    float _padding1;
+    float _padding2;
   };
 
   struct DirectionalLights {
@@ -125,6 +130,115 @@ export const lightShaderLib = `
     return vec3(uv * inv, face);
   }
 
+  vec3 map_cube_to_array_texture_direction(float face, vec2 uv) {
+    if (face == 0.0) {
+      return normalize(vec3(1.0, -uv.y, -uv.x));
+    }
+
+    if (face == 1.0) {
+      return normalize(vec3(-1.0, -uv.y, uv.x));
+    }
+
+    if (face == 2.0) {
+      return normalize(vec3(uv.x, 1.0, uv.y));
+    }
+
+    if (face == 3.0) {
+      return normalize(vec3(uv.x, -1.0, -uv.y));
+    }
+
+    if (face == 4.0) {
+      return normalize(vec3(uv.x, -uv.y, 1.0));
+    }
+
+    return normalize(vec3(-uv.x, -uv.y, -1.0));
+  }
+
+  float shadow_compare_2d(
+    Shadow shadow,
+    sampler2DArray shadow_atlas,
+    vec3 shadow_map_postion,
+    float current_depth,
+    float bias
+  ){
+    float shadow_map_depth = texture(
+      shadow_atlas,
+      vec3(shadow_map_postion.xy, shadow.layer)
+    ).r;
+
+    return current_depth - bias > shadow_map_depth ? 0.0 : 1.0;
+  }
+
+  float shadow_compare_cube(
+    Shadow shadow,
+    sampler2DArray shadow_atlas,
+    vec3 direction,
+    float current_depth,
+    float bias
+  ){
+    vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
+    vec2 shadow_uv = ndc_uv.xy * 0.5 + 0.5;
+    float shadow_map_depth = texture(
+      shadow_atlas,
+      vec3(shadow_uv.xy, shadow.layer + ndc_uv.z)
+    ).r;
+    vec2 clip_planes = shadow.space[0].xy;
+    float near = clip_planes.x;
+    float far = clip_planes.y;
+    vec3 norm_direction = normalize(direction);
+    float scale = max(abs(norm_direction.x), max(abs(norm_direction.y), abs(norm_direction.z)));
+    float view_space_map_depth = linearize_depth(shadow_map_depth, near, far);
+    float map_depth = view_space_map_depth / (scale * far);
+
+    return current_depth - bias > map_depth ? 0.0 : 1.0;
+  }
+
+  float shadow_pcf_2d(
+    Shadow shadow,
+    sampler2DArray shadow_atlas,
+    vec3 shadow_map_postion,
+    float current_depth,
+    float bias
+  ){
+    vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
+    vec2 pcf_step = texel_size * shadow.pcf_radius;
+    float shadow_sum = 0.0;
+
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec2 sample_offset = vec2(float(x), float(y)) * pcf_step;
+        vec3 sample_position = vec3(shadow_map_postion.xy + sample_offset, shadow_map_postion.z);
+        shadow_sum += shadow_compare_2d(shadow, shadow_atlas, sample_position, current_depth, bias);
+      }
+    }
+
+    return shadow_sum / 9.0;
+  }
+
+  float shadow_pcf_cube(
+    Shadow shadow,
+    sampler2DArray shadow_atlas,
+    vec3 direction,
+    float current_depth,
+    float bias
+  ){
+    vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
+    vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
+    vec2 pcf_step = texel_size * shadow.pcf_radius;
+    float shadow_sum = 0.0;
+
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec2 sample_offset = vec2(float(x), float(y)) * pcf_step;
+        vec2 sample_uv = ndc_uv.xy + sample_offset;
+        vec3 sample_direction = map_cube_to_array_texture_direction(ndc_uv.z, sample_uv);
+        shadow_sum += shadow_compare_cube(shadow, shadow_atlas, sample_direction, current_depth, bias);
+      }
+    }
+
+    return shadow_sum / 9.0;
+  }
+
   float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
     vec4 clipped_position = shadow.space * vec4(position, 1.0);
     vec3 ndc_position = clipped_position.xyz / clipped_position.w;
@@ -136,15 +250,14 @@ export const lightShaderLib = `
     ){
       return 1.0;
     }
-    float shadow_map_depth = texture(
-      shadow_atlas,
-      vec3(shadow_map_postion.xy, shadow.layer)
-    ).r;
     float current_depth = shadow_map_postion.z;
     float normal_bias = shadow.normal_bias * (1.0 - NdotL);
     float bias = shadow.bias + normal_bias;
 
-    return current_depth - bias > shadow_map_depth ? 0.0 : 1.0;
+    if (shadow.mode == 0u) {
+      return shadow_compare_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+    }
+    return shadow_pcf_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
   }
   
   float shadow_contribution_cube(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
@@ -156,21 +269,17 @@ export const lightShaderLib = `
     vec3 norm_distance = direction / distance;
     float near = clip_planes.x;
     float far = clip_planes.y;
+    float current_depth = distance / far;
     
     vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
     vec2 shadow_uv = ndc_uv.xy * 0.5 + 0.5;
-    float shadow_map_depth = texture(
-      shadow_atlas,
-      vec3(shadow_uv.xy, shadow.layer + ndc_uv.z)
-    ).r;
-    float scale = max(abs(norm_distance.x),max(abs(norm_distance.y), abs(norm_distance.z))); 
-    float view_space_map_depth = linearize_depth(shadow_map_depth, near, far);
-    float map_depth = view_space_map_depth / (scale * far);
-    float current_depth = distance / far;
     
     float normal_bias = shadow.normal_bias * (1.0 - NdotL);
     float bias = shadow.bias + normal_bias;
 
-    return current_depth - bias > map_depth ? 0.0 : 1.0;
+    if (shadow.mode == 0u) {
+      return shadow_compare_cube(shadow, shadow_atlas, direction, current_depth, bias);
+    }
+    return shadow_pcf_cube(shadow, shadow_atlas, direction, current_depth, bias);
   }
 `

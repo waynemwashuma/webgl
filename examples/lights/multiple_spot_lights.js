@@ -21,6 +21,7 @@ import {
   SkyboxPlugin,
   SpotLight,
   SpotLightShadow,
+  PCFShadowFilter,
   Affine3,
   Vector3,
   BasicMaterial,
@@ -191,13 +192,37 @@ function updateView() {
 const settings = {
   shadow: true
 }
+const shadowFilterSettings = {
+  mode: 'None',
+  get radius() {
+    return spotShadow.filterMode instanceof PCFShadowFilter ? spotShadow.filterMode.radius : 1
+  },
+  set radius(value) {
+    if (spotShadow.filterMode instanceof PCFShadowFilter) {
+      spotShadow.filterMode.radius = value
+    }
+  }
+}
 const controls = new GUI()
 const shadowFolder = controls.addFolder("Shadows")
+/**
+ * @type {import("dat.gui").GUIController<object>}
+ */
+let shadowRadiusControl
 
 shadowFolder
   .add(settings, 'shadow')
   .name("Enable Shadow")
   .onChange(toggleShadows)
+spotShadow.filterMode = undefined
+shadowFolder
+  .add(shadowFilterSettings, 'mode', ['None', 'PCF'])
+  .name("Shadow Filter")
+  .onChange(updateShadowFilterMode)
+shadowRadiusControl = shadowFolder
+  .add(shadowFilterSettings, 'radius', 0, 4, 0.1)
+  .name("PCF Radius")
+updateShadowFilterControls()
 shadowFolder.open()
 
 /**
@@ -219,4 +244,17 @@ function toggleShadows(value) {
       return true
     })
   }
+}
+
+function updateShadowFilterControls() {
+  const enabled = typeof spotShadow.filterMode !== "undefined"
+  shadowRadiusControl.domElement.style.display = enabled ? '' : 'none'
+}
+
+/**
+ * @param {string} value
+ */
+function updateShadowFilterMode(value) {
+  spotShadow.filterMode = value === 'PCF' ? new PCFShadowFilter() : undefined
+  updateShadowFilterControls()
 }

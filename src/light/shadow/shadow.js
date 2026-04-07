@@ -1,5 +1,13 @@
 import { OrthographicProjection } from "../../objects/index.js"
 
+export class PCFShadowFilter {
+  /**
+   * Percentage-closer filtering radius in texels.
+   * @type {number}
+   */
+  radius = 1
+}
+
 export class Shadow {
   /**
    * @type {number}
@@ -9,6 +17,10 @@ export class Shadow {
    * @type {number}
    */
   normalBias = 0
+  /**
+   * @type {ShadowFilteringModes}
+   */
+  filterMode = new PCFShadowFilter()
 }
 export class OrthographicShadow extends Shadow {
   /**
@@ -31,3 +43,7 @@ export class SpotLightShadow extends Shadow {
    */
   near = 0.1
 }
+
+/**
+ * @typedef {PCFShadowFilter | undefined} ShadowFilteringModes
+ */
