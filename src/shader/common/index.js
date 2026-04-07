@@ -1,4 +1,4 @@
-export * from './color.js'
-export * from './common.js'
-export * from './light.js'
-export * from './math.js'
+export { default as colorShaderLib } from './color.glsl'
+export { default as commonShaderLib } from './common.glsl'
+export { default as lightShaderLib } from './light.glsl'
+export { default as mathShaderLib } from './math.glsl'

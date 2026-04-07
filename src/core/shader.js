@@ -58,5 +58,5 @@ function preprocessShader(source, includes, defines) {
     }
     return include || ""
   })
-  return version + mergedDefines + preprocessed
+  return version + mergedDefines + "\n" + preprocessed
 }

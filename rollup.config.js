@@ -18,10 +18,23 @@ const banner = `/*
  * @license ${pkg.license}
  * @version ${pkg.version}
  */`
+
+function glsl() {
+  return {
+    name: "glsl",
+    load(id) {
+      if (!id.endsWith(".glsl")) {
+        return null
+      }
+      return `export default ${JSON.stringify(readFileSync(id, "utf8"))}`
+    }
+  }
+}
 export default [{
 
   // UMD
   input,
+  plugins: [glsl()],
   output: {
     file: "dist/index.umd.js",
     format: "umd",
@@ -36,6 +49,7 @@ export default [{
 
   // ESM
   input,
+  plugins: [glsl()],
   output: {
     file: "dist/index.module.js",
     format: "esm",
