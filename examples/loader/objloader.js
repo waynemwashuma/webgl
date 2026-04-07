@@ -38,13 +38,13 @@ const camera = new Camera(renderTarget)
 const textureLoader = new TextureLoader()
 const loader = new OBJLoader()
 const texture = textureLoader.load({
-  paths: ["/assets/models/obj/pirate_girl/pirate_girl.png"],
+  paths: ["/models/obj/pirate_girl/pirate_girl.png"],
   textureSettings:{
     flipY:true
   }
 })
 const model = loader.load({
-  paths: ["/assets/models/obj/pirate_girl/pirate_girl.obj"],
+  paths: ["/models/obj/pirate_girl/pirate_girl.obj"],
   postprocessor:(asset)=>{
     asset.traverseDFS((object)=>{
       if (object instanceof MeshMaterial3D) {

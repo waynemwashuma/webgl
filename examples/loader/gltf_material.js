@@ -60,12 +60,12 @@ const gltfLoader = new GLTFLoader()
 
 const day = textureLoader.load({
   paths: [
-    "/assets/images/skybox/miramar_right.png",
-    "/assets/images/skybox/miramar_left.png",
-    "/assets/images/skybox/miramar_top.png",
-    "/assets/images/skybox/miramar_bottom.png",
-    "/assets/images/skybox/miramar_back.png",
-    "/assets/images/skybox/miramar_front.png",
+    "/images/skybox/miramar_right.png",
+    "/images/skybox/miramar_left.png",
+    "/images/skybox/miramar_top.png",
+    "/images/skybox/miramar_bottom.png",
+    "/images/skybox/miramar_back.png",
+    "/images/skybox/miramar_front.png",
   ],
   type: TextureType.TextureCubeMap,
 })
@@ -76,7 +76,7 @@ skyBox.transform.orientation.rotateY(Math.PI)
 
 // The gltf model
 const model = gltfLoader.load({
-  paths: ["/assets/models/gltf/flight_helmet/index.gltf"]
+  paths: ["/models/gltf/flight_helmet/index.gltf"]
 })
 
 cameraControls.distance = 0.8

@@ -34,7 +34,7 @@ const cameraControls = new OrbitCameraControls(camera, canvas)
 // loaders
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"],
+  paths: ["/images/uv.jpg"],
 })
 
 //create objects

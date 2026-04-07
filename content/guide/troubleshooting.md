@@ -32,7 +32,7 @@ if (camera.projection instanceof PerspectiveProjection) {
 
 ## Missing Textures or Models
 
-- Use correct asset URLs under `/assets/...`.
+- Use correct asset URLs under `...`.
 - Check browser network tab for 404s.
 - For cube maps, provide all six faces in the expected order.
 

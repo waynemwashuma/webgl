@@ -36,7 +36,7 @@ const camera = new Camera(renderTarget)
 
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"]
+  paths: ["/images/uv.jpg"]
 })
 const mesh = new PlaneMeshBuilder().build()
 

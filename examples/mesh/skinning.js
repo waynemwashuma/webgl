@@ -43,7 +43,7 @@ const camera = new Camera(renderTarget)
 const loader = new GLTFLoader()
 const material = new BasicMaterial()
 loader.asyncLoad({
-  paths: ["/assets/models/gltf/pirate_girl/index.gltf"]
+  paths: ["/models/gltf/pirate_girl/index.gltf"]
 }).then((model) => {
   const entityMap = new Map()
   const clone = model.clone(entityMap)

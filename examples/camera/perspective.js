@@ -38,16 +38,16 @@ const cameraControls = new OrbitCameraControls(camera, canvas)
 // loaders
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"],
+  paths: ["/images/uv.jpg"],
 })
 const day = textureLoader.load({
   paths: [
-    "/assets/images/skybox/miramar_right.png",
-    "/assets/images/skybox/miramar_left.png",
-    "/assets/images/skybox/miramar_top.png",
-    "/assets/images/skybox/miramar_bottom.png",
-    "/assets/images/skybox/miramar_back.png",
-    "/assets/images/skybox/miramar_front.png",
+    "/images/skybox/miramar_right.png",
+    "/images/skybox/miramar_left.png",
+    "/images/skybox/miramar_top.png",
+    "/images/skybox/miramar_bottom.png",
+    "/images/skybox/miramar_back.png",
+    "/images/skybox/miramar_front.png",
   ],
   type: TextureType.TextureCubeMap,
 })

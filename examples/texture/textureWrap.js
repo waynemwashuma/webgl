@@ -36,7 +36,7 @@ const renderer = new WebGLRenderer({
 const camera = new Camera(renderTarget)
 const textureLoader = new TextureLoader()
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"]
+  paths: ["/images/uv.jpg"]
 })
 const sampler1 = new Sampler({
   wrapS: TextureWrap.Clamp,

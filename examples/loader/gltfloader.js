@@ -41,7 +41,7 @@ updateView()
 
 const loader = new GLTFLoader()
 const model = loader.load({
-  paths: ["/assets/models/gltf/pirate_girl/index.gltf"]
+  paths: ["/models/gltf/pirate_girl/index.gltf"]
 })
 
 camera.transform.position.z = 2

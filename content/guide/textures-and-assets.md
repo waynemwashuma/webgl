@@ -2,8 +2,6 @@
 title: "Textures and Assets"
 ---
 
-# Textures and Assets
-
 This guide assumes your scene already renders from [First Scene](/guide/first-scene).
 Here, we focus only on bringing external assets into that scene.
 
@@ -28,10 +26,11 @@ Create one loader instance per asset type and reuse it.
 const textureLoader = new TextureLoader();
 
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"],
+  paths: ["/images/uv.jpg"],
   textureSettings: { flipY: true }
 });
 ```
+
 Keep paths relative to your app's static/public asset root.
 
 ## Step 3: Apply the Texture to a Material
@@ -53,7 +52,7 @@ You can render immediately, no manual onready callback is required for basic flo
 const objLoader = new OBJLoader();
 
 const objRoot = objLoader.load({
-  paths: ["/assets/models/model.obj"]
+  paths: ["/models/model.obj"]
 });
 ```
 
@@ -64,9 +63,10 @@ You can include it in your render list right away.
 
 If you want to force a change across imported meshes, use `postprocessor`.
 An example is to assign a texture to all objects in an obj file
+
 ```js
 const objRoot = objLoader.load({
-  paths: ["/assets/models/obj/pirate_girl/pirate_girl.obj"],
+  paths: ["/models/obj/pirate_girl/pirate_girl.obj"],
   postprocessor: (asset) => {
     asset.traverseDFS((node) => {
       if (node instanceof MeshMaterial3D) {
@@ -84,7 +84,7 @@ const objRoot = objLoader.load({
 const gltfLoader = new GLTFLoader();
 
 const sceneRoot = gltfLoader.load({
-  paths: ["/assets/models/pirate_girl.gltf"]
+  paths: ["/models/pirate_girl.gltf"]
 });
 ```
 
@@ -107,7 +107,7 @@ Render continuously with placeholders and loaded data will appear as they become
 ## Path Rules That Prevent Most Loading Errors
 
 1. Use forward slashes in URLs, even on Windows.
-2. Use absolute app-root paths like `/assets/...` when possible.
+2. Use absolute app-root paths like `...` when possible.
 3. Keep `.gltf` sidecar files (`.bin`, textures) in expected relative locations.
 4. Confirm your dev server actually serves the asset directory.
 

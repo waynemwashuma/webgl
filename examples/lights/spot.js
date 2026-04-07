@@ -52,17 +52,17 @@ const textureLoader = new TextureLoader()
 //  assets
 const environmentTexture = textureLoader.load({
   paths: [
-    "/assets/images/skybox/miramar_right.png",
-    "/assets/images/skybox/miramar_left.png",
-    "/assets/images/skybox/miramar_top.png",
-    "/assets/images/skybox/miramar_bottom.png",
-    "/assets/images/skybox/miramar_back.png",
-    "/assets/images/skybox/miramar_front.png",
+    "/images/skybox/miramar_right.png",
+    "/images/skybox/miramar_left.png",
+    "/images/skybox/miramar_top.png",
+    "/images/skybox/miramar_bottom.png",
+    "/images/skybox/miramar_back.png",
+    "/images/skybox/miramar_front.png",
   ],
   type: TextureType.TextureCubeMap,
 })
 const texture = textureLoader.load({
-  paths: ["/assets/images/uv.jpg"],
+  paths: ["/images/uv.jpg"],
 })
 /**@type {[LambertMaterial, PhongMaterial, StandardMaterial]} */
 const materials = [
