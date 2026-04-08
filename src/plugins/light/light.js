@@ -1,9 +1,9 @@
-import { WebGLRenderDevice } from "../core/index.js";
-import { DirectionalLight } from "../light/directional.js";
-import { AmbientLight, PointLight, SpotLight } from "../light/index.js";
-import { Object3D } from "../objects/index.js";
-import { Plugin, WebGLRenderer } from "../renderer/index.js";
-import { ShadowMap } from "./shadow/index.js";
+import { WebGLRenderDevice } from "../../core/index.js";
+import { DirectionalLight } from "../../light/directional.js";
+import { AmbientLight, PointLight, SpotLight } from "../../light/index.js";
+import { Object3D } from "../../objects/index.js";
+import { Plugin, WebGLRenderer } from "../../renderer/index.js";
+import { ShadowMap } from "../shadow/index.js";
 
 export class LightPlugin extends Plugin {
 

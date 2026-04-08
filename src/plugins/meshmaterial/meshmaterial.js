@@ -1,16 +1,16 @@
-/**@import { Brand } from '../utils/index.js' */
-/**@import { Defaults } from '../renderer/index.js' */
-/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { assert } from '../utils/index.js'
-import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../core/index.js";
-import { RawMaterial } from "../material/index.js";
-import { Mesh, Attribute } from "../mesh/index.js";
-import { MeshMaterial3D, Object3D } from "../objects/index.js";
-import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
-import { Sampler, Texture } from "../texture/index.js";
-import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
-import { Caches } from '../caches/index.js';
-import { ShadowMap } from './shadow/index.js';
+/**@import { Brand } from '../../utils/index.js' */
+/**@import { Defaults } from '../../renderer/index.js' */
+/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../../core/index.js' */
+import { assert } from '../../utils/index.js'
+import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../../core/index.js";
+import { RawMaterial } from "../../material/index.js";
+import { Mesh, Attribute } from "../../mesh/index.js";
+import { MeshMaterial3D, Object3D } from "../../objects/index.js";
+import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
+import { Sampler, Texture } from "../../texture/index.js";
+import { PrimitiveTopology, TextureFilter, TextureFormat } from '../../constants/index.js';
+import { Caches } from '../../caches/index.js';
+import { ShadowMap } from '../shadow/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
 

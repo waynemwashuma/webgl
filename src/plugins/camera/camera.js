@@ -1,9 +1,9 @@
-/** @import { RenderItem, ViewFiller } from "../renderer/index.js"; */
-import { Plugin, View, ViewFillers, Views, WebGLRenderer } from "../renderer/index.js";
-import { WebGLRenderDevice } from "../core/index.js";
-import { Camera, Object3D } from "../objects/index.js";
-import { Vector3 } from "../math/index.js";
-import { assert } from "../utils/index.js";
+/** @import { RenderItem, ViewFiller } from "../../renderer/index.js"; */
+import { Plugin, View, ViewFillers, Views, WebGLRenderer } from "../../renderer/index.js";
+import { WebGLRenderDevice } from "../../core/index.js";
+import { Camera, Object3D } from "../../objects/index.js";
+import { Vector3 } from "../../math/index.js";
+import { assert } from "../../utils/index.js";
 
 export class CameraPlugin extends Plugin {
   /**

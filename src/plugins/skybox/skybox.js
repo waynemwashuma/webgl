@@ -1,12 +1,12 @@
-/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../core/index.js' */
-import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "../core/index.js";
-import { Matrix4 } from "../math/index.js";
-import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../constants/index.js";
-import { Object3D, SkyBox } from "../objects/index.js";
-import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
-import { skyboxFragment, skyboxVertex } from "../shader/index.js";
-import { CuboidMeshBuilder, Mesh } from "../mesh/index.js";
-import { Sampler } from "../texture/index.js";
+/**@import { GPUTexture, WebGLRenderPipeline, WebGLRenderPipelineDescriptor } from '../../core/index.js' */
+import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "../../core/index.js";
+import { Matrix4 } from "../../math/index.js";
+import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../../constants/index.js";
+import { Object3D, SkyBox } from "../../objects/index.js";
+import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
+import { skyboxFragment, skyboxVertex } from "../../shader/index.js";
+import { CuboidMeshBuilder, Mesh } from "../../mesh/index.js";
+import { Sampler } from "../../texture/index.js";
 
 export class SkyboxPlugin extends Plugin {
 
