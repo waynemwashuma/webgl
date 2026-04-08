@@ -6,7 +6,7 @@ import { Shader, WebGLRenderDevice } from "../core/index.js";
 import { DirectionalLight, PCFShadowFilter, PCSSShadowFilter, PointLight, SpotLight } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
-import { Plugin, RenderItem, ViewFillers, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, RenderItem, ViewFillers, Views, WebGLRenderer } from "../renderer/index.js";
 import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
 import { Sampler, Texture } from "../texture/index.js";
@@ -69,10 +69,12 @@ export class ShadowPlugin extends Plugin {
   preprocess(objects, device, renderer) {
     const { context } = device
     const shadowMap = renderer.getResource(ShadowMap)
+    const views = renderer.getResource(Views)
     /** @type {ShadowItem[]}*/
     const blocks = []
 
     assert(shadowMap, "Shadow map not set up.")
+    assert(views, "Views resource missing")
 
     shadowMap.reset()
     for (let i = 0; i < objects.length; i++) {
@@ -96,7 +98,7 @@ export class ShadowPlugin extends Plugin {
         area.spaceIndex = blocks.length
         blocks.push(items[0])
         items[1].forEach(e => e.order = -100)
-        renderer.views.push(...items[1])
+        views.push(...items[1])
 
         return true
       })

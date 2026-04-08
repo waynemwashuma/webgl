@@ -1,8 +1,9 @@
 /** @import { RenderItem, ViewFiller } from "../renderer/index.js"; */
-import { Plugin, View, ViewFillers, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, View, ViewFillers, Views, WebGLRenderer } from "../renderer/index.js";
 import { WebGLRenderDevice } from "../core/index.js";
 import { Camera, Object3D } from "../objects/index.js";
 import { Vector3 } from "../math/index.js";
+import { assert } from "../utils/index.js";
 
 export class CameraPlugin extends Plugin {
   /**
@@ -12,9 +13,7 @@ export class CameraPlugin extends Plugin {
   init(renderer){
     const viewFillers = renderer.getResource(ViewFillers)
 
-    if (!viewFillers) {
-      throw new Error("ViewFillers resource missing")
-    }
+    assert(viewFillers, "ViewFillers resource missing")
     viewFillers.set(Camera.name, fillCameraView)
   }
   /**
@@ -24,6 +23,9 @@ export class CameraPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   preprocess(objects, _device, renderer) {
+    const views = renderer.getResource(Views)
+
+    assert(views, "Views resource missing")
     for (let i = 0; i < objects.length; i++) {
       const camera = /**@type {Object3D} */(objects[i]);
       
@@ -46,7 +48,7 @@ export class CameraPlugin extends Plugin {
         tag: Camera.name
       })
   
-      renderer.views.push(cameraView)
+      views.push(cameraView)
     }
   }
 }

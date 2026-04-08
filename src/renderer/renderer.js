@@ -10,6 +10,7 @@ import { Plugin } from "./plugin.js"
 import { View } from "./core/index.js"
 import { FillViewsNode, RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
 import { ViewFillers } from "./viewfillers.js"
+import { Views } from "./views.js"
 
 export class WebGLRenderer {
 
@@ -23,11 +24,6 @@ export class WebGLRenderer {
    * @type {WebGLDeviceLimits}
    */
   limits
-
-  /**
-   * @type {View[]}
-   */
-  views = []
 
   /**
    * @readonly
@@ -95,6 +91,7 @@ export class WebGLRenderer {
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
     this.setResource(new ViewFillers())
+    this.setResource(new Views())
 
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);
@@ -151,7 +148,10 @@ export class WebGLRenderer {
    * @param {WebGLRenderDevice} renderDevice
    */
   render(objects, renderDevice) {
-    this.views.length = 0
+    const views = this.getResource(Views)
+
+    assert(views, "Views resource missing")
+    views.clear()
 
     for (let i = 0; i < objects.length; i++) {
       const object = /**@type {Object3D} */ (objects[i])
@@ -171,7 +171,7 @@ export class WebGLRenderer {
       renderer: this,
       objects,
       renderDevice,
-      views: this.views,
+      views: views.items(),
       sortedViews: []
     })
   }
