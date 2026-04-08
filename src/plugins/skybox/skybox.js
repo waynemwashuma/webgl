@@ -7,13 +7,10 @@ import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
 import { skyboxFragment, skyboxVertex } from "../../shader/index.js";
 import { CuboidMeshBuilder, Mesh } from "../../mesh/index.js";
 import { Sampler } from "../../texture/index.js";
+import { assert } from "../../utils/index.js";
+import { SkyboxPipeline } from "./skyboxpipeline.js";
 
 export class SkyboxPlugin extends Plugin {
-
-  /**
-   * @type {number | undefined}
-   */
-  pipelineId
   /**
    * @type {Mesh}
    */
@@ -34,6 +31,7 @@ export class SkyboxPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   init(renderer) {
+    renderer.setResource(new SkyboxPipeline())
     renderer.uniformBinders.set(SkyBox.name, uploadUniforms)
   }
 
@@ -76,10 +74,14 @@ export class SkyboxPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   getRenderPipeline(device, renderer) {
-    if (this.pipelineId !== undefined) {
-      return this.pipelineId
-    }
+    const skyboxPipeline = renderer.getResource(SkyboxPipeline)
     const { caches, includes, defines: globalDefines } = renderer
+
+    assert(skyboxPipeline, "SkyboxPipeline resource missing")
+
+    if (skyboxPipeline.pipelineId !== undefined) {
+      return skyboxPipeline.pipelineId
+    }
     /**
      * @type {WebGLRenderPipelineDescriptor}
      */
@@ -113,7 +115,8 @@ export class SkyboxPlugin extends Plugin {
 
     const [_, newId] = caches.createRenderPipeline(device, descriptor)
 
-    this.pipelineId = newId
+    skyboxPipeline.pipelineId = newId
+
     return newId
   }
 }
