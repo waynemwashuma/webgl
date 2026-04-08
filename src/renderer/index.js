@@ -1,3 +1,5 @@
 export * from './core/index.js'
+export * from './graph/index.js'
+export * from './renderer.js'
 export * from './renderer.js'
 export * from './plugin.js'

@@ -8,6 +8,7 @@ import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
 import { View } from "./core/index.js"
+import { FillViewsNode, RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
 
 export class WebGLRenderer {
 
@@ -73,6 +74,12 @@ export class WebGLRenderer {
   viewFiller = new Map()
 
   /**
+   * @readonly
+   * @type {RenderGraph}
+   */
+  renderGraph
+
+  /**
    * @param {WebGLRendererOptions} options 
    */
   constructor({ plugins = [] } = {}) {
@@ -103,6 +110,13 @@ export class WebGLRenderer {
       .set("color", colorShaderLib)
       .set("light", lightShaderLib)
       .set("math", mathShaderLib)
+
+    this.renderGraph = new RenderGraph()
+    this.renderGraph.addNode(FillViewsNode.name, new FillViewsNode())
+    this.renderGraph.addNode(SortViewsNode.name, new SortViewsNode())
+    this.renderGraph.addNode(RenderViewsNode.name, new RenderViewsNode())
+    this.renderGraph.addDependency(FillViewsNode.name, SortViewsNode.name)
+    this.renderGraph.addDependency(SortViewsNode.name, RenderViewsNode.name)
   }
 
   /**
@@ -156,25 +170,13 @@ export class WebGLRenderer {
 
       plugin.preprocess(objects, renderDevice, this)
     }
-
-    for (let i = 0; i < this.views.length; i++) {
-      const view = /** @type {View} */ (this.views[i]);
-      const fill = this.viewFiller.get(view.tag)
-
-      if (fill) {
-        fill(renderDevice, this, objects, this.plugins, view)
-      }
-    }
-
-    this.views.sort((a, b)=>{
-      return a.order - b.order
+    this.renderGraph.execute({
+      renderer: this,
+      objects,
+      renderDevice,
+      views: this.views,
+      sortedViews: []
     })
-    for (let i = 0; i < this.views.length; i++) {
-      const view = /**@type {View}*/(this.views[i]);
-
-      this.updateUBO(renderDevice.context, view.getData())
-      view.renderItems(renderDevice, this, this.uniformBinders)
-    }
   }
 }
 

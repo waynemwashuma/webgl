@@ -25,6 +25,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "target": "es2022",
+    "preserveSymlinks": true,
     "baseUrl": "..",
     "checkJs": true,
     "skipLibCheck": true,
