@@ -7,7 +7,6 @@ import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
-import { View } from "./core/index.js"
 import { FillViewsNode, RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
 import { ViewFillers } from "./viewfillers.js"
 import { Views } from "./views.js"
@@ -93,6 +92,13 @@ export class WebGLRenderer {
     this.setResource(new ViewFillers())
     this.setResource(new Views())
 
+    this.renderGraph = new RenderGraph()
+    this.renderGraph.addNode(FillViewsNode.name, new FillViewsNode())
+    this.renderGraph.addNode(SortViewsNode.name, new SortViewsNode())
+    this.renderGraph.addNode(RenderViewsNode.name, new RenderViewsNode())
+    this.renderGraph.addDependency(FillViewsNode.name, SortViewsNode.name)
+    this.renderGraph.addDependency(SortViewsNode.name, RenderViewsNode.name)
+
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);
 
@@ -104,13 +110,6 @@ export class WebGLRenderer {
       .set("color", colorShaderLib)
       .set("light", lightShaderLib)
       .set("math", mathShaderLib)
-
-    this.renderGraph = new RenderGraph()
-    this.renderGraph.addNode(FillViewsNode.name, new FillViewsNode())
-    this.renderGraph.addNode(SortViewsNode.name, new SortViewsNode())
-    this.renderGraph.addNode(RenderViewsNode.name, new RenderViewsNode())
-    this.renderGraph.addDependency(FillViewsNode.name, SortViewsNode.name)
-    this.renderGraph.addDependency(SortViewsNode.name, RenderViewsNode.name)
   }
 
   /**

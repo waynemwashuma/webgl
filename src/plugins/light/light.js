@@ -3,10 +3,10 @@ import { DirectionalLight } from "../../light/directional.js";
 import { AmbientLight, PointLight, SpotLight } from "../../light/index.js";
 import { Object3D } from "../../objects/index.js";
 import { Plugin, WebGLRenderer } from "../../renderer/index.js";
+import { FillViewsNode } from "../../renderer/graph/index.js";
 import { ShadowMap } from "../shadow/index.js";
 
 export class LightPlugin extends Plugin {
-
   /**
    * @override
    * @param {WebGLRenderer} renderer
@@ -16,87 +16,105 @@ export class LightPlugin extends Plugin {
       .set("MAX_DIRECTIONAL_LIGHTS", "10")
       .set("MAX_POINT_LIGHTS", "10")
       .set("MAX_SPOT_LIGHTS", "10")
+
+    renderer.renderGraph.addNode(LightNode.name, new LightNode())
+    renderer.renderGraph.addDependency(LightNode.name, FillViewsNode.name)
   }
   /**
    * @override
-   * @param {Object3D[]} objects
-   * @param {WebGLRenderDevice} device
-   * @param {WebGLRenderer} renderer
    */
-  preprocess(objects, device, renderer) {
-    const shadowMap = renderer.getResource(ShadowMap)
-    const directionalLights = new LightQueue()
-    const pointLights = new LightQueue()
-    const spotLights = new LightQueue()
-    for (let i = 0; i < objects.length; i++) {
-      const object = /**@type {Object3D} */ (objects[i])
+  preprocess() {}
+}
 
-      object.traverseDFS((object) => {
-        if (object instanceof DirectionalLight) {
-          directionalLights.add(object)
-        } else if (object instanceof PointLight) {
-          pointLights.add(object)
-        } else if (object instanceof SpotLight) {
-          spotLights.add(object)
-        } else if (object instanceof AmbientLight) {
-          renderer.updateUBO(device.context, object.getData())
-        }
-        return true
-      })
-    }
+export class LightNode {
+  /**
+   * @param {import("../../renderer/graph/index.js").RenderGraphContext} context
+   */
+  execute(context) {
+    updateLights(context.objects, context.renderDevice, context.renderer)
+  }
+}
 
-    const directionalLightData = directionalLights.getData()
-    const spotLightData = spotLights.getData()
-    const pointLightData = pointLights.getData()
-    const directionalItems  = new Int32Array(directionalLightData.buffer)
-    const spotItems  = new Int32Array(spotLightData.buffer)
-    const pointItems  = new Int32Array(pointLightData.buffer)
+/**
+ * @param {Object3D[]} objects
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ */
+function updateLights(objects, device, renderer) {
+  const shadowMap = renderer.getResource(ShadowMap)
+  const directionalLights = new LightQueue()
+  const pointLights = new LightQueue()
+  const spotLights = new LightQueue()
 
-    for (let i = 0; i < directionalLights.lights.length; i++) {
-      const offset = (i * 12) + 8 + 4;
-      const item = shadowMap?.inner.get(/**@type {DirectionalLight}*/(directionalLights.lights[i]))
-      
-      if(item?.enabled){
-        directionalItems[offset] = item.spaceIndex
-      } else {
-        directionalItems[offset] = -1
+  for (let i = 0; i < objects.length; i++) {
+    const object = /**@type {Object3D} */ (objects[i])
+
+    object.traverseDFS((object) => {
+      if (object instanceof DirectionalLight) {
+        directionalLights.add(object)
+      } else if (object instanceof PointLight) {
+        pointLights.add(object)
+      } else if (object instanceof SpotLight) {
+        spotLights.add(object)
+      } else if (object instanceof AmbientLight) {
+        renderer.updateUBO(device.context, object.getData())
       }
-    }
-
-    for (let i = 0; i < spotLights.lights.length; i++) {
-      const offset = (i * 16) + 7 + 4;
-      const item = shadowMap?.inner.get(/**@type {SpotLight}*/(spotLights.lights[i]))
-      if(item?.enabled){
-        spotItems[offset] = item.spaceIndex
-      } else {
-        spotItems[offset] = -1
-      }
-    }
-
-    for (let i = 0; i < pointLights.lights.length; i++) {
-      const offset = (i * 12) + 10 + 4;
-      const item = shadowMap?.inner.get(/**@type {PointLight}*/(pointLights.lights[i]))
-      if(item?.enabled){
-        pointItems[offset] = item.spaceIndex
-      } else {
-        pointItems[offset] = -1
-      }
-    }
-    renderer.updateUBO(device.context, {
-      name: "DirectionalLightBlock",
-      data: directionalLightData
-    })
-
-    renderer.updateUBO(device.context, {
-      name: "PointLightBlock",
-      data: pointLightData
-    })
-
-    renderer.updateUBO(device.context, {
-      name: "SpotLightBlock",
-      data: spotLightData
+      return true
     })
   }
+
+  const directionalLightData = directionalLights.getData()
+  const spotLightData = spotLights.getData()
+  const pointLightData = pointLights.getData()
+  const directionalItems = new Int32Array(directionalLightData.buffer)
+  const spotItems = new Int32Array(spotLightData.buffer)
+  const pointItems = new Int32Array(pointLightData.buffer)
+
+  for (let i = 0; i < directionalLights.lights.length; i++) {
+    const offset = (i * 12) + 8 + 4
+    const item = shadowMap?.inner.get(/**@type {DirectionalLight}*/(directionalLights.lights[i]))
+
+    if (item?.enabled) {
+      directionalItems[offset] = item.spaceIndex
+    } else {
+      directionalItems[offset] = -1
+    }
+  }
+
+  for (let i = 0; i < spotLights.lights.length; i++) {
+    const offset = (i * 16) + 7 + 4
+    const item = shadowMap?.inner.get(/**@type {SpotLight}*/(spotLights.lights[i]))
+    if (item?.enabled) {
+      spotItems[offset] = item.spaceIndex
+    } else {
+      spotItems[offset] = -1
+    }
+  }
+
+  for (let i = 0; i < pointLights.lights.length; i++) {
+    const offset = (i * 12) + 10 + 4
+    const item = shadowMap?.inner.get(/**@type {PointLight}*/(pointLights.lights[i]))
+    if (item?.enabled) {
+      pointItems[offset] = item.spaceIndex
+    } else {
+      pointItems[offset] = -1
+    }
+  }
+
+  renderer.updateUBO(device.context, {
+    name: "DirectionalLightBlock",
+    data: directionalLightData
+  })
+
+  renderer.updateUBO(device.context, {
+    name: "PointLightBlock",
+    data: pointLightData
+  })
+
+  renderer.updateUBO(device.context, {
+    name: "SpotLightBlock",
+    data: spotLightData
+  })
 }
 
 /**
