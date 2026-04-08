@@ -45,7 +45,8 @@ export class CameraPlugin extends Plugin {
         projection: camera.projection.asProjectionMatrix(camera.near, camera.far),
         view: camera.view,
         position,
-        tag: Camera.name
+        tag: Camera.name,
+        object: camera
       })
   
       views.push(cameraView)

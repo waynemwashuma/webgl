@@ -1,6 +1,7 @@
 /** @import { WebGLRenderer } from "../renderer.js" */
 import { GPUMesh, WebGLRenderDevice, WebGLRenderPipeline } from "../../core/index.js"
 import { Affine3, Matrix4, Vector3 } from "../../math/index.js"
+import { Object3D } from "../../objects/index.js"
 import { RenderTarget } from "../../rendertarget/index.js"
 
 export class View {
@@ -46,6 +47,11 @@ export class View {
    * @type {string}
    */
   tag
+  /**
+   * Source object that created this view.
+   * @type {Object3D | undefined}
+   */
+  object
 
   /**
    * @param {ViewOptions} options
@@ -57,7 +63,8 @@ export class View {
     view,
     near,
     far,
-    tag
+    tag,
+    object
   }) {
     this.renderTarget = renderTarget
     this.near = near
@@ -66,6 +73,7 @@ export class View {
     this.projectionMatrix = projection
     this.viewMatrix = view
     this.viewPosition = position
+    this.object = object
   }
 
   /**
@@ -192,6 +200,7 @@ export class RenderItem {
  * @property {number} near
  * @property {number} far
  * @property {string} tag
+ * @property {Object3D} [object]
  */
 
 /**

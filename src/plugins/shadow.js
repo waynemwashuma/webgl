@@ -140,7 +140,8 @@ function buildDirectionalShadowPass(light, shadowMap) {
     view: viewMatrix,
     near: shadow.near,
     far: shadow.far,
-    tag: DirectionalLight.name
+    tag: DirectionalLight.name,
+    object: light
   })
 
 
@@ -178,7 +179,8 @@ function buildSpotShadowPass(light, shadowMap) {
     view: viewMatrix,
     near: shadow.near,
     far: light.range,
-    tag: SpotLight.name
+    tag: SpotLight.name,
+    object: light
   })
 
   shadowItem.layer = layer
@@ -240,7 +242,8 @@ function buildPointShadowPass(light, shadowMap) {
       position: light.transform.position,
       near: shadow.near,
       far: light.radius,
-      tag: PointLight.name
+      tag: PointLight.name,
+      object: light
     }))
   }
 
