@@ -10,7 +10,7 @@ import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
 import { Sampler, Texture } from "../texture/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat } from '../constants/index.js';
 import { Caches } from '../caches/index.js';
-import { ShadowMap } from './shadow.js';
+import { ShadowMap } from './shadow/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
 

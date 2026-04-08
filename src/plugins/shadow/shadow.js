@@ -1,22 +1,23 @@
-/**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../core/index.js' */
-/** @import { ViewFiller } from "../renderer/index.js" */
-import { View } from "../renderer/index.js";
-import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constants/index.js";
-import { Shader, WebGLRenderDevice } from "../core/index.js";
-import { DirectionalLight, PCFShadowFilter, PCSSShadowFilter, PointLight, SpotLight } from "../light/index.js";
-import { Affine3, Matrix4, Vector3 } from "../math/index.js";
-import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
-import { Plugin, RenderItem, ViewFillers, Views, WebGLRenderer } from "../renderer/index.js";
-import { ImageRenderTarget } from "../rendertarget/index.js";
-import { basicVertex } from "../shader/index.js";
-import { Sampler, Texture } from "../texture/index.js";
-import { assert } from "../utils/index.js";
+/**@import { GPUMesh, WebGLRenderPipelineDescriptor } from '../../core/index.js' */
+/** @import { ViewFiller } from "../../renderer/index.js" */
+import { View } from "../../renderer/index.js";
+import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../../constants/index.js";
+import { Shader, WebGLRenderDevice } from "../../core/index.js";
+import { DirectionalLight, PCFShadowFilter, PCSSShadowFilter, PointLight, SpotLight } from "../../light/index.js";
+import { Affine3, Matrix4, Vector3 } from "../../math/index.js";
+import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../../objects/index.js";
+import { Plugin, RenderItem, ViewFillers, Views, WebGLRenderer } from "../../renderer/index.js";
+import { ImageRenderTarget } from "../../rendertarget/index.js";
+import { basicVertex } from "../../shader/index.js";
+import { Sampler, Texture } from "../../texture/index.js";
+import { assert } from "../../utils/index.js";
+import { ShadowPipelines } from "./shadowpipelines.js";
 
 const SHADOW_ITEM_BYTE_SIZE = 96
 
 /**
  * @param {ShadowItem} item
- * @param {import("../light/index.js").ShadowFilteringModes} mode
+ * @param {import("../../light/index.js").ShadowFilteringModes} mode
  */
 function packShadowMode(item, mode) {
   if (typeof mode === "undefined") {
@@ -35,15 +36,6 @@ function packShadowMode(item, mode) {
 }
 
 export class ShadowPlugin extends Plugin {
-
-  /**
-   * Layout hash is the key, pipeline id the value
-   * @package
-   * @type {Map<number, number>}
-   */
-  // TODO: Refactor into a resource `ShadowPipelines`
-  pipelines = new Map()
-
   /**
    * @override
    * @param {WebGLRenderer} renderer
@@ -54,10 +46,11 @@ export class ShadowPlugin extends Plugin {
 
     assert(viewFillers, "ViewFillers resource missing")
     renderer.setResource(new ShadowMap(maxShadows))
+    renderer.setResource(new ShadowPipelines())
     renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
-    viewFillers.set(DirectionalLight.name, fillShadowCameraView.bind(this))
-    viewFillers.set(PointLight.name, fillShadowCameraView.bind(this))
-    viewFillers.set(SpotLight.name, fillShadowCameraView.bind(this))
+    viewFillers.set(DirectionalLight.name, fillShadowCameraView)
+    viewFillers.set(PointLight.name, fillShadowCameraView)
+    viewFillers.set(SpotLight.name, fillShadowCameraView)
   }
 
   /**
@@ -268,7 +261,7 @@ function buildPointShadowPass(light, shadowMap) {
  * @param {WebGLRenderDevice} device
  * @param {WebGLRenderer} renderer
  * @param {GPUMesh} mesh
- * @param {Map<number, number>} pipelines
+ * @param {ShadowPipelines} pipelines
  * @returns {number}
  */
 function getRenderPipelineId(device, renderer, mesh, pipelines) {
@@ -310,13 +303,13 @@ function getRenderPipelineId(device, renderer, mesh, pipelines) {
   return newId
 }
 
-/**
- * @this {ShadowPlugin}
- * @type {ViewFiller}
- */
+/** @type {ViewFiller} */
 function fillShadowCameraView(device, renderer, objects, _plugins, view) {
+  const shadowPipelines = renderer.getResource(ShadowPipelines)
   /**@type {RenderItem[]} */
   const opaqueStage = []
+
+  assert(shadowPipelines, "ShadowPipelines resource missing")
   for (let i = 0; i < objects.length; i++) {
     const object = /**@type {Object3D} */ (objects[i])
     object.traverseDFS((child) => {
@@ -325,7 +318,7 @@ function fillShadowCameraView(device, renderer, objects, _plugins, view) {
       }
       const gpuMesh = renderer.caches.getMesh(device, child.mesh, renderer.attributes)
       const item = new RenderItem({
-        pipelineId: getRenderPipelineId(device, renderer, gpuMesh, this.pipelines),
+        pipelineId: getRenderPipelineId(device, renderer, gpuMesh, shadowPipelines),
         transform: child.transform.world,
         mesh: gpuMesh,
         uniforms: {},
