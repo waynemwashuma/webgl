@@ -9,6 +9,7 @@ import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
 import { View } from "./core/index.js"
 import { FillViewsNode, RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
+import { ViewFillers } from "./viewfillers.js"
 
 export class WebGLRenderer {
 
@@ -69,11 +70,6 @@ export class WebGLRenderer {
   uniformBinders = new Map()
 
   /**
-   * @type {Map<string, ViewFiller>}
-   */
-  viewFiller = new Map()
-
-  /**
    * @readonly
    * @type {RenderGraph}
    */
@@ -98,6 +94,7 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
+    this.setResource(new ViewFillers())
 
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);

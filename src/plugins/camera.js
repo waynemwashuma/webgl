@@ -1,5 +1,5 @@
 /** @import { RenderItem, ViewFiller } from "../renderer/index.js"; */
-import { Plugin, View, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, View, ViewFillers, WebGLRenderer } from "../renderer/index.js";
 import { WebGLRenderDevice } from "../core/index.js";
 import { Camera, Object3D } from "../objects/index.js";
 import { Vector3 } from "../math/index.js";
@@ -10,7 +10,12 @@ export class CameraPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   init(renderer){
-    renderer.viewFiller.set(Camera.name, fillCameraView)
+    const viewFillers = renderer.getResource(ViewFillers)
+
+    if (!viewFillers) {
+      throw new Error("ViewFillers resource missing")
+    }
+    viewFillers.set(Camera.name, fillCameraView)
   }
   /**
    * @override

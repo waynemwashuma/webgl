@@ -5,6 +5,8 @@
 /** @import { Object3D } from "../../objects/index.js" */
 /** @import { WebGLRenderDevice } from "../../core/index.js" */
 /** @import { WebGLRenderer } from "../renderer.js" */
+import { assert } from "../../utils/index.js"
+import { ViewFillers } from "../viewfillers.js"
 
 /**
  * @param {WebGLRenderDevice} device
@@ -28,10 +30,13 @@ export class FillViewsNode {
    */
   execute(context) {
     const { views, renderer, objects, renderDevice } = context
+    const viewFillers = renderer.getResource(ViewFillers)
+
+    assert(viewFillers, "ViewFillers resource missing")
 
     for (let i = 0; i < views.length; i++) {
       const view = /** @type {View} */ (views[i])
-      const fill = renderer.viewFiller.get(view.tag)
+      const fill = viewFillers.get(view.tag)
 
       runViewFiller(renderDevice, renderer, objects, renderer.plugins, view, fill)
     }
@@ -96,4 +101,3 @@ export class SubgraphNode {
     this.subgraph.execute(context)
   }
 }
-

@@ -6,7 +6,7 @@ import { Shader, WebGLRenderDevice } from "../core/index.js";
 import { DirectionalLight, PCFShadowFilter, PCSSShadowFilter, PointLight, SpotLight } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
-import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
+import { Plugin, RenderItem, ViewFillers, WebGLRenderer } from "../renderer/index.js";
 import { ImageRenderTarget } from "../rendertarget/index.js";
 import { basicVertex } from "../shader/index.js";
 import { Sampler, Texture } from "../texture/index.js";
@@ -50,12 +50,14 @@ export class ShadowPlugin extends Plugin {
    */
   init(renderer) {
     const maxShadows = 10
+    const viewFillers = renderer.getResource(ViewFillers)
+
+    assert(viewFillers, "ViewFillers resource missing")
     renderer.setResource(new ShadowMap(maxShadows))
     renderer.defines.set('MAX_SHADOW_CASTERS', maxShadows.toString())
-    renderer.viewFiller
-      .set(DirectionalLight.name, fillShadowCameraView.bind(this))
-      .set(PointLight.name, fillShadowCameraView.bind(this))
-      .set(SpotLight.name, fillShadowCameraView.bind(this))
+    viewFillers.set(DirectionalLight.name, fillShadowCameraView.bind(this))
+    viewFillers.set(PointLight.name, fillShadowCameraView.bind(this))
+    viewFillers.set(SpotLight.name, fillShadowCameraView.bind(this))
   }
 
   /**
