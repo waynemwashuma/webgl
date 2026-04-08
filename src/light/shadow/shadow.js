@@ -8,6 +8,24 @@ export class PCFShadowFilter {
   radius = 1
 }
 
+export class PCSSShadowFilter {
+  /**
+   * Base filter radius in texels.
+   * @type {number}
+   */
+  radius = 1
+  /**
+   * Blocker search radius in texels.
+   * @type {number}
+   */
+  searchRadius = 2
+  /**
+   * Penumbra scale factor.
+   * @type {number}
+   */
+  penumbra = 1
+}
+
 export class Shadow {
   /**
    * @type {number}
@@ -45,5 +63,5 @@ export class SpotLightShadow extends Shadow {
 }
 
 /**
- * @typedef {PCFShadowFilter | undefined} ShadowFilteringModes
+ * @typedef {PCFShadowFilter | PCSSShadowFilter | undefined} ShadowFilteringModes
  */

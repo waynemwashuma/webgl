@@ -23,6 +23,7 @@ import {
   SkyboxPlugin,
   ShadowPlugin,
   PCFShadowFilter,
+  PCSSShadowFilter,
   SpotLightShadow,
   CameraPlugin
 } from "webgllis"
@@ -86,11 +87,29 @@ const shadow = new SpotLightShadow()
 const shadowFilterSettings = {
   mode: 'None',
   get radius() {
-    return shadow.filterMode instanceof PCFShadowFilter ? shadow.filterMode.radius : 1
+    return (shadow.filterMode instanceof PCFShadowFilter || shadow.filterMode instanceof PCSSShadowFilter)
+      ? shadow.filterMode.radius
+      : 1
   },
   set radius(value) {
-    if (shadow.filterMode instanceof PCFShadowFilter) {
+    if (shadow.filterMode instanceof PCFShadowFilter || shadow.filterMode instanceof PCSSShadowFilter) {
       shadow.filterMode.radius = value
+    }
+  },
+  get searchRadius() {
+    return shadow.filterMode instanceof PCSSShadowFilter ? shadow.filterMode.searchRadius : 2
+  },
+  set searchRadius(value) {
+    if (shadow.filterMode instanceof PCSSShadowFilter) {
+      shadow.filterMode.searchRadius = value
+    }
+  },
+  get penumbra() {
+    return shadow.filterMode instanceof PCSSShadowFilter ? shadow.filterMode.penumbra : 1
+  },
+  set penumbra(value) {
+    if (shadow.filterMode instanceof PCSSShadowFilter) {
+      shadow.filterMode.penumbra = value
     }
   }
 }
@@ -190,6 +209,10 @@ const shadowFolder = controls.addFolder("Shadow")
  * @type {import("dat.gui").GUIController<object>}
  */
 let shadowRadiusControl
+/** @type {import("dat.gui").GUIController<object>} */
+let shadowSearchRadiusControl
+/** @type {import("dat.gui").GUIController<object>} */
+let shadowPenumbraControl
 lightFolder
   .add(light.transform.position, 'x', -10, 10)
   .name("Translate X")
@@ -236,12 +259,18 @@ shadowFolder
   .add(shadow, 'normalBias', 0, 0.005)
   .name('Normal Bias')
 shadowFolder
-  .add(shadowFilterSettings, 'mode', ['None', 'PCF'])
+  .add(shadowFilterSettings, 'mode', ['None', 'PCF', 'PCSS'])
   .name('Shadow Filter')
   .onChange(updateShadowFilterMode)
 shadowRadiusControl = shadowFolder
   .add(shadowFilterSettings, 'radius', 0, 4, 0.1)
   .name('PCF Radius')
+shadowSearchRadiusControl = shadowFolder
+  .add(shadowFilterSettings, 'searchRadius', 0, 8, 0.1)
+  .name('PCSS Search Radius')
+shadowPenumbraControl = shadowFolder
+  .add(shadowFilterSettings, 'penumbra', 0, 6, 0.1)
+  .name('PCSS Penumbra')
 updateShadowFilterControls()
 
 shadowFolder.open()
@@ -280,14 +309,23 @@ function toggleShadows(value) {
 }
 
 function updateShadowFilterControls() {
-  const enabled = shadow.filterMode !== undefined
-  shadowRadiusControl.domElement.style.display = enabled ? '' : 'none'
+  const isPCF = shadow.filterMode instanceof PCFShadowFilter
+  const isPCSS = shadow.filterMode instanceof PCSSShadowFilter
+  shadowRadiusControl.domElement.style.display = (isPCF || isPCSS) ? '' : 'none'
+  shadowSearchRadiusControl.domElement.style.display = isPCSS ? '' : 'none'
+  shadowPenumbraControl.domElement.style.display = isPCSS ? '' : 'none'
 }
 
 /**
  * @param {string} value
  */
 function updateShadowFilterMode(value) {
-  shadow.filterMode = value === 'PCF' ? new PCFShadowFilter() : undefined
+  if (value === 'PCF') {
+    shadow.filterMode = new PCFShadowFilter()
+  } else if (value === 'PCSS') {
+    shadow.filterMode = new PCSSShadowFilter()
+  } else {
+    shadow.filterMode = undefined
+  }
   updateShadowFilterControls()
 }

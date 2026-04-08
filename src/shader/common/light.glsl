@@ -38,8 +38,8 @@ struct Shadow {
   float layer;
   uint mode;
   float pcf_radius;
-  float _padding0;
-  float _padding1;
+  float pcss_search_radius;
+  float pcss_penumbra;
   float _padding2;
 };
 
@@ -192,15 +192,16 @@ float shadow_compare_cube(
   return current_depth - bias > map_depth ? 0.0 : 1.0;
 }
 
-float shadow_pcf_2d(
+float shadow_pcf_2d_radius(
   Shadow shadow,
   sampler2DArray shadow_atlas,
   vec3 shadow_map_postion,
   float current_depth,
+  float radius,
   float bias
 ){
   vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
-  vec2 pcf_step = texel_size * shadow.pcf_radius;
+  vec2 pcf_step = texel_size * radius;
   float shadow_sum = 0.0;
 
   for (int y = -1; y <= 1; y++) {
@@ -214,16 +215,34 @@ float shadow_pcf_2d(
   return shadow_sum / 9.0;
 }
 
-float shadow_pcf_cube(
+float shadow_pcf_2d(
+  Shadow shadow,
+  sampler2DArray shadow_atlas,
+  vec3 shadow_map_postion,
+  float current_depth,
+  float bias
+){
+  return shadow_pcf_2d_radius(
+    shadow,
+    shadow_atlas,
+    shadow_map_postion,
+    current_depth,
+    shadow.pcf_radius,
+    bias
+  );
+}
+
+float shadow_pcf_cube_radius(
   Shadow shadow,
   sampler2DArray shadow_atlas,
   vec3 direction,
   float current_depth,
+  float radius,
   float bias
 ){
   vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
   vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
-  vec2 pcf_step = texel_size * shadow.pcf_radius;
+  vec2 pcf_step = texel_size * radius;
   float shadow_sum = 0.0;
 
   for (int y = -1; y <= 1; y++) {
@@ -236,6 +255,129 @@ float shadow_pcf_cube(
   }
 
   return shadow_sum / 9.0;
+}
+
+float shadow_pcf_cube(
+  Shadow shadow,
+  sampler2DArray shadow_atlas,
+  vec3 direction,
+  float current_depth,
+  float bias
+){
+  return shadow_pcf_cube_radius(
+    shadow,
+    shadow_atlas,
+    direction,
+    current_depth,
+    shadow.pcf_radius,
+    bias
+  );
+}
+
+float shadow_pcss_2d(
+  Shadow shadow,
+  sampler2DArray shadow_atlas,
+  vec3 shadow_map_postion,
+  float current_depth,
+  float bias
+){
+  vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
+  vec2 search_step = texel_size * shadow.pcss_search_radius;
+  float blocker_sum = 0.0;
+  float blocker_count = 0.0;
+
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 sample_offset = vec2(float(x), float(y)) * search_step;
+      float sample_depth = texture(
+        shadow_atlas,
+        vec3(shadow_map_postion.xy + sample_offset, shadow.layer)
+      ).r;
+      if (sample_depth < current_depth - bias) {
+        blocker_sum += sample_depth;
+        blocker_count += 1.0;
+      }
+    }
+  }
+
+  if (blocker_count == 0.0) {
+    return 1.0;
+  }
+
+  float blocker_depth = blocker_sum / blocker_count;
+  float penumbra = (current_depth - blocker_depth) / max(blocker_depth, 0.0001);
+  float filter_radius = clamp(
+    shadow.pcf_radius + penumbra * shadow.pcss_penumbra,
+    shadow.pcf_radius,
+    shadow.pcf_radius + 12.0
+  );
+  return shadow_pcf_2d_radius(
+    shadow,
+    shadow_atlas,
+    shadow_map_postion,
+    current_depth,
+    filter_radius,
+    bias
+  );
+}
+
+float shadow_pcss_cube(
+  Shadow shadow,
+  sampler2DArray shadow_atlas,
+  vec3 direction,
+  float current_depth,
+  float bias
+){
+  vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
+  vec2 texel_size = 1.0 / vec2(textureSize(shadow_atlas, 0).xy);
+  vec2 search_step = texel_size * shadow.pcss_search_radius;
+  vec2 clip_planes = shadow.space[0].xy;
+  float near = clip_planes.x;
+  float far = clip_planes.y;
+  float blocker_sum = 0.0;
+  float blocker_count = 0.0;
+
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 sample_offset = vec2(float(x), float(y)) * search_step;
+      vec2 sample_uv = ndc_uv.xy + sample_offset;
+      vec3 sample_direction = map_cube_to_array_texture_direction(ndc_uv.z, sample_uv);
+      vec3 sample_ndc = map_cube_from_array_texture_ndc(sample_direction);
+      vec2 sample_shadow_uv = sample_ndc.xy * 0.5 + 0.5;
+      float shadow_map_depth = texture(
+        shadow_atlas,
+        vec3(sample_shadow_uv.xy, shadow.layer + sample_ndc.z)
+      ).r;
+      vec3 norm_direction = normalize(sample_direction);
+      float scale = max(abs(norm_direction.x), max(abs(norm_direction.y), abs(norm_direction.z)));
+      float view_space_map_depth = linearize_depth(shadow_map_depth, near, far);
+      float map_depth = view_space_map_depth / (scale * far);
+      if (map_depth < current_depth - bias) {
+        blocker_sum += map_depth;
+        blocker_count += 1.0;
+      }
+    }
+  }
+
+  if (blocker_count == 0.0) {
+    return 1.0;
+  }
+
+  float blocker_depth = blocker_sum / blocker_count;
+  float penumbra = (current_depth - blocker_depth) / max(blocker_depth, 0.0001);
+  float filter_radius = clamp(
+    shadow.pcf_radius + penumbra * shadow.pcss_penumbra,
+    shadow.pcf_radius,
+    shadow.pcf_radius + 12.0
+  );
+  return shadow_pcf_cube_radius(
+    shadow,
+    shadow_atlas,
+    direction,
+    current_depth,
+    filter_radius,
+    bias
+  );
 }
 
 float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
@@ -255,6 +397,12 @@ float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 po
 
   if (shadow.mode == 0u) {
     return shadow_compare_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+  }
+  if (shadow.mode == 1u) {
+    return shadow_pcf_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+  }
+  if (shadow.mode == 2u) {
+    return shadow_pcss_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
   }
   return shadow_pcf_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
 }
@@ -278,6 +426,12 @@ float shadow_contribution_cube(Shadow shadow, sampler2DArray shadow_atlas, vec3 
 
   if (shadow.mode == 0u) {
     return shadow_compare_cube(shadow, shadow_atlas, direction, current_depth, bias);
+  }
+  if (shadow.mode == 1u) {
+    return shadow_pcf_cube(shadow, shadow_atlas, direction, current_depth, bias);
+  }
+  if (shadow.mode == 2u) {
+    return shadow_pcss_cube(shadow, shadow_atlas, direction, current_depth, bias);
   }
   return shadow_pcf_cube(shadow, shadow_atlas, direction, current_depth, bias);
 }

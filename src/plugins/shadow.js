@@ -3,7 +3,7 @@
 import { View } from "../renderer/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat, TextureType, TextureWrap } from "../constants/index.js";
 import { Shader, WebGLRenderDevice } from "../core/index.js";
-import { DirectionalLight, PCFShadowFilter, PointLight, SpotLight } from "../light/index.js";
+import { DirectionalLight, PCFShadowFilter, PCSSShadowFilter, PointLight, SpotLight } from "../light/index.js";
 import { Affine3, Matrix4, Vector3 } from "../math/index.js";
 import { MeshMaterial3D, Object3D, PerspectiveProjection } from "../objects/index.js";
 import { Plugin, RenderItem, WebGLRenderer } from "../renderer/index.js";
@@ -24,6 +24,11 @@ function packShadowMode(item, mode) {
   } else if (mode instanceof PCFShadowFilter) {
     item.mode = 1
     item.pcfRadius = mode.radius
+  } else if (mode instanceof PCSSShadowFilter) {
+    item.mode = 2
+    item.pcfRadius = mode.radius
+    item.pcssSearchRadius = mode.searchRadius
+    item.pcssPenumbra = mode.penumbra
   }else {
     throw new Error("Invalid shadow filtering mode")
   }
@@ -425,11 +430,13 @@ export class ShadowItem {
   bias = 0.001
   normalBias = 0
   /**
-   * 0 = hard compare, 1 = PCF.
+   * 0 = hard compare, 1 = PCF, 2 = PCSS.
    * @type {number}
    */
   mode = 0
   pcfRadius = 0
+  pcssSearchRadius = 0
+  pcssPenumbra = 0
   layer = 0
   /**
    * @param {DataView} view
@@ -446,8 +453,8 @@ export class ShadowItem {
     view.setFloat32(offset + 72, this.layer, true)
     view.setUint32(offset + 76, this.mode >>> 0, true)
     view.setFloat32(offset + 80, this.pcfRadius, true)
-    view.setFloat32(offset + 84, 0, true)
-    view.setFloat32(offset + 88, 0, true)
+    view.setFloat32(offset + 84, this.pcssSearchRadius, true)
+    view.setFloat32(offset + 88, this.pcssPenumbra, true)
     view.setFloat32(offset + 92, 0, true)
   }
 }
