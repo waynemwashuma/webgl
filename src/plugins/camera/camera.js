@@ -1,6 +1,5 @@
-/** @import { RenderItem, ViewFiller } from "../../renderer/index.js"; */
-import { FillViewsNode, Plugin, View, ViewFillers, Views, WebGLRenderer } from "../../renderer/index.js";
-import { Camera, MeshMaterial3D, Object3D, SkyBox } from "../../objects/index.js";
+import { FillViewsNode, Plugin, View, Views, WebGLRenderer } from "../../renderer/index.js";
+import { Camera, Object3D } from "../../objects/index.js";
 import { Vector3 } from "../../math/index.js";
 import { assert } from "../../utils/index.js";
 
@@ -10,10 +9,6 @@ export class CameraPlugin extends Plugin {
    * @param {WebGLRenderer} renderer
    */
   init(renderer){
-    const viewFillers = renderer.getResource(ViewFillers)
-
-    assert(viewFillers, "ViewFillers resource missing")
-    viewFillers.set(Camera.name, fillCameraView)
     renderer.renderGraph.addNode(CameraViewNode.name, new CameraViewNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, FillViewsNode.name)
   }
@@ -56,31 +51,6 @@ export class CameraViewNode {
       })
 
       views.push(cameraView)
-    }
-  }
-}
-
-/**
- * @type {ViewFiller}
- */
-function fillCameraView(device, renderer, objects, plugins, view) {
-  /**@type {RenderItem[]} */
-  const opaqueStage = view.renderStage.opaque || []
-
-  view.renderStage.opaque = opaqueStage
-  for (let i = 0; i < plugins.length; i++) {
-    const plugin = /**@type {Plugin} */(plugins[i]);
-    for (let i = 0; i < objects.length; i++) {
-      const object = /**@type {Object3D} */ (objects[i])
-      object.traverseDFS((child) => {
-        const item = plugin.getRenderItem(child, device, renderer)
-
-        if (item && item.tag !== MeshMaterial3D.name && item.tag !== SkyBox.name) {
-          // we only support opaque items for now.
-          opaqueStage.push(item)
-        }
-        return true
-      })
     }
   }
 }
