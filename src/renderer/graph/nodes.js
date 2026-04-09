@@ -1,5 +1,6 @@
 /** @import { RenderGraphContext } from "./rendergraph.js" */
 /** @import { View } from "../core/index.js" */
+import { Camera } from "../../objects/index.js"
 import { assert } from "../../utils/index.js"
 import { Views } from "../views.js"
 
@@ -43,6 +44,9 @@ export class RenderViewsNode {
 
     for (let i = 0; i < viewItems.length; i++) {
       const view = /** @type {View} */ (viewItems[i])
+      if (view.tag === Camera.name) {
+        continue
+      }
 
       renderer.updateUBO(renderDevice.context, view.getData())
       view.renderItems(renderDevice, renderer, renderer.uniformBinders)

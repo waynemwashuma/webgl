@@ -1,7 +1,8 @@
-import { Plugin, SortViewsNode, View, Views, WebGLRenderer } from "../../renderer/index.js";
+import { Plugin, RenderViewsNode, SortViewsNode, View, Views, WebGLRenderer } from "../../renderer/index.js";
 import { Camera, Object3D } from "../../objects/index.js";
 import { Vector3 } from "../../math/index.js";
 import { assert } from "../../utils/index.js";
+import { CameraNode } from "./nodes/index.js";
 
 export class CameraPlugin extends Plugin {
   /**
@@ -10,7 +11,9 @@ export class CameraPlugin extends Plugin {
    */
   init(renderer){
     renderer.renderGraph.addNode(CameraViewNode.name, new CameraViewNode())
+    renderer.renderGraph.addNode(CameraNode.name, new CameraNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, SortViewsNode.name)
+    renderer.renderGraph.addDependency(RenderViewsNode.name, CameraNode.name)
   }
   /**
    * @override
