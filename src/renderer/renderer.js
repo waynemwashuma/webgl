@@ -1,4 +1,4 @@
-/** @import { UniformBinder } from "./core/index.js" */
+/** @import { UniformBinder, View } from "./core/index.js" */
 import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D } from "../objects/index.js"
 import { colorShaderLib, commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
