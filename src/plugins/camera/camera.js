@@ -1,6 +1,5 @@
 /** @import { RenderItem, ViewFiller } from "../../renderer/index.js"; */
-import { Plugin, View, ViewFillers, Views, WebGLRenderer } from "../../renderer/index.js";
-import { WebGLRenderDevice } from "../../core/index.js";
+import { FillViewsNode, Plugin, View, ViewFillers, Views, WebGLRenderer } from "../../renderer/index.js";
 import { Camera, Object3D } from "../../objects/index.js";
 import { Vector3 } from "../../math/index.js";
 import { assert } from "../../utils/index.js";
@@ -15,21 +14,28 @@ export class CameraPlugin extends Plugin {
 
     assert(viewFillers, "ViewFillers resource missing")
     viewFillers.set(Camera.name, fillCameraView)
+    renderer.renderGraph.addNode(CameraViewNode.name, new CameraViewNode())
+    renderer.renderGraph.addDependency(CameraViewNode.name, FillViewsNode.name)
   }
   /**
    * @override
-   * @param {Object3D[]} objects
-   * @param {WebGLRenderDevice} _device
-   * @param {WebGLRenderer} renderer
    */
-  preprocess(objects, _device, renderer) {
+  preprocess() {}
+}
+
+export class CameraViewNode {
+  /**
+   * @param {import("../../renderer/graph/index.js").RenderGraphContext} context
+   */
+  execute(context) {
+    const { objects, renderer } = context
     const views = renderer.getResource(Views)
 
     assert(views, "Views resource missing")
     for (let i = 0; i < objects.length; i++) {
-      const camera = /**@type {Object3D} */(objects[i]);
-      
-      if(!(camera instanceof Camera)){
+      const camera = /**@type {Object3D} */(objects[i])
+
+      if (!(camera instanceof Camera)) {
         continue
       }
 
@@ -48,7 +54,7 @@ export class CameraPlugin extends Plugin {
         tag: Camera.name,
         object: camera
       })
-  
+
       views.push(cameraView)
     }
   }
