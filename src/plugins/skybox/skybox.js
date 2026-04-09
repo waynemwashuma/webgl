@@ -2,13 +2,14 @@
 import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "../../core/index.js";
 import { Matrix4 } from "../../math/index.js";
 import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../../constants/index.js";
-import { Object3D, SkyBox } from "../../objects/index.js";
-import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
+import { Camera, Object3D, SkyBox } from "../../objects/index.js";
+import { FillViewsNode, Plugin, RenderItem, Views, WebGLRenderer } from "../../renderer/index.js";
 import { skyboxFragment, skyboxVertex } from "../../shader/index.js";
 import { Sampler } from "../../texture/index.js";
 import { assert } from "../../utils/index.js";
 import { SkyboxPipeline } from "./skyboxpipeline.js";
 import { SkyBoxMesh } from "./skyboxmesh.js";
+import { CameraViewNode } from "../camera/index.js";
 
 export class SkyboxPlugin extends Plugin {
   /**
@@ -19,95 +20,131 @@ export class SkyboxPlugin extends Plugin {
     renderer.setResource(new SkyboxPipeline())
     renderer.setResource(new SkyBoxMesh())
     renderer.uniformBinders.set(SkyBox.name, uploadUniforms)
+    renderer.renderGraph.addNode(SkyBoxNode.name, new SkyBoxNode())
+    renderer.renderGraph.addDependency(CameraViewNode.name, SkyBoxNode.name)
+    renderer.renderGraph.addDependency(SkyBoxNode.name, FillViewsNode.name)
   }
+}
 
+export class SkyBoxNode {
   /**
-   * @override
-   * @param {Object3D} object
-   * @param {WebGLRenderDevice} device
-   * @param {WebGLRenderer} renderer
+   * @param {import("../../renderer/graph/index.js").RenderGraphContext} context
    */
-  getRenderItem(object, device, renderer) {
-    if (!(object instanceof SkyBox)) {
-      return
-    }
-    const skyboxMesh = renderer.getResource(SkyBoxMesh)
+  execute(context) {
+    const { renderer, renderDevice, objects } = context
+    const views = renderer.getResource(Views)
 
-    assert(skyboxMesh, "SkyBoxMesh resource missing")
-    const mesh = renderer.caches.getMesh(device, skyboxMesh.cube, renderer.attributes)
-    const uniforms = new SkyBoxGroup(object.lerp)
-    
-    if (object.day) {
-      const dayTex = renderer.caches.getTexture(device, object.day)
-      
-      uniforms.day = dayTex
-    }
-    if (object.night) {
-      const nightTex = renderer.caches.getTexture(device, object.night)
-      
-      uniforms.night = nightTex
-    }
-    const item = new RenderItem({
-      pipelineId: this.getRenderPipeline(device, renderer),
-      uniforms,
-      tag: SkyBox.name,
-      transform: object.transform.world,
-      mesh
-    })
-    
-    return item
-  }
+    assert(views, "Views resource missing")
 
-  /**
-   * @param {WebGLRenderDevice} device
-   * @param {WebGLRenderer} renderer
-   */
-  getRenderPipeline(device, renderer) {
-    const skyboxPipeline = renderer.getResource(SkyboxPipeline)
-    const { caches, includes, defines: globalDefines } = renderer
+    for (const view of views.items()) {
+      if (view.tag !== Camera.name) {
+        continue
+      }
 
-    assert(skyboxPipeline, "SkyboxPipeline resource missing")
+      const opaqueStage = view.renderStage.opaque || []
+      view.renderStage.opaque = opaqueStage
 
-    if (skyboxPipeline.pipelineId !== undefined) {
-      return skyboxPipeline.pipelineId
-    }
-    /**
-     * @type {WebGLRenderPipelineDescriptor}
-     */
-    const descriptor = {
-      depthWrite: false,
-      depthCompare: CompareFunction.Lequal,
-      cullFace: CullFace.Front,
-      topology: PrimitiveTopology.Triangles,
-      vertexLayout: new MeshVertexLayout([]),
-      vertex: new Shader({
-        source: skyboxVertex
-      }),
-      fragment: {
-        source: new Shader({
-          source: skyboxFragment
-        }),
-        targets: [{
-          format: TextureFormat.RGBA8Unorm
-        }]
+      for (let i = 0; i < objects.length; i++) {
+        const object = /** @type {Object3D} */ (objects[i])
+
+        object.traverseDFS((child) => {
+          if (!(child instanceof SkyBox)) {
+            return true
+          }
+          const item = createSkyboxRenderItem(child, renderDevice, renderer)
+
+          opaqueStage.push(item)
+
+          return true
+        })
       }
     }
-
-    for (const [name, value] of globalDefines) {
-      descriptor.vertex.defines.set(name, value)
-      descriptor.fragment?.source?.defines?.set(name, value)
-    }
-    for (const [name, value] of includes) {
-      descriptor.vertex.includes.set(name, value)
-      descriptor.fragment?.source?.includes?.set(name, value)
-    }
-
-    const [_, newId] = caches.createRenderPipeline(device, descriptor)
-
-    skyboxPipeline.pipelineId = newId
-
-    return newId
   }
+}
+
+/**
+ * @param {SkyBox} object
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ * @returns {RenderItem}
+ */
+function createSkyboxRenderItem(object, device, renderer) {
+  const skyboxMesh = renderer.getResource(SkyBoxMesh)
+
+  assert(skyboxMesh, "SkyBoxMesh resource missing")
+  const mesh = renderer.caches.getMesh(device, skyboxMesh.cube, renderer.attributes)
+  const uniforms = new SkyBoxGroup(object.lerp)
+
+  if (object.day) {
+    const dayTex = renderer.caches.getTexture(device, object.day)
+
+    uniforms.day = dayTex
+  }
+  if (object.night) {
+    const nightTex = renderer.caches.getTexture(device, object.night)
+
+    uniforms.night = nightTex
+  }
+  const item = new RenderItem({
+    pipelineId: getSkyboxRenderPipeline(device, renderer),
+    uniforms,
+    tag: SkyBox.name,
+    transform: object.transform.world,
+    mesh
+  })
+
+  return item
+}
+
+/**
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ */
+function getSkyboxRenderPipeline(device, renderer) {
+  const skyboxPipeline = renderer.getResource(SkyboxPipeline)
+  const { caches, includes, defines: globalDefines } = renderer
+
+  assert(skyboxPipeline, "SkyboxPipeline resource missing")
+
+  if (skyboxPipeline.pipelineId !== undefined) {
+    return skyboxPipeline.pipelineId
+  }
+  /**
+   * @type {WebGLRenderPipelineDescriptor}
+   */
+  const descriptor = {
+    depthWrite: false,
+    depthCompare: CompareFunction.Lequal,
+    cullFace: CullFace.Front,
+    topology: PrimitiveTopology.Triangles,
+    vertexLayout: new MeshVertexLayout([]),
+    vertex: new Shader({
+      source: skyboxVertex
+    }),
+    fragment: {
+      source: new Shader({
+        source: skyboxFragment
+      }),
+      targets: [{
+        format: TextureFormat.RGBA8Unorm
+      }]
+    }
+  }
+
+  for (const [name, value] of globalDefines) {
+    descriptor.vertex.defines.set(name, value)
+    descriptor.fragment?.source?.defines?.set(name, value)
+  }
+  for (const [name, value] of includes) {
+    descriptor.vertex.includes.set(name, value)
+    descriptor.fragment?.source?.includes?.set(name, value)
+  }
+
+  const [_, newId] = caches.createRenderPipeline(device, descriptor)
+
+  skyboxPipeline.pipelineId = newId
+
+  return newId
 }
 
 export class SkyBoxGroup {
