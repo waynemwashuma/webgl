@@ -5,33 +5,19 @@ import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../..
 import { Object3D, SkyBox } from "../../objects/index.js";
 import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
 import { skyboxFragment, skyboxVertex } from "../../shader/index.js";
-import { CuboidMeshBuilder, Mesh } from "../../mesh/index.js";
 import { Sampler } from "../../texture/index.js";
 import { assert } from "../../utils/index.js";
 import { SkyboxPipeline } from "./skyboxpipeline.js";
+import { SkyBoxMesh } from "./skyboxmesh.js";
 
 export class SkyboxPlugin extends Plugin {
-  /**
-   * @type {Mesh}
-   */
-  cube
-
-  constructor() {
-    super()
-
-    const cuboid = new CuboidMeshBuilder()
-    cuboid.width = 1
-    cuboid.height = 1
-    cuboid.depth = 1
-
-    this.cube = cuboid.build()
-  }
   /**
    * @override
    * @param {WebGLRenderer} renderer
    */
   init(renderer) {
     renderer.setResource(new SkyboxPipeline())
+    renderer.setResource(new SkyBoxMesh())
     renderer.uniformBinders.set(SkyBox.name, uploadUniforms)
   }
 
@@ -45,7 +31,10 @@ export class SkyboxPlugin extends Plugin {
     if (!(object instanceof SkyBox)) {
       return
     }
-    const mesh = renderer.caches.getMesh(device, this.cube, renderer.attributes)
+    const skyboxMesh = renderer.getResource(SkyBoxMesh)
+
+    assert(skyboxMesh, "SkyBoxMesh resource missing")
+    const mesh = renderer.caches.getMesh(device, skyboxMesh.cube, renderer.attributes)
     const uniforms = new SkyBoxGroup(object.lerp)
     
     if (object.day) {
