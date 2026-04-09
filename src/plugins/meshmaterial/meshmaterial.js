@@ -5,17 +5,16 @@ import { assert } from '../../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../../core/index.js";
 import { RawMaterial } from "../../material/index.js";
 import { Mesh, Attribute } from "../../mesh/index.js";
-import { MeshMaterial3D, Object3D } from "../../objects/index.js";
-import { Plugin, RenderItem, WebGLRenderer } from "../../renderer/index.js";
+import { Camera, MeshMaterial3D, Object3D } from "../../objects/index.js";
+import { FillViewsNode, Plugin, RenderItem, Views, WebGLRenderer } from "../../renderer/index.js";
 import { Sampler, Texture } from "../../texture/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat } from '../../constants/index.js';
 import { Caches } from '../../caches/index.js';
 import { ShadowMap } from '../shadow/index.js';
+import { CameraViewNode } from '../camera/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
-
   /**
-   * @private
    * @type {Map<string,Map<PipelineKey, number>>}
    */
   materials = new Map()
@@ -26,36 +25,94 @@ export class MeshMaterialPlugin extends Plugin {
    */
   init(renderer) {
     renderer.uniformBinders.set(MeshMaterial3D.name, uploadUniforms)
+    renderer.renderGraph.addNode(MeshMaterialNode.name, new MeshMaterialNode(this))
+    renderer.renderGraph.addDependency(CameraViewNode.name, MeshMaterialNode.name)
+    renderer.renderGraph.addDependency(MeshMaterialNode.name, FillViewsNode.name)
   }
 
   /**
    * @override
    */
   preprocess() { }
+}
+
+export class MeshMaterialNode {
+  /**
+   * @private
+   * @type {MeshMaterialPlugin}
+   */
+  plugin
 
   /**
-   * @override
-   * @param {Object3D} object
-   * @param {WebGLRenderDevice} device
-   * @param {WebGLRenderer} renderer
+   * @param {MeshMaterialPlugin} plugin
    */
-  getRenderItem(object, device, renderer) {
-    if (!(object instanceof MeshMaterial3D)) {
-      return
-    }
+  constructor(plugin) {
+    this.plugin = plugin
+  }
 
-    const { caches, attributes } = renderer
-    const { material, mesh, transform } = object
-    const gpuMesh = caches.getMesh(device, mesh, attributes)
-    const meshBits = createPipelineBitsFromMesh(mesh, object)
-    const materialBits = material.getPipelineBits()
-    const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
-    const pipelineId = this.getMaterialRenderPipelineId(device, caches, material, pipelineKey, () => {
-      const meshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
+  /**
+   * @param {import("../../renderer/graph/index.js").RenderGraphContext} context
+   */
+  execute(context) {
+    const { renderer, renderDevice, objects } = context
+    const views = renderer.getResource(Views)
+
+    assert(views, "Views resource missing")
+
+    for (const view of views.items()) {
+      if (view.tag !== Camera.name) {
+        continue
+      }
+
+      const opaqueStage = view.renderStage.opaque || []
+      view.renderStage.opaque = opaqueStage
+
+      for (let i = 0; i < objects.length; i++) {
+        const object = /**@type {Object3D} */ (objects[i])
+
+        object.traverseDFS((child) => {
+          const item = createMeshMaterialRenderItem(this.plugin, child, renderDevice, renderer)
+
+          if (item) {
+            opaqueStage.push(item)
+          }
+          return true
+        })
+      }
+    }
+  }
+}
+
+/**
+ * @param {MeshMaterialPlugin} plugin
+ * @param {Object3D} object
+ * @param {WebGLRenderDevice} device
+ * @param {WebGLRenderer} renderer
+ * @returns {RenderItem | undefined}
+ */
+function createMeshMaterialRenderItem(plugin, object, device, renderer) {
+  if (!(object instanceof MeshMaterial3D)) {
+    return
+  }
+
+  const { caches, attributes } = renderer
+  const { material, mesh, transform } = object
+  const gpuMesh = caches.getMesh(device, mesh, attributes)
+  const meshBits = createPipelineBitsFromMesh(mesh, object)
+  const materialBits = material.getPipelineBits()
+  const pipelineKey = createPipelineKey(gpuMesh.layoutHash, meshBits, materialBits)
+  const pipelineId = getMaterialRenderPipelineId(
+    plugin.materials,
+    device,
+    caches,
+    material,
+    pipelineKey,
+    () => {
+      const keyMeshBits = pipelineKey >> GeneralPipelineKeyShiftBits.MeshBits
       const meshLayout = caches.getMeshVertexLayout(gpuMesh.layoutHash)
       const { defines, includes } = renderer
       assert(meshLayout, "Mesh layout not available")
-      const shaderdefs = getShaderDefs(meshLayout, meshBits, defines)
+      const shaderdefs = getShaderDefs(meshLayout, keyMeshBits, defines)
       /**
        * @type {WebGLRenderPipelineDescriptor}
        */
@@ -87,63 +144,64 @@ export class MeshMaterialPlugin extends Plugin {
       material.specialize(descriptor)
 
       return descriptor
-    })
-
-    const uniforms = new MaterialBindGroup({
-      textures: object.material.getTextures(),
-      data: material.getData(),
-    })
-
-    if (object.skin) {
-      object.skin.bindMatrix.copy(object.transform.world)
-      object.skin.inverseBindMatrix.copy(object.skin.bindMatrix).invert()
-      object.skin.updateTexture()
-      const texture = caches.getTexture(device, object.skin.boneTexture)
-
-      uniforms.boneTransforms = texture
     }
-    const item = new RenderItem({
-      uniforms,
-      mesh: gpuMesh,
-      pipelineId,
-      tag: MeshMaterial3D.name,
-      transform: transform.world
-    })
+  )
 
-    return item
+  const uniforms = new MaterialBindGroup({
+    textures: object.material.getTextures(),
+    data: material.getData(),
+  })
+
+  if (object.skin) {
+    object.skin.bindMatrix.copy(object.transform.world)
+    object.skin.inverseBindMatrix.copy(object.skin.bindMatrix).invert()
+    object.skin.updateTexture()
+    const texture = caches.getTexture(device, object.skin.boneTexture)
+
+    uniforms.boneTransforms = texture
+  }
+  const item = new RenderItem({
+    uniforms,
+    mesh: gpuMesh,
+    pipelineId,
+    tag: MeshMaterial3D.name,
+    transform: transform.world
+  })
+
+  return item
+}
+
+/**
+ * @param {Map<string,Map<PipelineKey, number>>} materials
+ * @param {WebGLRenderDevice} device
+ * @param {Caches} caches
+ * @param {RawMaterial} material
+ * @param {PipelineKey} key
+ * @param {() => WebGLRenderPipelineDescriptor} compute
+ * @returns {number}
+ */
+function getMaterialRenderPipelineId(materials, device, caches, material, key, compute) {
+  const name = material.constructor.name
+  let materialCache = materials.get(name)
+
+  if (!materialCache) {
+    const newCache = new Map()
+
+    materialCache = newCache
+    materials.set(name, newCache)
   }
 
-  /**
-   * @param {WebGLRenderDevice} device
-   * @param {Caches} caches
-   * @param {RawMaterial} material
-   * @param {PipelineKey} key
-   * @param {() => WebGLRenderPipelineDescriptor} compute
-   * @returns {number}
-   */
-  getMaterialRenderPipelineId(device, caches, material, key, compute) {
-    const name = material.constructor.name
-    let materialCache = this.materials.get(name)
+  const id = materialCache.get(key)
 
-    if (!materialCache) {
-      const newCache = new Map()
-
-      materialCache = newCache
-      this.materials.set(name, newCache)
-    }
-
-    const id = materialCache.get(key)
-
-    if (id !== undefined) {
-      return id
-    }
-
-    const descriptor = compute()
-    const [_, newId] = caches.createRenderPipeline(device, descriptor)
-
-    materialCache.set(key, newId)
-    return newId
+  if (id !== undefined) {
+    return id
   }
+
+  const descriptor = compute()
+  const [_, newId] = caches.createRenderPipeline(device, descriptor)
+
+  materialCache.set(key, newId)
+  return newId
 }
 
 class MaterialBindGroup {
