@@ -169,9 +169,7 @@ export class WebGLRenderer {
     this.renderGraph.execute({
       renderer: this,
       objects,
-      renderDevice,
-      views: views.items(),
-      sortedViews: []
+      renderDevice
     })
   }
 }

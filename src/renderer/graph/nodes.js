@@ -7,6 +7,7 @@
 /** @import { WebGLRenderer } from "../renderer.js" */
 import { assert } from "../../utils/index.js"
 import { ViewFillers } from "../viewfillers.js"
+import { Views } from "../views.js"
 
 /**
  * @param {WebGLRenderDevice} device
@@ -29,13 +30,17 @@ export class FillViewsNode {
    * @param {RenderGraphContext} context
    */
   execute(context) {
-    const { views, renderer, objects, renderDevice } = context
+    const { renderer, objects, renderDevice } = context
     const viewFillers = renderer.getResource(ViewFillers)
+    const views = renderer.getResource(Views)
 
     assert(viewFillers, "ViewFillers resource missing")
+    assert(views, "Views resource missing")
 
-    for (let i = 0; i < views.length; i++) {
-      const view = /** @type {View} */ (views[i])
+    const viewItems = views.items()
+
+    for (let i = 0; i < viewItems.length; i++) {
+      const view = /** @type {View} */ (viewItems[i])
       const fill = viewFillers.get(view.tag)
 
       runViewFiller(renderDevice, renderer, objects, renderer.plugins, view, fill)
@@ -48,7 +53,11 @@ export class SortViewsNode {
    * @param {RenderGraphContext} context
    */
   execute(context) {
-    context.sortedViews = context.views
+    const views = context.renderer.getResource(Views)
+
+    assert(views, "Views resource missing")
+
+    const sorted = views.items()
       .map((view, index) => ({ view, index }))
       .sort((a, b) => {
         const order = a.view.order - b.view.order
@@ -60,6 +69,9 @@ export class SortViewsNode {
         return a.index - b.index
       })
       .map((entry) => entry.view)
+
+    views.clear()
+    views.push(...sorted)
   }
 }
 
@@ -69,10 +81,13 @@ export class RenderViewsNode {
    */
   execute(context) {
     const { renderer, renderDevice } = context
-    const sortedViews = context.sortedViews.length > 0 ? context.sortedViews : context.views
+    const views = renderer.getResource(Views)
 
-    for (let i = 0; i < sortedViews.length; i++) {
-      const view = /** @type {View} */ (sortedViews[i])
+    assert(views, "Views resource missing")
+    const viewItems = views.items()
+
+    for (let i = 0; i < viewItems.length; i++) {
+      const view = /** @type {View} */ (viewItems[i])
 
       renderer.updateUBO(renderDevice.context, view.getData())
       view.renderItems(renderDevice, renderer, renderer.uniformBinders)

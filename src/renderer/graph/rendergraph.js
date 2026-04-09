@@ -11,8 +11,6 @@ import { assert } from "../../utils/index.js"
  * @property {import("../renderer.js").WebGLRenderer} renderer
  * @property {import("../../objects/index.js").Object3D[]} objects
  * @property {import("../../core/index.js").WebGLRenderDevice} renderDevice
- * @property {import("../core/index.js").View[]} views
- * @property {import("../core/index.js").View[]} sortedViews
  */
 
 export class RenderGraph {
