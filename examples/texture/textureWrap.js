@@ -29,8 +29,8 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 })
 const renderer = new WebGLRenderer({
   plugins:[
+    new CameraPlugin(),
     new MeshMaterialPlugin(),
-    new CameraPlugin()
   ]
 })
 const camera = new Camera(renderTarget)

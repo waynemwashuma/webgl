@@ -32,10 +32,10 @@ const renderDevice = new WebGLRenderDevice(canvas,{
 })
 const renderer = new WebGLRenderer({
   plugins: [
+    new CameraPlugin(),
     new LightPlugin(),
     new SkyboxPlugin(),
     new MeshMaterialPlugin(),
-    new CameraPlugin(),
   ]
 })
 
