@@ -1,4 +1,4 @@
-import { Plugin, RenderViewsNode, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
+import { Plugin, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
 import { CameraNode, CameraViewNode } from "./nodes/index.js";
 
 export class CameraPlugin extends Plugin {
@@ -10,7 +10,7 @@ export class CameraPlugin extends Plugin {
     renderer.renderGraph.addNode(CameraViewNode.name, new CameraViewNode())
     renderer.renderGraph.addNode(CameraNode.name, new CameraNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, SortViewsNode.name)
-    renderer.renderGraph.addDependency(RenderViewsNode.name, CameraNode.name)
+    renderer.renderGraph.addDependency(SortViewsNode.name, CameraNode.name)
   }
   /**
    * @override

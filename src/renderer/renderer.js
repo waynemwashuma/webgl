@@ -7,7 +7,7 @@ import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
-import { RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
+import { RenderGraph, SortViewsNode } from "./graph/index.js"
 import { Views } from "./views.js"
 
 export class WebGLRenderer {
@@ -92,8 +92,6 @@ export class WebGLRenderer {
 
     this.renderGraph = new RenderGraph()
     this.renderGraph.addNode(SortViewsNode.name, new SortViewsNode())
-    this.renderGraph.addNode(RenderViewsNode.name, new RenderViewsNode())
-    this.renderGraph.addDependency(SortViewsNode.name, RenderViewsNode.name)
 
     for (let i = 0; i < plugins.length; i++) {
       const plugin = /**@type {Plugin} */ (plugins[i]);
