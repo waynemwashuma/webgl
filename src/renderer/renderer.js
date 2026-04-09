@@ -1,4 +1,4 @@
-/** @import { UniformBinder, View } from "./core/index.js" */
+/** @import { UniformBinder } from "./core/index.js" */
 import { WebGLDeviceLimits, WebGLRenderDevice } from "../core/index.js"
 import { Object3D } from "../objects/index.js"
 import { colorShaderLib, commonShaderLib, lightShaderLib, mathShaderLib } from "../shader/index.js"
@@ -7,8 +7,7 @@ import { assert } from '../utils/index.js'
 import { Caches } from "../caches/index.js"
 import { Attribute } from "../mesh/index.js"
 import { Plugin } from "./plugin.js"
-import { FillViewsNode, RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
-import { ViewFillers } from "./viewfillers.js"
+import { RenderGraph, RenderViewsNode, SortViewsNode } from "./graph/index.js"
 import { Views } from "./views.js"
 
 export class WebGLRenderer {
@@ -89,14 +88,11 @@ export class WebGLRenderer {
       .set(Attribute.Color.name, Attribute.Color)
       .set(Attribute.JointIndex.name, Attribute.JointIndex)
       .set(Attribute.JointWeight.name, Attribute.JointWeight)
-    this.setResource(new ViewFillers())
     this.setResource(new Views())
 
     this.renderGraph = new RenderGraph()
-    this.renderGraph.addNode(FillViewsNode.name, new FillViewsNode())
     this.renderGraph.addNode(SortViewsNode.name, new SortViewsNode())
     this.renderGraph.addNode(RenderViewsNode.name, new RenderViewsNode())
-    this.renderGraph.addDependency(FillViewsNode.name, SortViewsNode.name)
     this.renderGraph.addDependency(SortViewsNode.name, RenderViewsNode.name)
 
     for (let i = 0; i < plugins.length; i++) {
@@ -173,16 +169,6 @@ export class WebGLRenderer {
     })
   }
 }
-
-/**
- * @callback ViewFiller
- * @param {WebGLRenderDevice} device
- * @param {WebGLRenderer} renderer
- * @param {readonly Object3D[]} objects
- * @param {readonly Plugin[]} plugins
- * @param {View} view
- * @return {void}
- */
 
 /**
  * @typedef WebGLRendererOptions

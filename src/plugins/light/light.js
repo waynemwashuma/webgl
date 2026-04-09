@@ -3,7 +3,7 @@ import { DirectionalLight } from "../../light/directional.js";
 import { AmbientLight, PointLight, SpotLight } from "../../light/index.js";
 import { Object3D } from "../../objects/index.js";
 import { Plugin, WebGLRenderer } from "../../renderer/index.js";
-import { FillViewsNode } from "../../renderer/graph/index.js";
+import { SortViewsNode } from "../../renderer/graph/index.js";
 import { ShadowMap } from "../shadow/index.js";
 
 export class LightPlugin extends Plugin {
@@ -18,7 +18,7 @@ export class LightPlugin extends Plugin {
       .set("MAX_SPOT_LIGHTS", "10")
 
     renderer.renderGraph.addNode(LightNode.name, new LightNode())
-    renderer.renderGraph.addDependency(LightNode.name, FillViewsNode.name)
+    renderer.renderGraph.addDependency(LightNode.name, SortViewsNode.name)
   }
   /**
    * @override

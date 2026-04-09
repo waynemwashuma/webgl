@@ -1,4 +1,4 @@
-import { FillViewsNode, Plugin, WebGLRenderer } from "../../renderer/index.js";
+import { Plugin, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
 import { ShadowMap, ShadowPipelines } from "./resources";
 import { ShadowOccluderNode, ShadowViewNode } from "./nodes";
 
@@ -16,7 +16,7 @@ export class ShadowPlugin extends Plugin {
     renderer.renderGraph.addNode(ShadowViewNode.name, new ShadowViewNode())
     renderer.renderGraph.addNode(ShadowOccluderNode.name, new ShadowOccluderNode())
     renderer.renderGraph.addDependency(ShadowViewNode.name, ShadowOccluderNode.name)
-    renderer.renderGraph.addDependency(ShadowOccluderNode.name, FillViewsNode.name)
+    renderer.renderGraph.addDependency(ShadowOccluderNode.name, SortViewsNode.name)
     
   }
 

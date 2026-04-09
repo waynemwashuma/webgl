@@ -5,7 +5,7 @@ import { assert } from '../../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../../core/index.js";
 import { Mesh, Attribute } from "../../mesh/index.js";
 import { Camera, MeshMaterial3D, Object3D } from "../../objects/index.js";
-import { FillViewsNode, Plugin, RenderItem, Views, WebGLRenderer } from "../../renderer/index.js";
+import { Plugin, RenderItem, SortViewsNode, Views, WebGLRenderer } from "../../renderer/index.js";
 import { Sampler, Texture } from "../../texture/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat } from '../../constants/index.js';
 import { Caches } from '../../caches/index.js';
@@ -23,7 +23,7 @@ export class MeshMaterialPlugin extends Plugin {
     renderer.uniformBinders.set(MeshMaterial3D.name, uploadUniforms)
     renderer.renderGraph.addNode(MeshMaterialNode.name, new MeshMaterialNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, MeshMaterialNode.name)
-    renderer.renderGraph.addDependency(MeshMaterialNode.name, FillViewsNode.name)
+    renderer.renderGraph.addDependency(MeshMaterialNode.name, SortViewsNode.name)
   }
 
   /**

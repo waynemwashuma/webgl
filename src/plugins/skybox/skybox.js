@@ -3,7 +3,7 @@ import { CompareFunction, MeshVertexLayout, Shader, WebGLRenderDevice } from "..
 import { Matrix4 } from "../../math/index.js";
 import { CullFace, PrimitiveTopology, TextureFilter, TextureFormat } from "../../constants/index.js";
 import { Camera, Object3D, SkyBox } from "../../objects/index.js";
-import { FillViewsNode, Plugin, RenderItem, Views, WebGLRenderer } from "../../renderer/index.js";
+import { Plugin, RenderItem, SortViewsNode, Views, WebGLRenderer } from "../../renderer/index.js";
 import { skyboxFragment, skyboxVertex } from "../../shader/index.js";
 import { Sampler } from "../../texture/index.js";
 import { assert } from "../../utils/index.js";
@@ -22,7 +22,7 @@ export class SkyboxPlugin extends Plugin {
     renderer.uniformBinders.set(SkyBox.name, uploadUniforms)
     renderer.renderGraph.addNode(SkyBoxNode.name, new SkyBoxNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, SkyBoxNode.name)
-    renderer.renderGraph.addDependency(SkyBoxNode.name, FillViewsNode.name)
+    renderer.renderGraph.addDependency(SkyBoxNode.name, SortViewsNode.name)
   }
 }
 
