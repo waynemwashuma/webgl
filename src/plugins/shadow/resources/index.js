@@ -1,2 +1,2 @@
-export * from './ShadowMap'
-export * from './shadowpipelines'
+export * from './ShadowMap.js'
+export * from './shadowpipelines.js'

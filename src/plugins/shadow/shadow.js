@@ -1,6 +1,6 @@
 import { Plugin, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
-import { ShadowMap, ShadowPipelines } from "./resources";
-import { ShadowOccluderNode, ShadowViewNode } from "./nodes";
+import { ShadowMap, ShadowPipelines } from "./resources/index.js";
+import { ShadowOccluderNode, ShadowViewNode } from "./nodes/index.js";
 
 export class ShadowPlugin extends Plugin {
   /**

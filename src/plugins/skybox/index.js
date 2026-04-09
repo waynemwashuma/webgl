@@ -1,3 +1,3 @@
 export * from './skybox.js'
-export * from './skyboxpipeline.js'
-export * from './skyboxmesh.js'
+export * from './nodes/index.js'
+export * from './resources/index.js'

@@ -4,13 +4,14 @@
 import { assert } from '../../utils/index.js'
 import { MeshVertexLayout, Shader, Uniform, WebGLRenderDevice } from "../../core/index.js";
 import { Mesh, Attribute } from "../../mesh/index.js";
-import { Camera, MeshMaterial3D, Object3D } from "../../objects/index.js";
-import { Plugin, RenderItem, SortViewsNode, Views, WebGLRenderer } from "../../renderer/index.js";
+import { MeshMaterial3D, Object3D } from "../../objects/index.js";
+import { Plugin, RenderItem, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
 import { Sampler, Texture } from "../../texture/index.js";
 import { PrimitiveTopology, TextureFilter, TextureFormat } from '../../constants/index.js';
 import { Caches } from '../../caches/index.js';
 import { ShadowMap } from '../shadow/index.js';
 import { CameraViewNode } from '../camera/index.js';
+import { MeshMaterialNode } from './nodes/index.js';
 import { MeshMaterialPipelines } from './resources/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
@@ -32,42 +33,6 @@ export class MeshMaterialPlugin extends Plugin {
   preprocess() { }
 }
 
-export class MeshMaterialNode {
-  /**
-   * @param {import("../../renderer/graph/index.js").RenderGraphContext} context
-   */
-  execute(context) {
-    const { renderer, renderDevice, objects } = context
-    const views = renderer.getResource(Views)
-    const pipelines = renderer.getResource(MeshMaterialPipelines)
-
-    assert(views, "Views resource missing")
-    assert(pipelines, "MeshMaterialPipelines resource missing")
-
-    for (const view of views.items()) {
-      if (view.tag !== Camera.name) {
-        continue
-      }
-
-      const opaqueStage = view.renderStage.opaque || []
-      view.renderStage.opaque = opaqueStage
-
-      for (let i = 0; i < objects.length; i++) {
-        const object = /**@type {Object3D} */ (objects[i])
-
-        object.traverseDFS((child) => {
-          const item = createMeshMaterialRenderItem(child, renderDevice, renderer, pipelines)
-
-          if (item) {
-            opaqueStage.push(item)
-          }
-          return true
-        })
-      }
-    }
-  }
-}
-
 /**
  * @param {Object3D} object
  * @param {WebGLRenderDevice} device
@@ -75,7 +40,7 @@ export class MeshMaterialNode {
  * @param {MeshMaterialPipelines} pipelines
  * @returns {RenderItem | undefined}
  */
-function createMeshMaterialRenderItem(object, device, renderer, pipelines) {
+export function createMeshMaterialRenderItem(object, device, renderer, pipelines) {
   if (!(object instanceof MeshMaterial3D)) {
     return
   }

@@ -1,2 +1,3 @@
 export * from './shadow.js'
-export * from './resources'
+export * from './nodes/index.js'
+export * from './resources/index.js'

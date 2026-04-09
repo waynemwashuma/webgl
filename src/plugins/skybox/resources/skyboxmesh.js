@@ -1,4 +1,4 @@
-import { CuboidMeshBuilder } from "../../mesh/index.js";
+import { CuboidMeshBuilder } from "../../../mesh/index.js";
 
 export class SkyBoxMesh {
   cube
