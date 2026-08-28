@@ -1,5 +1,5 @@
 import { Plugin, SortViewsNode, WebGLRenderer } from "../../renderer/index.js";
-import { SkyboxPipeline, SkyBoxMesh, SkyBoxUniforms } from "./resources/index.js";
+import { SkyboxPipeline, SkyBoxUniforms } from "./resources/index.js";
 import { SkyBoxNode } from "./nodes/index.js";
 import { CameraViewNode } from "../camera/index.js";
 
@@ -10,7 +10,6 @@ export class SkyboxPlugin extends Plugin {
    */
   init(renderer) {
     renderer.setResource(new SkyboxPipeline())
-    renderer.setResource(new SkyBoxMesh())
     renderer.setResource(new SkyBoxUniforms())
     renderer.renderGraph.addNode(SkyBoxNode.name, new SkyBoxNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, SkyBoxNode.name)

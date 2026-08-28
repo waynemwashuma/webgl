@@ -2,10 +2,10 @@
 import { CompareFunction, MeshVertexLayout, Shader } from "../../../core/index.js"
 import { CullFace, PrimitiveTopology, TextureFormat } from "../../../constants/index.js"
 import { Camera, Object3D, SkyBox } from "../../../objects/index.js"
-import { RenderItem, ViewBindGroups, Views } from "../../../renderer/index.js"
-import { skyboxFragment, skyboxVertex } from "../../../shader/index.js"
+import { NonMeshRenderItem, ViewBindGroups, Views } from "../../../renderer/index.js"
+import { fullscreenVertex, skyboxFragment } from "../../../shader/index.js"
 import { assert } from "../../../utils/index.js"
-import { SkyboxPipeline, SkyBoxMesh, SkyBoxUniforms } from "../resources/index.js"
+import { SkyboxPipeline, SkyBoxUniforms } from "../resources/index.js"
 /** @import { Texture } from "../../../texture/index.js" */
 
 export class SkyBoxNode {
@@ -60,23 +60,22 @@ export class SkyBoxNode {
  * @param {import("../../../core/index.js").WebGLRenderDevice} device
  * @param {import("../../../renderer/index.js").WebGLRenderer} renderer
  * @param {import("../../../renderer/index.js").View} view
- * @returns {RenderItem | undefined}
+ * @returns {NonMeshRenderItem | undefined}
  */
 function createSkyboxRenderItem(object, device, renderer, view) {
-  const skyboxMesh = renderer.getResource(SkyBoxMesh)
   const skyboxPipeline = renderer.getResource(SkyboxPipeline)
 
-  assert(skyboxMesh, "SkyBoxMesh resource missing")
   assert(skyboxPipeline, "SkyboxPipeline resource missing")
 
-  const day = object.day ?? object.night
-  const night = object.night ?? object.day
+  const texture = object.day ?? object.night
 
-  if (!day || !night) {
+  if (!texture) {
     return undefined
   }
 
-  const mesh = renderer.caches.getMesh(device, skyboxMesh.cube, renderer.attributes)
+  const day = /** @type {Texture} */ (object.day ?? texture)
+  const night = /** @type {Texture} */ (object.night ?? texture)
+
   const pipelineId = getSkyboxRenderPipeline(device, renderer, view)
   const pipeline = renderer.caches.getRenderPipeline(pipelineId)
   const skyboxBlockLayout = pipeline?.uniformBlocks.get("SkyBoxBlock")
@@ -95,12 +94,10 @@ function createSkyboxRenderItem(object, device, renderer, view) {
     object
   )
 
-  return new RenderItem({
+  return new NonMeshRenderItem({
     pipelineId,
     bindGroup,
     tag: SkyBox.name,
-    transform: object.transform.world,
-    mesh
   })
 }
 
@@ -128,7 +125,7 @@ function getSkyboxRenderPipeline(device, renderer, view) {
     return skyboxPipeline.pipelineId
   }
   const vertexShader = new Shader({
-    source: skyboxVertex,
+    source: fullscreenVertex,
     defines: new Map(globalDefines),
     includes: new Map(includes)
   })
@@ -144,7 +141,7 @@ function getSkyboxRenderPipeline(device, renderer, view) {
   const descriptor = {
     depthWrite: false,
     depthCompare: CompareFunction.Lequal,
-    cullFace: CullFace.Front,
+    cullFace: CullFace.None,
     topology: PrimitiveTopology.Triangles,
     vertexLayout: new MeshVertexLayout([]),
     vertex: device.createShaderModule({
