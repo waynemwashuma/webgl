@@ -33,6 +33,8 @@ struct SpotLight {
 
 struct Shadow {
   mat4 space;
+  vec2 offset;
+  vec2 size;
   float bias;
   float normal_bias;
   float layer;
@@ -160,9 +162,10 @@ float shadow_compare_2d(
   float current_depth,
   float bias
 ){
+  vec2 shadow_uv = clamp(shadow_map_postion.xy, shadow.offset, shadow.offset + shadow.size);
   float shadow_map_depth = texture(
     shadow_atlas,
-    vec3(shadow_map_postion.xy, shadow.layer)
+    vec3(shadow_uv, shadow.layer)
   ).r;
 
   return current_depth - bias > shadow_map_depth ? 0.0 : 1.0;
@@ -176,7 +179,7 @@ float shadow_compare_cube(
   float bias
 ){
   vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
-  vec2 shadow_uv = ndc_uv.xy * 0.5 + 0.5;
+  vec2 shadow_uv = clamp(ndc_uv.xy * 0.5 + 0.5, shadow.offset, shadow.offset + shadow.size);
   float shadow_map_depth = texture(
     shadow_atlas,
     vec3(shadow_uv.xy, shadow.layer + ndc_uv.z)
@@ -289,9 +292,10 @@ float shadow_pcss_2d(
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
       vec2 sample_offset = vec2(float(x), float(y)) * search_step;
+      vec2 sample_uv = clamp(shadow_map_postion.xy + sample_offset, shadow.offset, shadow.offset + shadow.size);
       float sample_depth = texture(
         shadow_atlas,
-        vec3(shadow_map_postion.xy + sample_offset, shadow.layer)
+        vec3(sample_uv, shadow.layer)
       ).r;
       if (sample_depth < current_depth - bias) {
         blocker_sum += sample_depth;
@@ -343,7 +347,7 @@ float shadow_pcss_cube(
       vec2 sample_uv = ndc_uv.xy + sample_offset;
       vec3 sample_direction = map_cube_to_array_texture_direction(ndc_uv.z, sample_uv);
       vec3 sample_ndc = map_cube_from_array_texture_ndc(sample_direction);
-      vec2 sample_shadow_uv = sample_ndc.xy * 0.5 + 0.5;
+      vec2 sample_shadow_uv = clamp(sample_ndc.xy * 0.5 + 0.5, shadow.offset, shadow.offset + shadow.size);
       float shadow_map_depth = texture(
         shadow_atlas,
         vec3(sample_shadow_uv.xy, shadow.layer + sample_ndc.z)
@@ -384,6 +388,7 @@ float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 po
   vec4 clipped_position = shadow.space * vec4(position, 1.0);
   vec3 ndc_position = clipped_position.xyz / clipped_position.w;
   vec3 shadow_map_postion = ndc_position * 0.5 + 0.5;
+  vec2 shadow_map_uv = shadow.offset + shadow_map_postion.xy * shadow.size;
 
   if(
     shadow_map_postion.x < 0.0 || shadow_map_postion.x > 1.0 ||
@@ -396,15 +401,15 @@ float shadow_contribution_2d(Shadow shadow, sampler2DArray shadow_atlas, vec3 po
   float bias = shadow.bias + normal_bias;
 
   if (shadow.mode == 0u) {
-    return shadow_compare_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+    return shadow_compare_2d(shadow, shadow_atlas, vec3(shadow_map_uv, shadow_map_postion.z), current_depth, bias);
   }
   if (shadow.mode == 1u) {
-    return shadow_pcf_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+    return shadow_pcf_2d(shadow, shadow_atlas, vec3(shadow_map_uv, shadow_map_postion.z), current_depth, bias);
   }
   if (shadow.mode == 2u) {
-    return shadow_pcss_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+    return shadow_pcss_2d(shadow, shadow_atlas, vec3(shadow_map_uv, shadow_map_postion.z), current_depth, bias);
   }
-  return shadow_pcf_2d(shadow, shadow_atlas, shadow_map_postion, current_depth, bias);
+  return shadow_pcf_2d(shadow, shadow_atlas, vec3(shadow_map_uv, shadow_map_postion.z), current_depth, bias);
 }
 
 float shadow_contribution_cube(Shadow shadow, sampler2DArray shadow_atlas, vec3 position, float NdotL){
@@ -419,7 +424,6 @@ float shadow_contribution_cube(Shadow shadow, sampler2DArray shadow_atlas, vec3 
   float current_depth = distance / far;
   
   vec3 ndc_uv = map_cube_from_array_texture_ndc(direction);
-  vec2 shadow_uv = ndc_uv.xy * 0.5 + 0.5;
   
   float normal_bias = shadow.normal_bias * (1.0 - NdotL);
   float bias = shadow.bias + normal_bias;

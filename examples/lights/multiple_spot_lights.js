@@ -31,6 +31,7 @@ import {
   CameraPlugin
 } from "chorama"
 import { GUI } from "dat.gui"
+import Stats from "stats.js"
 import { addRenderGraphGuiAddon } from "chorama"
 
 const canvas = document.createElement('canvas')
@@ -81,6 +82,8 @@ arrowBuilder.depth = 1
 const ambientLight = new AmbientLight()
 const sun = new DirectionalLight()
 const spotShadow = new SpotLightShadow()
+spotShadow.resolution.x = 2048
+spotShadow.resolution.y = 2048
 const lights = createLights()
 const camera = new Camera(renderTarget)
 const cameraControls = new OrbitCameraControls(camera, canvas)
@@ -175,9 +178,11 @@ function createLights() {
 }
 
 function update() {
+  stats.begin()
   cameraControls.update()
   lights.transform.orientation.rotateY(0.01)
   renderer.render([ground, ...objects, sun, lights, ambientLight, skyBox, camera], renderDevice)
+  stats.end()
   requestAnimationFrame(update)
 }
 
@@ -225,6 +230,7 @@ const shadowFilterSettings = {
   }
 }
 // demo-only GUI controls
+const maxShadowResolution = renderDevice.limits.maxTextureDimension2D
 const controls = new GUI()
 const shadowFolder = controls.addFolder("Shadows")
 /**
@@ -240,6 +246,12 @@ shadowFolder
   .add(settings, 'shadow')
   .name("Enable Shadow")
   .onChange(toggleShadows)
+shadowFolder
+  .add(spotShadow.resolution, 'x', 1, maxShadowResolution, 64)
+  .name("Resolution X")
+shadowFolder
+  .add(spotShadow.resolution, 'y', 1, maxShadowResolution, 64)
+  .name("Resolution Y")
 spotShadow.filterMode = undefined
 shadowFolder
   .add(shadowFilterSettings, 'mode', ['None', 'PCF', 'PCSS'])
@@ -304,3 +316,11 @@ addRenderGraphGuiAddon({
   gui: controls,
   renderer
 })
+
+// demo-only performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.style.position = "fixed"
+stats.dom.style.top = "0"
+stats.dom.style.left = "0"

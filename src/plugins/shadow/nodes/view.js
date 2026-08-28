@@ -3,13 +3,13 @@ import { DirectionalLight, SpotLight, PointLight, PCFShadowFilter, PCSSShadowFil
 import { Object3D, PerspectiveProjection } from "../../../objects"
 import { Views, View, ViewBindGroups, ViewBindings } from "../../../renderer"
 import { ViewUniformBuffer } from "../../../renderer/resources/index.js"
+import { Vector2 } from "../../../math/index.js"
 import {
-  SHADOW_CASTER_BYTE_SIZE,
   ShadowCasterUniformBuffer,
   ShadowViewBindings,
   ShadowMap
 } from "../resources/index.js"
-import { assert } from "../../../utils"
+import { assert, ViewRectangle } from "../../../utils/index.js"
 import { BoneTextureResource } from "../../meshmaterial/resources/index.js"
 
 export class ShadowViewNode {
@@ -36,11 +36,19 @@ export class ShadowViewNode {
     assert(viewBindGroups, "ViewBindGroups resource missing")
     assert(viewUniformBuffer, "ViewUniformBuffer resource missing")
 
+    const maxShadowCasters = shadowCasterUniform.capacity
+    let shadowCasterOverflow = false
+
     shadowMap.reset()
-    for (let i = 0; i < objects.length; i++) {
+    for (let i = 0; i < objects.length && !shadowCasterOverflow; i++) {
       const object = /**@type {Object3D} */ (objects[i]);
 
       object.traverseDFS((object) => {
+        if (blocks.length >= maxShadowCasters) {
+          shadowCasterOverflow = true
+          return false
+        }
+
         const area = shadowMap.getOrSet(object)
         const items = object instanceof DirectionalLight ?
           buildDirectionalShadowPass(object, shadowMap) :
@@ -71,15 +79,19 @@ export class ShadowViewNode {
       })
     }
 
-    const data = new ArrayBuffer(blocks.length * SHADOW_CASTER_BYTE_SIZE)
+    const data = new ArrayBuffer(blocks.length * ShadowCasterUniformBuffer.BlockSize)
     const view = new DataView(data)
 
     for (let i = 0; i < blocks.length; i++) {
       // SAFETY: The array is dense
-      /**@type {ShadowItem}*/(blocks[i]).write(view, i * SHADOW_CASTER_BYTE_SIZE)
+      /**@type {ShadowItem}*/(blocks[i]).write(view, i * ShadowCasterUniformBuffer.BlockSize)
     }
 
     shadowCasterUniform.setData(data)
+
+    if (shadowCasterOverflow) {
+      console.error(`Maximum shadow caster capacity reached (${maxShadowCasters}), some shadows will be ignored`)
+    }
     }
 }
 
@@ -116,13 +128,21 @@ function buildDirectionalShadowPass(light, shadowMap) {
 
   if (!shadow) return
 
-  const layer = shadowMap.getTarget()
+  const allocation = shadowMap.allocate(shadow.resolution, 1)
+
+  if (!allocation) {
+    return
+  }
+
   const shadowItem = new ShadowItem()
   const projectionMatrix = shadow.projection.asProjectionMatrix(shadow.near, shadow.far)
   const viewMatrix = Affine3.toMatrix4(light.transform.world).invert()
+  const viewport = createViewport(allocation, shadowMap)
   const view = new View({
-    colorLayer: layer,
-    depthLayer: layer,
+    viewport,
+    scissor: viewport,
+    colorLayer: allocation.layer,
+    depthLayer: allocation.layer,
     colorMipmapLevel: 0,
     depthMipmapLevel: 0,
     position: light.transform.position,
@@ -136,9 +156,7 @@ function buildDirectionalShadowPass(light, shadowMap) {
   })
 
 
-  shadowItem.layer = layer
-  shadowItem.bias = shadow.bias
-  shadowItem.normalBias = shadow.normalBias
+  writePackedRegion(shadowItem, allocation, shadowMap, shadow)
   packShadowMode(shadowItem,shadow.filterMode)
   Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
@@ -156,16 +174,23 @@ function buildSpotShadowPass(light, shadowMap) {
   if (!shadow) {
     return
   }
-  const layer = shadowMap.getTarget()
+  const allocation = shadowMap.allocate(shadow.resolution, 1)
+
+  if (!allocation) {
+    return
+  }
   const shadowItem = new ShadowItem()
   const viewMatrix = Affine3.toMatrix4(light.transform.world).invert()
   const projectionMatrix = new PerspectiveProjection(light.outerAngle, 1).asProjectionMatrix(
     shadow.near,
     light.range
   )
+  const viewport = createViewport(allocation, shadowMap)
   const view = new View({
-    colorLayer: layer,
-    depthLayer: layer,
+    viewport,
+    scissor: viewport,
+    colorLayer: allocation.layer,
+    depthLayer: allocation.layer,
     colorMipmapLevel: 0,
     depthMipmapLevel: 0,
     position: light.transform.position,
@@ -178,9 +203,7 @@ function buildSpotShadowPass(light, shadowMap) {
     renderMask: light.renderMask
   })
 
-  shadowItem.layer = layer
-  shadowItem.bias = shadow.bias
-  shadowItem.normalBias = shadow.normalBias
+  writePackedRegion(shadowItem, allocation, shadowMap, shadow)
   packShadowMode(shadowItem, shadow.filterMode)
   Matrix4.multiply(projectionMatrix, viewMatrix, shadowItem.matrix)
 
@@ -199,6 +222,11 @@ function buildPointShadowPass(light, shadowMap) {
   if (!shadow) {
     return
   }
+  const allocation = shadowMap.allocate(shadow.resolution, 6)
+
+  if (!allocation) {
+    return
+  }
   const shadowItem = new ShadowItem()
   const sides = [
     [Vector3.X, Vector3.NegY],
@@ -213,11 +241,11 @@ function buildPointShadowPass(light, shadowMap) {
     light.radius
   )
   const views = []
-  let layerId = 0
+  const viewport = createViewport(allocation, shadowMap)
 
   for (let i = 0; i < sides.length; i++) {
     const side = /**@type {[Vector3, Vector3]} */ (sides[i])
-    const layer = shadowMap.getTarget()
+    const layer = allocation.layer + i
 
     const worldMatrix = light.transform.world
     const viewMatrix = Affine3.toMatrix4(new Affine3()
@@ -229,8 +257,9 @@ function buildPointShadowPass(light, shadowMap) {
       )))
       .invert()
 
-    layerId = layer
     views.push(new View({
+      viewport,
+      scissor: viewport,
       colorLayer: layer,
       depthLayer: layer,
       colorMipmapLevel: 0,
@@ -255,10 +284,8 @@ function buildPointShadowPass(light, shadowMap) {
   shadowItem.matrix.m = light.transform.world.x
   shadowItem.matrix.n = light.transform.world.y
   shadowItem.matrix.o = light.transform.world.z
-  shadowItem.bias = shadow.bias
-  shadowItem.normalBias = shadow.normalBias
+  writePackedRegion(shadowItem, allocation, shadowMap, shadow)
   packShadowMode(shadowItem, shadow.filterMode)
-  shadowItem.layer = layerId - 5
 
   return [shadowItem, views]
 }
@@ -285,6 +312,8 @@ function packShadowMode(item, mode) {
 
 export class ShadowItem {
   matrix = new Matrix4()
+  offset = new Vector2()
+  size = new Vector2(1, 1)
   bias = 0.001
   normalBias = 0
   /**
@@ -306,13 +335,54 @@ export class ShadowItem {
       view.setFloat32(offset + (i * 4), value, true)
       i++
     }
-    view.setFloat32(offset + 64, this.bias, true)
-    view.setFloat32(offset + 68, this.normalBias, true)
-    view.setFloat32(offset + 72, this.layer, true)
-    view.setUint32(offset + 76, this.mode >>> 0, true)
-    view.setFloat32(offset + 80, this.pcfRadius, true)
-    view.setFloat32(offset + 84, this.pcssSearchRadius, true)
-    view.setFloat32(offset + 88, this.pcssPenumbra, true)
-    view.setFloat32(offset + 92, 0, true)
+    view.setFloat32(offset + 64, this.offset.x, true)
+    view.setFloat32(offset + 68, this.offset.y, true)
+    view.setFloat32(offset + 72, this.size.x, true)
+    view.setFloat32(offset + 76, this.size.y, true)
+    view.setFloat32(offset + 80, this.bias, true)
+    view.setFloat32(offset + 84, this.normalBias, true)
+    view.setFloat32(offset + 88, this.layer, true)
+    view.setUint32(offset + 92, this.mode >>> 0, true)
+    view.setFloat32(offset + 96, this.pcfRadius, true)
+    view.setFloat32(offset + 100, this.pcssSearchRadius, true)
+    view.setFloat32(offset + 104, this.pcssPenumbra, true)
+    view.setFloat32(offset + 108, 0, true)
   }
+}
+
+/**
+ * @param {{ offset: Vector2, size: Vector2 }} allocation
+ * @param {ShadowMap} shadowMap
+ * @returns {ViewRectangle}
+ */
+function createViewport(allocation, shadowMap) {
+  const atlasWidth = shadowMap.shadowAtlas.width
+  const atlasHeight = shadowMap.shadowAtlas.height
+  const viewport = new ViewRectangle()
+
+  viewport.offset.x = allocation.offset.x / atlasWidth
+  viewport.offset.y = allocation.offset.y / atlasHeight
+  viewport.size.x = allocation.size.x / atlasWidth
+  viewport.size.y = allocation.size.y / atlasHeight
+
+  return viewport
+}
+
+/**
+ * @param {ShadowItem} item
+ * @param {{ layer: number, offset: Vector2, size: Vector2 }} allocation
+ * @param {ShadowMap} shadowMap
+ * @param {{ bias: number, normalBias: number }} shadow
+ */
+function writePackedRegion(item, allocation, shadowMap, shadow) {
+  const atlasWidth = shadowMap.shadowAtlas.width
+  const atlasHeight = shadowMap.shadowAtlas.height
+
+  item.layer = allocation.layer
+  item.offset.x = allocation.offset.x / atlasWidth
+  item.offset.y = allocation.offset.y / atlasHeight
+  item.size.x = allocation.size.x / atlasWidth
+  item.size.y = allocation.size.y / atlasHeight
+  item.bias = shadow.bias
+  item.normalBias = shadow.normalBias
 }

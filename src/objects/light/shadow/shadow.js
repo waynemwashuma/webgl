@@ -1,4 +1,5 @@
 import { OrthographicProjection } from "../../camera/index.js"
+import { Vector2 } from "../../../math/index.js"
 
 export class PCFShadowFilter {
   /**
@@ -39,6 +40,11 @@ export class Shadow {
    * @type {ShadowFilteringModes}
    */
   filterMode = new PCFShadowFilter()
+  /**
+   * Shadow map resolution in texels.
+   * @type {Vector2}
+   */
+  resolution = new Vector2(512, 512)
 }
 export class OrthographicShadow extends Shadow {
   /**

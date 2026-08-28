@@ -13,7 +13,7 @@ import { assert, assertTrue } from "../../utils/index.js"
  * @property {"uniform"} kind
  * @property {number} binding
  * @property {string} name
- * @property {number} minBindingSize
+ * @property {number} [minBindingSize]
  * @property {boolean} [hasDynamicOffset]
  */
 
@@ -66,7 +66,7 @@ export class ViewBindGroup {
    *
    * @param {number} binding
    * @param {string} name
-   * @param {number} minBindingSize
+   * @param {number} [minBindingSize]
    * @param {boolean} [hasDynamicOffset=false]
    * @returns {ViewUniformSlot}
    */
@@ -450,9 +450,13 @@ function textureSampleTypeFromFormat(format) {
  *
  * @param {WebGLRenderDevice} device
  * @param {ViewUniformSlot} slot
- * @returns {number}
+ * @returns {number | undefined}
  */
 function getAlignedUniformBindingSize(device, slot) {
+  if (slot.minBindingSize === undefined) {
+    return undefined
+  }
+
   if (!slot.hasDynamicOffset) {
     return slot.minBindingSize
   }

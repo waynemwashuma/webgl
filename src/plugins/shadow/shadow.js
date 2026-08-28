@@ -1,6 +1,5 @@
 import { Plugin, SortViewsNode, PrepareMeshInstanceBindGroupsNode, WebGLRenderer } from "../../renderer/index.js";
 import {
-  MAX_SHADOW_CASTERS,
   ShadowCasterUniformBuffer,
   ShadowMap,
   ShadowPipelines
@@ -16,13 +15,15 @@ export class ShadowPlugin extends Plugin {
    * @param {import("../../core/index.js").WebGLRenderDevice} renderDevice
    */
   init(renderer, renderDevice) {
-    renderer.setResource(new ShadowCasterUniformBuffer())
-    renderer.setResource(new ShadowMap(MAX_SHADOW_CASTERS))
+    const shadowCasterUniform = new ShadowCasterUniformBuffer(renderDevice)
+
+    renderer.setResource(shadowCasterUniform)
+    renderer.setResource(new ShadowMap(renderDevice))
     renderer.setResource(new ShadowPipelines())
     if (!renderer.getResource(BoneTextureResource)) {
       renderer.setResource(new BoneTextureResource(renderDevice.limits))
     }
-    renderer.defines.set('MAX_SHADOW_CASTERS', MAX_SHADOW_CASTERS.toString())
+    renderer.defines.set('MAX_SHADOW_CASTERS', shadowCasterUniform.capacity.toString())
 
     renderer.renderGraph.addNode(ShadowViewNode.name, new ShadowViewNode())
     renderer.renderGraph.addNode(ShadowOccluderNode.name, new ShadowOccluderNode())

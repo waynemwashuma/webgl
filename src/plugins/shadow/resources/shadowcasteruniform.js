@@ -1,24 +1,45 @@
 import { UniformBuffer } from "../../../core/resources/index.js"
 
-export const MAX_SHADOW_CASTERS = 10
-export const SHADOW_CASTER_BYTE_SIZE = 96
-
 export class ShadowCasterUniformBuffer {
-  static BlockSize = SHADOW_CASTER_BYTE_SIZE * MAX_SHADOW_CASTERS
+  static BlockSize = 112
 
   /**
    * Backing CPU-side buffer used by the renderer's GPU cache.
    * @readonly
    * @type {UniformBuffer}
    */
-  buffer = new UniformBuffer(new ArrayBuffer(ShadowCasterUniformBuffer.BlockSize))
+  buffer
 
   /**
-   * Replaces the backing payload with the provided fixed-size data.
+   * Total number of shadow caster items that fit in this buffer.
+   * @readonly
+   * @type {number}
+   */
+  capacity
+
+  /**
+   * @param {import("../../../core/index.js").WebGLRenderDevice} renderDevice
+   */
+  constructor(renderDevice) {
+    this.capacity = Math.floor(renderDevice.limits.maxUniformBufferBindingSize / ShadowCasterUniformBuffer.BlockSize)
+    this.buffer = new UniformBuffer(new ArrayBuffer(this.capacity * ShadowCasterUniformBuffer.BlockSize))
+  }
+
+  /**
+   * Copies the backing payload into the fixed-size shadow caster buffer.
    *
    * @param {ArrayBuffer} data
    */
   setData(data) {
-    this.buffer.data = data
+    if (data.byteLength > this.buffer.size) {
+      throw new Error("Shadow caster data exceeds the configured capacity")
+    }
+
+    const target = this.buffer.data
+    const targetBytes = new Uint8Array(target)
+
+    targetBytes.fill(0)
+    targetBytes.set(new Uint8Array(data))
+    this.buffer.data = target
   }
 }

@@ -31,6 +31,7 @@ import {
   CameraPlugin
 } from "chorama"
 import { GUI } from "dat.gui"
+import Stats from "stats.js"
 import { addRenderGraphGuiAddon } from "chorama"
 
 const canvas = document.createElement('canvas')
@@ -92,6 +93,8 @@ arrowBuilder.depth = 1
 const ambientLight = new AmbientLight()
 const sun = new DirectionalLight()
 const shadow = new OrthographicShadow()
+shadow.resolution.x = 2048
+shadow.resolution.y = 2048
 const shadowFilterSettings = {
   mode: 'None',
   get radius() {
@@ -184,8 +187,10 @@ function createObjects() {
 }
 
 function update() {
+  stats.begin()
   cameraControls.update()
   renderer.render([ground, ...objects, sun, ambientLight, skyBox, camera], renderDevice)
+  stats.end()
   requestAnimationFrame(update)
 }
 
@@ -200,6 +205,7 @@ function updateView() {
   }
 }
 // demo-only GUI controls
+const maxShadowResolution = renderDevice.limits.maxTextureDimension2D
 const options = [
   'LAMBERT',
   'PHONG',
@@ -294,6 +300,12 @@ shadowFolder
 shadowFolder
   .add(shadow, 'normalBias', 0, 0.005)
   .name('Normal Bias')
+shadowFolder
+  .add(shadow.resolution, 'x', 1, maxShadowResolution, 64)
+  .name('Resolution X')
+shadowFolder
+  .add(shadow.resolution, 'y', 1, maxShadowResolution, 64)
+  .name('Resolution Y')
 shadowFolder
   .add(shadowFilterSettings, 'mode', ['None', 'PCF', 'PCSS'])
   .name('Shadow Filter')
@@ -395,3 +407,11 @@ addRenderGraphGuiAddon({
   gui: controls,
   renderer
 })
+
+// demo-only performance monitor
+const stats = new Stats()
+stats.showPanel(1)
+document.body.append(stats.dom)
+stats.dom.style.position = "fixed"
+stats.dom.style.top = "0"
+stats.dom.style.left = "0"
