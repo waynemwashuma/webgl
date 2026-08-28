@@ -221,33 +221,25 @@ export class RenderStage {
   /**
    * @type {RenderItem[]}
    */
-  items = []
-
-  /**
-   * @type {RenderItem[]}
-   */
   meshItems = []
 
   /**
-   * @type {RenderItem[]}
+   * @type {NonMeshRenderItem[]}
    */
   nonMeshItems = []
 
   /**
-   * @param {RenderItem} item
+   * @param {RenderItem | NonMeshRenderItem} item
    */
   add(item) {
-    if (item.meshInstance) {
-      this.meshItems.push(item)
-      this.items.splice(this.meshItems.length - 1, 0, item)
+    if (item instanceof NonMeshRenderItem) {
+      this.nonMeshItems.push(item)
       return
     }
 
-    this.nonMeshItems.push(item)
-    this.items.push(item)
+    this.meshItems.push(item)
   }
   clear() {
-    this.items.length = 0
     this.meshItems.length = 0
     this.nonMeshItems.length = 0
   }
@@ -266,7 +258,7 @@ export class RenderStage {
    * Returns non-mesh items in the order they should be drawn.
    *
    * @param {View} _view
-   * @returns {RenderItem[]}
+   * @returns {NonMeshRenderItem[]}
    */
   getNonMeshItems(_view) {
     return this.nonMeshItems
@@ -275,11 +267,11 @@ export class RenderStage {
   /**
    * @param {import("../../core/index.js").WebGLRenderPassEncoder} pass
    * @param {WebGL2RenderingContext} context
- * @param {import("../../caches/cache.js").Caches} caches
- * @param {MeshInstancePhaseBindGroup} phaseState
- * @param {number} bindGroupIndex
- * @param {View} view
- */
+   * @param {import("../../caches/cache.js").Caches} caches
+   * @param {MeshInstancePhaseBindGroup} phaseState
+   * @param {number} bindGroupIndex
+   * @param {View} view
+   */
   renderItems(pass, context, caches, phaseState, bindGroupIndex, view) {
     const meshItems = this.getMeshItems(view)
     const nonMeshItems = this.getNonMeshItems(view)
@@ -291,9 +283,9 @@ export class RenderStage {
     }
 
     for (let i = 0; i < nonMeshItems.length; i++) {
-      const nonMeshItem = /** @type {RenderItem} */ (nonMeshItems[i])
+      const nonMeshItem = /** @type {NonMeshRenderItem} */ (nonMeshItems[i])
 
-      drawRenderItem(pass, context, caches, nonMeshItem)
+      drawNonMeshRenderItem(pass, context, caches, nonMeshItem)
     }
   }
 }
@@ -382,6 +374,30 @@ export function drawRenderItem(pass, _context, caches, item, phaseState, bindGro
     pass.draw(mesh.count)
   }
 }
+
+/**
+ * Draws a non-mesh render item using its vertex-count parameters.
+ *
+ * @param {import("../../core/index.js").WebGLRenderPassEncoder} pass
+ * @param {WebGL2RenderingContext} _context
+ * @param {import("../../caches/cache.js").Caches} caches
+ * @param {NonMeshRenderItem} item
+ */
+export function drawNonMeshRenderItem(pass, _context, caches, item) {
+  const pipeline = caches.getRenderPipeline(item.pipelineId)
+
+  if (!pipeline) {
+    return
+  }
+
+  pass.setPipeline(pipeline)
+
+  if (item.bindGroup) {
+    pass.setBindGroup(1, item.bindGroup)
+  }
+
+  pass.draw(item.vertexCount, item.instanceCount, item.firstVertex, item.firstInstance)
+}
 export class RenderItem {
 
   /**
@@ -431,6 +447,85 @@ export class RenderItem {
     this.tag = tag
     this.bindGroup = bindGroup
     this.meshInstance = meshInstance
+  }
+}
+
+/**
+ * Non-mesh render item options.
+ *
+ * @typedef NonMeshRenderItemOptions
+ * @property {number} pipelineId
+ * @property {string} tag
+ * @property {import("../../core/index.js").WebGLBindGroup} [bindGroup]
+ * @property {number} [vertexCount]
+ * @property {number} [instanceCount]
+ * @property {number} [firstVertex]
+ * @property {number} [firstInstance]
+ */
+
+/**
+ * Render item for fullscreen or other vertex-stream-only draws.
+ */
+export class NonMeshRenderItem {
+  /**
+   * @type {number}
+   */
+  pipelineId
+
+  /**
+   * @type {import("../../core/index.js").WebGLBindGroup | undefined}
+   */
+  bindGroup
+
+  /**
+   * @type {string}
+   */
+  tag
+
+  /**
+   * @type {undefined}
+   */
+  meshInstance = undefined
+
+  /**
+   * @type {number}
+   */
+  vertexCount
+
+  /**
+   * @type {number}
+   */
+  instanceCount
+
+  /**
+   * @type {number}
+   */
+  firstVertex
+
+  /**
+   * @type {number}
+   */
+  firstInstance
+
+  /**
+   * @param {NonMeshRenderItemOptions} options
+   */
+  constructor({
+    pipelineId,
+    tag,
+    bindGroup,
+    vertexCount = 3,
+    instanceCount = 1,
+    firstVertex = 0,
+    firstInstance = 0
+  }) {
+    this.pipelineId = pipelineId
+    this.tag = tag
+    this.bindGroup = bindGroup
+    this.vertexCount = vertexCount
+    this.instanceCount = instanceCount
+    this.firstVertex = firstVertex
+    this.firstInstance = firstInstance
   }
 }
 

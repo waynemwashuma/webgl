@@ -22,7 +22,7 @@ function renderItems(view, viewIndex, device, renderer, colorTargets) {
     throw "Camera transparent pass expects a camera view"
   }
 
-  if (transparentStage.items.length === 0) {
+  if (transparentStage.meshItems.length === 0 && transparentStage.nonMeshItems.length === 0) {
     return
   }
 
