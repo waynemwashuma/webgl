@@ -1,7 +1,7 @@
 import { Plugin, SortViewsNode, PrepareMeshInstanceBindGroupsNode, WebGLRenderer } from "../../renderer/index.js";
-import { BloomNode, CameraOpaquePassNode, CameraPrePassNode, CameraTransparentPassNode, CameraViewNode, CanvasBlitNode, TonemappingNode } from "./nodes/index.js";
+import { BloomNode, CameraOpaquePassNode, CameraPrePassNode, CameraTransparentPassNode, CameraViewNode, CanvasBlitNode, FogNode, TonemappingNode } from "./nodes/index.js";
 import { Texture2DPool } from "./RenderTarget2DPool.js";
-import { BloomPipeline, BloomUniform, CameraColorTargets, CanvasBlitPipeline, GaussianBlurPipeline, PrePassPipeline, PrePassTextures, TonemappingPipeline, TonemappingUniform } from "./resources/index.js";
+import { BloomPipeline, BloomUniform, CameraColorTargets, CanvasBlitPipeline, FogPipeline, FogUniform, GaussianBlurPipeline, PrePassPipeline, PrePassTextures, TonemappingPipeline, TonemappingUniform } from "./resources/index.js";
 
 export class CameraPlugin extends Plugin {
   /**
@@ -19,12 +19,15 @@ export class CameraPlugin extends Plugin {
     renderer.setResource(new TonemappingPipeline(renderDevice))
     renderer.setResource(new BloomUniform(renderDevice))
     renderer.setResource(new BloomPipeline(renderer, renderDevice))
+    renderer.setResource(new FogUniform(renderDevice))
+    renderer.setResource(new FogPipeline(renderer, renderDevice))
     renderer.setResource(new GaussianBlurPipeline(renderer, renderDevice))
     renderer.renderGraph.addNode(CameraViewNode.name, new CameraViewNode())
     renderer.renderGraph.addNode(CanvasBlitNode.name, new CanvasBlitNode())
     renderer.renderGraph.addNode(CameraPrePassNode.name, new CameraPrePassNode())
     renderer.renderGraph.addNode(CameraOpaquePassNode.name, new CameraOpaquePassNode())
     renderer.renderGraph.addNode(CameraTransparentPassNode.name, new CameraTransparentPassNode())
+    renderer.renderGraph.addNode(FogNode.name, new FogNode())
     renderer.renderGraph.addNode(BloomNode.name, new BloomNode())
     renderer.renderGraph.addNode(TonemappingNode.name, new TonemappingNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, SortViewsNode.name)
@@ -32,6 +35,8 @@ export class CameraPlugin extends Plugin {
     renderer.renderGraph.addDependency(PrepareMeshInstanceBindGroupsNode.name, CameraPrePassNode.name)
     renderer.renderGraph.addDependency(CameraPrePassNode.name, CameraOpaquePassNode.name)
     renderer.renderGraph.addDependency(CameraOpaquePassNode.name, CameraTransparentPassNode.name)
+    renderer.renderGraph.addDependency(CameraTransparentPassNode.name, FogNode.name)
+    renderer.renderGraph.addDependency(FogNode.name, BloomNode.name)
     renderer.renderGraph.addDependency(CameraTransparentPassNode.name, BloomNode.name)
     renderer.renderGraph.addDependency(BloomNode.name, TonemappingNode.name)
     renderer.renderGraph.addDependency(TonemappingNode.name, CanvasBlitNode.name)

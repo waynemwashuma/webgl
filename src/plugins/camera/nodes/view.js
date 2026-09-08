@@ -13,13 +13,9 @@ import {
 } from "../../../renderer/index.js"
 import { EnvironmentMap, BoneTextureResource } from "../../meshmaterial/resources/index.js"
 import { ShadowCasterUniformBuffer, ShadowMap, ShadowViewBindings } from "../../shadow/resources/index.js"
-import {
-  AmbientLightUniformBuffer,
-  DirectionalLightUniformBuffer,
-  LightViewBindings,
-  PointLightUniformBuffer,
-  SpotLightUniformBuffer
-} from "../../light/index.js"
+import { AmbientLightUniformBuffer, DirectionalLightUniformBuffer, PointLightUniformBuffer, SpotLightUniformBuffer } from "../../light/index.js"
+import { FogUniform } from "../resources/index.js"
+import { LightViewBindings } from "../../light/index.js"
 
 export class CameraViewNode {
   subgraph() {
@@ -35,6 +31,7 @@ export class CameraViewNode {
     const targetPool = renderer.getResource(Texture2DPool)
     const colorTargets = renderer.getResource(CameraColorTargets)
     const prePassTextures = renderer.getResource(PrePassTextures)
+    const fogUniform = renderer.getResource(FogUniform)
     const viewBindGroups = renderer.getResource(ViewBindGroups)
     const viewUniformBuffer = renderer.getResource(ViewUniformBuffer)
 
@@ -42,8 +39,11 @@ export class CameraViewNode {
     assert(targetPool, "Render target pool resource missing")
     assert(colorTargets, "Camera color targets resource missing")
     assert(prePassTextures, "PrePassTextures resource missing")
+    assert(fogUniform, "FogUniform resource missing")
     assert(viewBindGroups, "ViewBindGroups resource missing")
     assert(viewUniformBuffer, "ViewUniformBuffer resource missing")
+
+    fogUniform.reset()
 
     for (let i = 0; i < objects.length; i++) {
       const root = /**@type {Object3D} */(objects[i])
@@ -105,6 +105,10 @@ export class CameraViewNode {
         assert(viewObject, "View object missing")
         const viewBindGroup = viewBindGroups.getOrSet(renderDevice, viewObject)
         populateCameraViewBindGroup(viewBindGroup, renderer, /** @type {Camera} */ (viewObject))
+
+        if (object.fog) {
+          fogUniform.setFog(object, object.fog, object.near, object.far)
+        }
 
         views.push(cameraView)
         return true

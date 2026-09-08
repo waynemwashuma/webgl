@@ -1,5 +1,6 @@
 import { Affine3, Color, Matrix4 } from "../../math/index.js"
 import { Object3D } from "../object3d.js"
+import { Fog } from "./fog.js"
 import { RenderTarget } from "../../rendertarget/index.js"
 import { PerspectiveProjection, Projection } from "./projection.js"
 import { Range, ViewRectangle } from "../../utils/index.js"
@@ -268,6 +269,12 @@ export class Camera extends Object3D {
 	bloom = undefined
 
 	/**
+	 * Undefined means no camera fog.
+	 * @type {Fog | undefined}
+	 */
+	fog = undefined
+
+	/**
 	 * Enabled camera prepasses.
 	 * @type {number}
 	 */
@@ -307,6 +314,7 @@ export class Camera extends Object3D {
 		this.projection = object.projection.clone()
 		this.toneMapping = object.toneMapping ? object.toneMapping.clone() : undefined
 		this.bloom = object.bloom ? object.bloom.clone() : undefined
+		this.fog = object.fog ? object.fog.clone() : undefined
 		this.prepasses = object.prepasses
 		this.view.copy(object.view)
 		return this
