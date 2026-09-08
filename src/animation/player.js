@@ -10,6 +10,11 @@ export class AnimationPlayer extends Object3D {
   animations = new Map()
 
   /**
+   * @type {Map<string, AnimationClip>}
+   */
+  clipsByName = new Map()
+
+  /**
    * @param {Map<AnimationClip, Playback>} [animations]
    */
   constructor(animations) {
@@ -32,6 +37,11 @@ export class AnimationPlayer extends Object3D {
     this.animations.clear()
     object.animations.forEach((playback, clip) => {
       this.animations.set(clip, playback.clone())
+    })
+
+    this.clipsByName.clear()
+    object.clipsByName.forEach((clip, name) => {
+      this.clipsByName.set(name, clip)
     })
 
     return this
@@ -86,7 +96,19 @@ export class AnimationPlayer extends Object3D {
    * @returns {boolean}
    */
   delete(clip) {
-    return this.animations.delete(clip)
+    const deleted = this.animations.delete(clip)
+
+    if (!deleted) {
+      return false
+    }
+
+    this.clipsByName.forEach((namedClip, name) => {
+      if (namedClip === clip) {
+        this.clipsByName.delete(name)
+      }
+    })
+
+    return true
   }
 
   /**
@@ -94,6 +116,7 @@ export class AnimationPlayer extends Object3D {
    */
   clear() {
     this.animations.clear()
+    this.clipsByName.clear()
     return this
   }
 

@@ -333,8 +333,9 @@ export class GLTFLoader extends Loader {
     if (clips.length > 0) {
       const animationPlayer = new AnimationPlayer()
 
-      for (const clip of clips) {
+      for (const { name, clip } of clips) {
         animationPlayer.set(clip)
+        animationPlayer.clipsByName.set(name, clip)
       }
 
       destination.add(animationPlayer)
@@ -368,7 +369,7 @@ async function loadGLTF(data, baseUrl) {
  * @param {GLTFAnimation[]} animations
  * @param {GLTF} gltf
  * @param {Map<number, Object3D>} entityMap
- * @returns {AnimationClip[]}
+ * @returns {{name: string, clip: AnimationClip}[]}
  */
 function parseAnimations(animations, gltf, entityMap) {
   const clips = []
@@ -381,6 +382,9 @@ function parseAnimations(animations, gltf, entityMap) {
     }
 
     const clip = new AnimationClip()
+    const name = typeof animation.name === "string" && animation.name.length > 0
+      ? animation.name
+      : `animation_${i}`
     const samplers = animation.samplers instanceof Array ? animation.samplers : []
     const channels = animation.channels instanceof Array ? animation.channels : []
 
@@ -405,7 +409,10 @@ function parseAnimations(animations, gltf, entityMap) {
     }
 
     if (clip.tracks.size > 0 && clip.validate()) {
-      clips.push(clip)
+      clips.push({
+        name,
+        clip
+      })
     }
   }
 
