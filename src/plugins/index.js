@@ -1,4 +1,5 @@
 export * from './camera/index.js'
+export * from './animation/index.js'
 export * from './meshmaterial/index.js'
 export * from './skeletonhelper/index.js'
 export * from './light/index.js'

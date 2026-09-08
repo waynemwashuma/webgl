@@ -11,6 +11,15 @@ import { TextureLoader } from './texture.js';
 import { Texture, Sampler } from '../texture/index.js';
 import { assert } from '../utils/index.js';
 import { CullFace, TextureFilter, TextureType, TextureWrap } from '../constants/index.js';
+import { AnimationClip } from '../animation/clip.js';
+import { AnimationPlayer } from '../animation/player.js';
+import {
+  AnimationMode,
+  MorphWeightsAnimationTrack,
+  OrientationAnimationTrack,
+  PositionAnimationTrack,
+  ScaleAnimationTrack
+} from '../animation/track.js';
 
 const defaultMaterial = new StandardMaterial()
 const GLB_MAGIC = 0x46546C67
@@ -309,6 +318,17 @@ export class GLTFLoader extends Loader {
 
 
     destination.add(...sceneEntities)
+
+    const clips = parseAnimations(gltf.animations, gltf, entityMap)
+    if (clips.length > 0) {
+      const animationPlayer = new AnimationPlayer()
+
+      for (const clip of clips) {
+        animationPlayer.set(clip)
+      }
+
+      destination.add(animationPlayer)
+    }
   }
 
   /**
@@ -332,6 +352,261 @@ async function loadGLTF(data, baseUrl) {
   gltf.buffers = buffers
 
   return gltf
+}
+
+/**
+ * @param {GLTFAnimation[]} animations
+ * @param {GLTF} gltf
+ * @param {Map<number, Object3D>} entityMap
+ * @returns {AnimationClip[]}
+ */
+function parseAnimations(animations, gltf, entityMap) {
+  const clips = []
+
+  for (let i = 0; i < animations.length; i++) {
+    const animation = animations[i]
+
+    if (!(animation instanceof Object)) {
+      continue
+    }
+
+    const clip = new AnimationClip()
+    const samplers = animation.samplers instanceof Array ? animation.samplers : []
+    const channels = animation.channels instanceof Array ? animation.channels : []
+
+    for (let j = 0; j < channels.length; j++) {
+      const channel = channels[j]
+
+      if (!(channel instanceof Object)) {
+        continue
+      }
+
+      const track = parseAnimationChannel(channel, samplers, gltf, entityMap)
+      if (!track) {
+        continue
+      }
+
+      const targetName = resolveAnimationTargetName(channel.target, gltf, entityMap)
+      if (!targetName) {
+        continue
+      }
+
+      clip.add(targetName, track)
+    }
+
+    if (clip.tracks.size > 0 && clip.validate()) {
+      clips.push(clip)
+    }
+  }
+
+  return clips
+}
+
+/**
+ * @param {GLTFAnimationChannel} channel
+ * @param {GLTFAnimationSampler[]} samplers
+ * @param {GLTF} gltf
+ * @param {Map<number, Object3D>} entityMap
+ * @returns {import("../animation/track.js").AnimationTrack | undefined}
+ */
+function parseAnimationChannel(channel, samplers, gltf, entityMap) {
+  const samplerIndex = channel.sampler
+  const target = channel.target
+
+  if (typeof samplerIndex !== "number" || !(target instanceof Object)) {
+    return undefined
+  }
+
+  const sampler = samplers[samplerIndex]
+  if (!(sampler instanceof Object)) {
+    return undefined
+  }
+
+  const path = typeof target.path === "string" ? target.path : ""
+  if (path.length === 0) {
+    return undefined
+  }
+
+  const interpolation = typeof sampler.interpolation === "string"
+    ? sampler.interpolation
+    : "LINEAR"
+
+  const inputIndex = sampler.input
+  const outputIndex = sampler.output
+
+  if (typeof inputIndex !== "number" || typeof outputIndex !== "number") {
+    return undefined
+  }
+
+  const times = readAnimationAccessorValues(inputIndex, gltf, 1)
+  if (times.length === 0) {
+    return undefined
+  }
+
+  let baseTrack
+  let componentSize = 0
+  let morphTargetCount = 0
+
+  switch (path) {
+    case "translation":
+      baseTrack = PositionAnimationTrack
+      componentSize = 3
+      break
+    case "rotation":
+      baseTrack = OrientationAnimationTrack
+      componentSize = 4
+      break
+    case "scale":
+      baseTrack = ScaleAnimationTrack
+      componentSize = 3
+      break
+    case "weights": {
+      morphTargetCount = getAnimationMorphTargetCount(target.node, entityMap)
+      if (morphTargetCount <= 0) {
+        return undefined
+      }
+
+      baseTrack = MorphWeightsAnimationTrack
+      componentSize = 1
+      break
+    }
+    default:
+      return undefined
+  }
+
+  const trackSize = path === "weights" ? morphTargetCount : componentSize
+  const outputValues = readAnimationAccessorValues(outputIndex, gltf, componentSize)
+  const track = createAnimationTrack(baseTrack, interpolation, trackSize)
+
+  track.times = times
+
+  if (interpolation === "CUBICSPLINE") {
+    const valueSize = track.elementSize()
+    const keyframeCount = times.length
+    const blockLength = keyframeCount * valueSize
+
+    if (outputValues.length !== blockLength * 3) {
+      return undefined
+    }
+
+    track.inTangents = outputValues.slice(0, blockLength)
+    track.keyframes = outputValues.slice(blockLength, blockLength * 2)
+    track.outTangents = outputValues.slice(blockLength * 2)
+  } else {
+    const expectedLength = times.length * track.elementSize()
+    if (outputValues.length !== expectedLength) {
+      return undefined
+    }
+
+    track.keyframes = outputValues
+  }
+
+  return track.validate() ? track : undefined
+}
+
+/**
+ * @param {new (...args: any[]) => import("../animation/track.js").AnimationTrack} Track
+ * @param {string} interpolation
+ * @param {number} [size=0]
+ * @returns {import("../animation/track.js").AnimationTrack}
+ */
+function createAnimationTrack(Track, interpolation, size = 0) {
+  const track = new Track(size)
+
+  if (interpolation === "STEP") {
+    track.mode = AnimationMode.Step
+  } else if (interpolation === "CUBICSPLINE") {
+    track.mode = AnimationMode.Cubic
+  }
+  return track
+}
+
+/**
+ * @param {number} accessorIndex
+ * @param {GLTF} gltf
+ * @param {number} componentCount
+ * @returns {number[]}
+ */
+function readAnimationAccessorValues(accessorIndex, gltf, componentCount) {
+  const [buffer, accessor] = getAccessorData(accessorIndex, gltf)
+  const converted = convertAccessorToFloat32(accessor, buffer, componentCount)
+  return Array.from(
+    new Float32Array(
+      converted.buffer,
+      converted.byteOffset,
+      converted.byteLength / Float32Array.BYTES_PER_ELEMENT
+    )
+  )
+}
+
+/**
+ * @param {GLTFAnimationTarget} target
+ * @param {GLTF} gltf
+ * @param {Map<number, Object3D>} entityMap
+ * @returns {string | undefined}
+ */
+function resolveAnimationTargetName(target, gltf, entityMap) {
+  if (!(target instanceof Object)) {
+    return undefined
+  }
+
+  const nodeIndex = target.node
+  if (typeof nodeIndex !== "number") {
+    return undefined
+  }
+
+  const entity = entityMap.get(nodeIndex)
+  if (!entity) {
+    return undefined
+  }
+
+  if (entity.name.length === 0) {
+    const node = gltf.nodes[nodeIndex]
+    const fallbackName = typeof node?.name === "string" && node.name.length > 0
+      ? node.name
+      : `gltf_node_${nodeIndex}`
+
+    entity.name = fallbackName
+  }
+
+  return entity.name
+}
+
+/**
+ * @param {number | undefined} nodeIndex
+ * @param {Map<number, Object3D>} entityMap
+ * @returns {number}
+ */
+function getAnimationMorphTargetCount(nodeIndex, entityMap) {
+  if (typeof nodeIndex !== "number") {
+    return 0
+  }
+
+  const entity = entityMap.get(nodeIndex)
+  if (!entity) {
+    return 0
+  }
+
+  let morphTargetCount = 0
+
+  entity.traverseDFS((object) => {
+    const morphWeights = /** @type {number[] | undefined} */ (/** @type {any} */ (object).morphWeights)
+
+    if (morphWeights instanceof Array && morphWeights.length > 0) {
+      morphTargetCount = morphWeights.length
+      return false
+    }
+
+    const mesh = /** @type {MeshMaterial3D | undefined} */ (object instanceof MeshMaterial3D ? object : undefined)
+    if (mesh && mesh.mesh.morphTargets.length > 0) {
+      morphTargetCount = mesh.mesh.morphTargets.length
+      return false
+    }
+
+    return true
+  })
+
+  return morphTargetCount
 }
 
 /**
@@ -614,6 +889,10 @@ class GLTF {
    */
   skins = []
   /**
+   * @type {GLTFAnimation[]}
+   */
+  animations = []
+  /**
    * @type {ArrayBuffer[]}
    */
   buffers = []
@@ -666,6 +945,7 @@ class GLTF {
       accessors,
       asset,
       skins,
+      animations,
       extensions,
       extensionsUsed,
       extensionsRequired
@@ -723,6 +1003,12 @@ class GLTF {
       gltf.skins = []
     }
 
+    if (animations instanceof Array) {
+      gltf.animations = animations.map((/**@type {any}*/d) => GLTFAnimation.deserialize(d))
+    } else {
+      gltf.animations = []
+    }
+
     if (extensions instanceof Object) {
       gltf.extensions = extensions
     } else {
@@ -741,6 +1027,170 @@ class GLTF {
       gltf.extensionsRequired = []
     }
     return gltf
+  }
+}
+
+class GLTFAnimation {
+  /**
+   * @type {string}
+   */
+  name = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = {}
+  /**
+   * @type {GLTFAnimationSampler[]}
+   */
+  samplers = []
+  /**
+   * @type {GLTFAnimationChannel[]}
+   */
+  channels = []
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { name, extensions, extras, samplers, channels } = data
+    const animation = new GLTFAnimation()
+
+    if (typeof name === "string") {
+      animation.name = name
+    }
+
+    if (extensions instanceof Object) {
+      animation.extensions = extensions
+    }
+
+    if (extras instanceof Object) {
+      animation.extras = extras
+    }
+
+    if (samplers instanceof Array) {
+      animation.samplers = samplers.map((/**@type {any}*/sampler) => GLTFAnimationSampler.deserialize(sampler))
+    }
+
+    if (channels instanceof Array) {
+      animation.channels = channels.map((/**@type {any}*/channel) => GLTFAnimationChannel.deserialize(channel))
+    }
+
+    return animation
+  }
+}
+
+class GLTFAnimationSampler {
+  /**
+   * @type {number}
+   */
+  input = 0
+  /**
+   * @type {number}
+   */
+  output = 0
+  /**
+   * @type {string}
+   */
+  interpolation = "LINEAR"
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { input, output, interpolation } = data
+    const sampler = new GLTFAnimationSampler()
+
+    if (typeof input === "number") {
+      sampler.input = input
+    }
+
+    if (typeof output === "number") {
+      sampler.output = output
+    }
+
+    if (typeof interpolation === "string") {
+      sampler.interpolation = interpolation
+    }
+
+    return sampler
+  }
+}
+
+class GLTFAnimationChannel {
+  /**
+   * @type {number}
+   */
+  sampler = 0
+  /**
+   * @type {GLTFAnimationTarget}
+   */
+  target = new GLTFAnimationTarget()
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { sampler, target } = data
+    const channel = new GLTFAnimationChannel()
+
+    if (typeof sampler === "number") {
+      channel.sampler = sampler
+    }
+
+    if (target instanceof Object) {
+      channel.target = GLTFAnimationTarget.deserialize(target)
+    }
+
+    return channel
+  }
+}
+
+class GLTFAnimationTarget {
+  /**
+   * @type {number | undefined}
+   */
+  node
+  /**
+   * @type {string}
+   */
+  path = ''
+  /**
+   * @type {Record<string,any>}
+   */
+  extensions = {}
+  /**
+   * @type {Record<string,any>}
+   */
+  extras = {}
+
+  /**
+   * @param {any} data
+   */
+  static deserialize(data) {
+    const { node, path, extensions, extras } = data
+    const target = new GLTFAnimationTarget()
+
+    if (typeof node === "number") {
+      target.node = node
+    }
+
+    if (typeof path === "string") {
+      target.path = path
+    }
+
+    if (extensions instanceof Object) {
+      target.extensions = extensions
+    }
+
+    if (extras instanceof Object) {
+      target.extras = extras
+    }
+
+    return target
   }
 }
 
