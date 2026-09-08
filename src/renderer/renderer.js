@@ -83,12 +83,6 @@ export class WebGLRenderer {
     this.renderGraph.addNode(PrepareMeshInstanceBindGroupsNode.name, new PrepareMeshInstanceBindGroupsNode())
     this.renderGraph.addDependency(SortViewsNode.name, PrepareMeshInstanceBindGroupsNode.name)
 
-    for (let i = 0; i < plugins.length; i++) {
-      const plugin = /**@type {Plugin} */ (plugins[i]);
-
-      plugin.init(this, renderDevice)
-    }
-
     this.includes
       .set("common", commonShaderLib)
       .set("color", colorShaderLib)
@@ -96,6 +90,12 @@ export class WebGLRenderer {
       .set("mesh", meshShaderLib)
       .set("math", mathShaderLib)
       .set("tonemap", tonemapShaderLib)
+
+    for (let i = 0; i < plugins.length; i++) {
+      const plugin = /**@type {Plugin} */ (plugins[i]);
+
+      plugin.init(this, renderDevice)
+    }
   }
 
   /**

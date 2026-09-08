@@ -2,7 +2,7 @@ import { UniformBuffer } from "../../../core/resources/index.js"
 import { snapUp } from "../../../math/index.js"
 
 /**
- * CPU-side payload for fog color, range, and camera depth data.
+ * CPU-side payload for fog color, distance parameters, and height fade parameters.
  */
 export class FogUniform {
   /**
@@ -10,18 +10,6 @@ export class FogUniform {
    * @type {number}
    */
   static BlockSize = 32
-
-  /**
-   * Returns the size of one dynamically offset slot for the current device.
-   * @param {import("../../../core/index.js").WebGLRenderDevice} renderDevice
-   * @returns {number}
-   */
-  static getBindingSize(renderDevice) {
-    return snapUp(
-      FogUniform.BlockSize,
-      renderDevice.limits.minUniformBufferOffsetAlignment
-    )
-  }
 
   /**
    * Size of a single fog slot in the shared buffer.
@@ -53,7 +41,10 @@ export class FogUniform {
    * @param {import("../../../core/index.js").WebGLRenderDevice} renderDevice
    */
   constructor(renderDevice) {
-    this.bindingSize = FogUniform.getBindingSize(renderDevice)
+    this.bindingSize = snapUp(
+      FogUniform.BlockSize,
+      renderDevice.limits.minUniformBufferOffsetAlignment
+    )
   }
 
   /**
@@ -101,11 +92,9 @@ export class FogUniform {
    * Writes a fog payload into the slot associated with a camera.
    * @param {import("../../../objects/camera/camera.js").Camera} camera
    * @param {import("../../../objects/index.js").Fog} fog
-   * @param {number} near
-   * @param {number} far
    * @returns {number} The dynamic offset for the slot.
    */
-  setFog(camera, fog, near, far) {
+  setFog(camera, fog) {
     const offset = this.getSlot(camera) * this.bindingSize
     const data = this.#ensureCapacity(offset + this.bindingSize)
     const view = new DataView(data)
@@ -116,8 +105,8 @@ export class FogUniform {
     view.setFloat32(offset + 12, fog.color.a, true)
     view.setFloat32(offset + 16, fog.start, true)
     view.setFloat32(offset + 20, fog.end, true)
-    view.setFloat32(offset + 24, near, true)
-    view.setFloat32(offset + 28, far, true)
+    view.setFloat32(offset + 24, fog.height, true)
+    view.setFloat32(offset + 28, fog.heightFalloff ?? 8, true)
 
     this.buffer.data = data
 

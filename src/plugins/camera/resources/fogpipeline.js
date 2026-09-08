@@ -1,6 +1,8 @@
 /** @import { WebGLRenderDevice } from "../../../core/index.js" */
 import { CompareFunction, MeshVertexLayout, Shader } from "../../../core/index.js"
 import { CullFace, PrimitiveTopology, TextureFormat } from "../../../constants/index.js"
+import { snapUp } from "../../../math/index.js"
+import { View } from "../../../renderer/index.js"
 import { fogFragment, fullscreenVertex } from "../../../shader/index.js"
 import { FogUniform } from "./foguniform.js"
 
@@ -9,6 +11,18 @@ export class FogPipeline {
    * @type {number}
    */
   pipelineId
+
+  /**
+   * Aligned size of one camera block in the shared fog bind group.
+   * @type {number}
+   */
+  cameraBindingSize
+
+  /**
+   * Aligned size of one fog block in the shared fog bind group.
+   * @type {number}
+   */
+  fogBindingSize
 
   /**
    * @readonly
@@ -21,21 +35,40 @@ export class FogPipeline {
    * @param {WebGLRenderDevice} renderDevice
    */
   constructor(renderer, renderDevice) {
+    this.cameraBindingSize = snapUp(
+      View.BlockSize,
+      renderDevice.limits.minUniformBufferOffsetAlignment
+    )
+    this.fogBindingSize = snapUp(
+      FogUniform.BlockSize,
+      renderDevice.limits.minUniformBufferOffsetAlignment
+    )
+
     this.bindGroupLayout = renderDevice.createBindGroupLayout({
       label: "FogBindGroupLayout",
       entries: [
         {
           binding: 0,
+          name: "CameraBlock",
+          visibility: 0,
+          buffer: {
+            type: "uniform",
+            hasDynamicOffset: true,
+            minBindingSize: this.cameraBindingSize
+          }
+        },
+        {
+          binding: 1,
           name: "FogBlock",
           visibility: 0,
           buffer: {
             type: "uniform",
             hasDynamicOffset: true,
-            minBindingSize: FogUniform.getBindingSize(renderDevice)
+            minBindingSize: this.fogBindingSize
           }
         },
         {
-          binding: 1,
+          binding: 2,
           name: "sceneTexture",
           visibility: 0,
           texture: {
@@ -44,7 +77,7 @@ export class FogPipeline {
           }
         },
         {
-          binding: 2,
+          binding: 3,
           name: "sceneTexture",
           visibility: 0,
           sampler: {
@@ -52,7 +85,7 @@ export class FogPipeline {
           }
         },
         {
-          binding: 3,
+          binding: 4,
           name: "depthTexture",
           visibility: 0,
           texture: {
@@ -61,7 +94,7 @@ export class FogPipeline {
           }
         },
         {
-          binding: 4,
+          binding: 5,
           name: "depthTexture",
           visibility: 0,
           sampler: {

@@ -1,5 +1,6 @@
 import { Camera } from "../../../objects/index.js"
 import { Views } from "../../../renderer/index.js"
+import { ViewUniformBuffer } from "../../../renderer/resources/index.js"
 import { assert } from "../../../utils/index.js"
 import { CameraColorTargets } from "../resources/index.js"
 import { FogPipeline, FogUniform } from "../resources/index.js"
@@ -21,19 +22,24 @@ export class FogNode {
     const colorTargets = renderer.getResource(CameraColorTargets)
     const pipelineState = renderer.getResource(FogPipeline)
     const fogUniform = renderer.getResource(FogUniform)
+    const viewUniformBuffer = renderer.getResource(ViewUniformBuffer)
 
     assert(views, "Views resource missing")
     assert(colorTargets, "Camera color targets resource missing")
     assert(pipelineState, "FogPipeline resource missing")
     assert(fogUniform, "FogUniform resource missing")
+    assert(viewUniformBuffer, "ViewUniformBuffer resource missing")
 
     const commandEncoder = renderDevice.createCommandEncoder()
     const actualViews = views.items()
     const pipeline = renderer.caches.getRenderPipeline(pipelineState.pipelineId)
+    const cameraBuffer = renderer.caches.getUniformBuffer(renderDevice, viewUniformBuffer.buffer)
+    const fogBuffer = renderer.caches.getUniformBuffer(renderDevice, fogUniform.buffer)
 
     assert(pipeline, "Fog pipeline missing")
 
-    for (const view of actualViews) {
+    for (let viewIndex = 0; viewIndex < actualViews.length; viewIndex++) {
+      const view = /** @type {import("../../../renderer/core/index.js").View} */ (actualViews[viewIndex])
 
       if (!(view.object instanceof Camera)) {
         continue
@@ -58,18 +64,18 @@ export class FogNode {
 
       const sourceTexture = renderer.caches.getTexture(renderDevice, sourceColor)
       const sampler = renderer.caches.getSampler(renderDevice, renderer.defaults.textureNearestSampler)
-      const dynamicOffset = fogUniform.getOffset(view.object)
+      const cameraDynamicOffset = viewIndex * pipelineState.cameraBindingSize
+      const fogDynamicOffset = fogUniform.getOffset(view.object)
 
-      if (dynamicOffset === undefined) {
+      if (fogDynamicOffset === undefined) {
         continue
       }
 
-      const fogBuffer = renderer.caches.getUniformBuffer(renderDevice, fogUniform.buffer)
       const bindGroup = createFogBindGroup(
         renderDevice,
         pipelineState,
+        cameraBuffer,
         fogBuffer,
-        fogUniform.bindingSize,
         sourceTexture,
         depthTexture,
         sampler
@@ -89,7 +95,7 @@ export class FogNode {
       })
 
       pass.setPipeline(pipeline)
-      pass.setBindGroup(0, bindGroup, [dynamicOffset])
+      pass.setBindGroup(0, bindGroup, [cameraDynamicOffset, fogDynamicOffset])
       pass.draw(3)
       pass.end()
     }
@@ -99,13 +105,13 @@ export class FogNode {
 /**
  * @param {import("../../../core/index.js").WebGLRenderDevice} device
  * @param {FogPipeline} pipelineState
+ * @param {import("../../../core/resources/index.js").GPUBuffer} cameraBuffer
  * @param {import("../../../core/resources/index.js").GPUBuffer} fogBuffer
- * @param {number} fogBindingSize
  * @param {import("../../../core/resources/index.js").GPUTexture} sceneTexture
  * @param {import("../../../core/resources/index.js").GPUTexture} depthTexture
  * @param {import("../../../core/resources/index.js").GPUSampler} sampler
  */
-function createFogBindGroup(device, pipelineState, fogBuffer, fogBindingSize, sceneTexture, depthTexture, sampler) {
+function createFogBindGroup(device, pipelineState, cameraBuffer, fogBuffer, sceneTexture, depthTexture, sampler) {
   return device.createBindGroup({
     label: "FogBindGroup",
     layout: pipelineState.bindGroupLayout,
@@ -113,30 +119,37 @@ function createFogBindGroup(device, pipelineState, fogBuffer, fogBindingSize, sc
       {
         binding: 0,
         resource: {
-          buffer: fogBuffer,
-          size: fogBindingSize
+          buffer: cameraBuffer,
+          size: pipelineState.cameraBindingSize
         }
       },
       {
         binding: 1,
         resource: {
-          texture: sceneTexture
+          buffer: fogBuffer,
+          size: pipelineState.fogBindingSize
         }
       },
       {
         binding: 2,
         resource: {
-          sampler
+          texture: sceneTexture
         }
       },
       {
         binding: 3,
         resource: {
-          texture: depthTexture
+          sampler
         }
       },
       {
         binding: 4,
+        resource: {
+          texture: depthTexture
+        }
+      },
+      {
+        binding: 5,
         resource: {
           sampler
         }

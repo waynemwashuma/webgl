@@ -33,6 +33,14 @@ vec3 octahedral_decode(vec2 encoded) {
   return normalize(normal);
 }
 
+vec3 reconstruct_world_position(mat4 view, mat4 projection, vec2 uv, float depth) {
+  vec2 ndc = uv * 2.0 - 1.0;
+  vec4 clip = vec4(ndc, depth * 2.0 - 1.0, 1.0);
+  vec4 view_position = inverse(projection) * clip;
+  view_position /= view_position.w;
+  return (inverse(view) * vec4(view_position.xyz, 1.0)).xyz;
+}
+
 ivec2 map_to_index_2d(uint index, uint width) {
   return ivec2(int(index % width), int(index / width));
 }

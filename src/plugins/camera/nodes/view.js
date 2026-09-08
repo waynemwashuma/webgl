@@ -107,7 +107,7 @@ export class CameraViewNode {
         populateCameraViewBindGroup(viewBindGroup, renderer, /** @type {Camera} */ (viewObject))
 
         if (object.fog) {
-          fogUniform.setFog(object, object.fog, object.near, object.far)
+          fogUniform.setFog(object, object.fog)
         }
 
         views.push(cameraView)
