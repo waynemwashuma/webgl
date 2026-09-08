@@ -33,6 +33,16 @@ const DEFAULT_GLTF_LIGHT_RANGE = 1000
  */
 export class GLTFLoader extends Loader {
   textureLoader
+
+  /**
+   * @override
+   * @protected
+   * @type {(destination: Object3D, source: Object3D) => void}
+   */
+  copyFn = (destination, source) => {
+    destination.merge(source)
+  }
+
   constructor({ textureLoader = new TextureLoader() } = {}) {
     super(Object3D)
     this.textureLoader = textureLoader

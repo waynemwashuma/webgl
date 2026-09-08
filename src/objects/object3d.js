@@ -82,6 +82,26 @@ export class Object3D {
     this.transform.copy(object.transform)
     this.name = object.name
     this.renderMask.copy(object.renderMask)
+    this.children.length = 0
+    this.merge(object, entityMap)
+
+    if (entityMap) {
+      entityMap.set(object, this)
+    }
+    return this
+  }
+
+  /**
+   * Merges clones of the source children into this object.
+   *
+   * The local transform, name, and render mask are left untouched so callers can
+   * use the object as a wrapper while still inheriting the loaded hierarchy.
+   *
+   * @param {this} object
+   * @param {Map<Object3D,Object3D>} [entityMap]
+   * @returns {this}
+   */
+  merge(object, entityMap) {
     this.add(...object.children.map(child => {
       const childClone = child.clone(entityMap)
 
@@ -92,9 +112,6 @@ export class Object3D {
       return childClone
     }))
 
-    if (entityMap) {
-      entityMap.set(object, this)
-    }
     return this
   }
 

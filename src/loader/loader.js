@@ -36,6 +36,20 @@ export class Loader {
    * @type {Map<string,[Asset,((asset:Asset)=>void) | undefined][]>}
    */
   toLoad = new Map()
+
+  /**
+   * Copies the parsed asset into a waiting clone.
+   *
+   * Subclasses can override this to keep wrapper state and only inject a
+   * subset of the parsed data.
+   *
+   * @protected
+   * @type {(destination: Asset, source: Asset) => void}
+   */
+  copyFn = (destination, source) => {
+    destination.copy(source)
+  }
+
   /**
    * @param {Constructor<Asset>} asset
    */
@@ -78,7 +92,8 @@ export class Loader {
       for (let i = 0; i < loads.length; i++) {
         const [clone, postprocessor] = /**@type {[Asset, ((asset: Asset) => void) | undefined]} */ (loads[i]);
 
-        clone.copy(cachedAsset)
+        this.copyFn(clone, cachedAsset)
+
         if (postprocessor) {
           postprocessor(clone)
         }

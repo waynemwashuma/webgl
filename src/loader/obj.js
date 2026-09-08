@@ -10,6 +10,15 @@ import { SeparateAttributeData } from '../mesh/attributedata/separate.js';
  */
 export class OBJLoader extends Loader {
 
+  /**
+   * @override
+   * @protected
+   * @type {(destination: Object3D, source: Object3D) => void}
+   */
+  copyFn = (destination, source) => {
+    destination.merge(source)
+  }
+
   constructor() {
     super(Object3D)
   }
