@@ -9,7 +9,21 @@ export class MeshInstanceUniform {
    * @readonly
    * @type {number}
    */
-  static BlockSize = 80
+  static MorphTargetWeightVectors = 4
+
+  /**
+   * Maximum number of morph targets supported by the packed UBO payload.
+   * @readonly
+   * @type {number}
+   */
+  static MorphTargetCount = MeshInstanceUniform.MorphTargetWeightVectors * 4
+
+  /**
+   * Raw std140 payload size for one mesh-instance block.
+   * @readonly
+   * @type {number}
+   */
+  static BlockSize = (16 + 4 + MeshInstanceUniform.MorphTargetWeightVectors * 4) * Float32Array.BYTES_PER_ELEMENT
 
   /**
    * Current world transform for the instance.
@@ -30,16 +44,32 @@ export class MeshInstanceUniform {
   boneCount = 0
 
   /**
+   * Number of morph targets exposed by the mesh.
+   * @type {number}
+   */
+  morphTargetCount = 0
+
+  /**
+   * Packed morph weights for up to {@link MeshInstanceUniform.MorphTargetCount} targets.
+   * @type {number[]}
+   */
+  morphWeights = []
+
+  /**
    * @param {MeshInstanceUniformOptions} options
    */
   constructor({
     transform,
     skinIndex = 0,
-    boneCount = 0
+    boneCount = 0,
+    morphTargetCount = 0,
+    morphWeights = []
   }) {
     this.transform = transform
     this.skinIndex = skinIndex
     this.boneCount = boneCount
+    this.morphTargetCount = Math.min(morphTargetCount, MeshInstanceUniform.MorphTargetCount)
+    this.morphWeights = morphWeights.slice(0, MeshInstanceUniform.MorphTargetCount)
   }
 
   /**
@@ -71,6 +101,17 @@ export class MeshInstanceUniform {
 
     metadata[16] = this.skinIndex >>> 0
     metadata[17] = this.boneCount >>> 0
+    metadata[18] = this.morphTargetCount >>> 0
+
+    const weightCount = Math.min(
+      this.morphTargetCount,
+      this.morphWeights.length,
+      MeshInstanceUniform.MorphTargetCount
+    )
+
+    for (let i = 0; i < weightCount; i++) {
+      floats[20 + i] = this.morphWeights[i] ?? 0
+    }
   }
 }
 
@@ -79,4 +120,6 @@ export class MeshInstanceUniform {
  * @property {Affine3} transform
  * @property {number} [skinIndex=0]
  * @property {number} [boneCount=0]
+ * @property {number} [morphTargetCount=0]
+ * @property {number[]} [morphWeights=[]]
  */

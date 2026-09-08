@@ -3,6 +3,13 @@ import { Attribute } from "./attribute/index.js"
 import { SeparateAttributeData } from "./attributedata/separate.js"
 import { Affine3 } from "../math/index.js"
 
+/**
+ * @typedef {object} MorphTarget
+ * @property {DataView | undefined} [position]
+ * @property {DataView | undefined} [normal]
+ * @property {DataView | undefined} [tangent]
+ */
+
 export class Mesh {
   /**
    * @type {Uint16Array | Uint32Array | undefined}
@@ -13,6 +20,11 @@ export class Mesh {
    * @type {SeparateAttributeData}
    */
   #attributes
+
+  /**
+   * @type {MorphTarget[]}
+   */
+  #morphTargets = []
 
   /**
    * @type {PrimitiveTopology}
@@ -67,10 +79,28 @@ export class Mesh {
   }
 
   /**
+   * @type {MorphTarget[]}
+   */
+  get morphTargets() {
+    return this.#morphTargets
+  }
+  set morphTargets(value) {
+    this.#morphTargets = value
+    this.#changed = true
+  }
+
+  /**
    * @param {Affine3} affine
    */
   transform(affine) {
     this.attributes.transform(affine)
+
+    for (const target of this.morphTargets) {
+      transformMorphTargetAttribute(target.position, affine)
+      transformMorphTargetAttribute(target.normal, affine)
+      transformMorphTargetAttribute(target.tangent, affine)
+    }
+
     return this
   }
 
@@ -78,6 +108,10 @@ export class Mesh {
    * @param {Mesh} other
    */
   merge(other) {
+    if (this.morphTargets.length > 0 || other.morphTargets.length > 0) {
+      throw "Merging meshes with morph targets is not supported"
+    }
+
     const newAttributes = this.attributes.merge(other.attributes)
     const newMesh = new Mesh(newAttributes)
 
@@ -153,5 +187,30 @@ export class Mesh {
         data[i + 3] = /**@type {number}*/(data[i + 3]) * inv
       }
     }
+  }
+}
+
+/**
+ * Morph target deltas are vectors, so they only receive the linear part of
+ * the affine transform.
+ *
+ * @param {DataView | undefined} data
+ * @param {Affine3} affine
+ */
+function transformMorphTargetAttribute(data, affine) {
+  if (!data) {
+    return
+  }
+
+  const floats = new Float32Array(data.buffer, data.byteOffset, data.byteLength / Float32Array.BYTES_PER_ELEMENT)
+
+  for (let i = 0; i < floats.length; i += 3) {
+    const x = floats[i] ?? 0
+    const y = floats[i + 1] ?? 0
+    const z = floats[i + 2] ?? 0
+
+    floats[i] = affine.a * x + affine.d * y + affine.g * z
+    floats[i + 1] = affine.b * x + affine.e * y + affine.h * z
+    floats[i + 2] = affine.c * x + affine.f * y + affine.i * z
   }
 }

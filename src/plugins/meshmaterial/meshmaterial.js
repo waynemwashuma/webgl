@@ -8,7 +8,7 @@ import { Plugin, RenderItem, ViewBindGroups, SortViewsNode, WebGLRenderer, MeshI
 import { PrimitiveTopology, TextureFormat, TextureType } from '../../constants/index.js';
 import { CameraViewNode } from '../camera/index.js';
 import { MeshMaterialNode } from './nodes/index.js';
-import { BoneTextureResource, EnvironmentMap, MaterialUniforms, MeshMaterialPipelines } from './resources/index.js';
+import { BoneTextureResource, EnvironmentMap, MaterialUniforms, MeshMaterialPipelines, MorphTargetTextures } from './resources/index.js';
 
 export class MeshMaterialPlugin extends Plugin {
   /**
@@ -23,6 +23,7 @@ export class MeshMaterialPlugin extends Plugin {
     if (!renderer.getResource(BoneTextureResource)) {
       renderer.setResource(new BoneTextureResource(renderDevice.limits))
     }
+    renderer.setResource(new MorphTargetTextures(renderDevice.limits))
     renderer.renderGraph.addNode(MeshMaterialNode.name, new MeshMaterialNode())
     renderer.renderGraph.addDependency(CameraViewNode.name, MeshMaterialNode.name)
     renderer.renderGraph.addDependency(MeshMaterialNode.name, SortViewsNode.name)
@@ -44,8 +45,12 @@ export function createMeshMaterialRenderItem(object, device, renderer, pipelines
 
   const { caches, attributes } = renderer
   const meshInstanceBindGroups = renderer.getResource(MeshInstanceBindGroups)
+  const morphTargetTextures = renderer.getResource(MorphTargetTextures)
   const { material, mesh, transform } = object
   const skinTextureState = object.skin ? getSkinTextureState(renderer, object.skin) : undefined
+  const morphTextureState = mesh.morphTargets.length > 0
+    ? getMorphTextureState(morphTargetTextures, mesh)
+    : undefined
   const viewObject = view.object
 
   assert(viewObject, "View object missing")
@@ -116,6 +121,12 @@ export function createMeshMaterialRenderItem(object, device, renderer, pipelines
       if (!pipeline.layout.getBindGroupLayout(2)) {
         pipeline.layout.setBindGroupLayout(2, meshInstanceBindGroups.getBindGroupLayout(device))
       }
+      if ((keyMeshBits & MeshKey.MorphTargets) !== 0n) {
+        assert(morphTargetTextures, "MorphTargetTextures resource missing")
+        if (!pipeline.layout.getBindGroupLayout(3)) {
+          pipeline.layout.setBindGroupLayout(3, morphTargetTextures.getBindGroupLayout(device))
+        }
+      }
 
       return newId
   })
@@ -124,15 +135,23 @@ export function createMeshMaterialRenderItem(object, device, renderer, pipelines
   if (pipeline && !pipeline.layout.getBindGroupLayout(2)) {
     pipeline.layout.setBindGroupLayout(2, meshInstanceBindGroups.getBindGroupLayout(device))
   }
+  if (pipeline && morphTextureState && morphTargetTextures && !pipeline.layout.getBindGroupLayout(3)) {
+    pipeline.layout.setBindGroupLayout(3, morphTargetTextures.getBindGroupLayout(device))
+  }
   const materialBindGroup = pipeline ? createMaterialBindGroup(device, renderer, pipeline, material, view) : undefined
   const meshInstance = new MeshInstanceUniform({
     transform: transform.world,
     skinIndex: skinTextureState ? skinTextureState.slot.index : 0,
-    boneCount: object.skin?.bones.length ?? 0
+    boneCount: object.skin?.bones.length ?? 0,
+    morphTargetCount: morphTextureState?.targetCount ?? 0,
+    morphWeights: object.morphWeights
   })
 
   const item = new RenderItem({
     bindGroup: materialBindGroup,
+    morphBindGroup: morphTextureState && morphTargetTextures
+      ? morphTargetTextures.getBindGroup(device, renderer, mesh)
+      : undefined,
     mesh: gpuMesh,
     pipelineId,
     meshInstance,
@@ -242,6 +261,16 @@ function getSkinTextureState(renderer, skin) {
     resource,
     slot: resource.getOrAllocate(skin)
   }
+}
+
+/**
+ * @param {MorphTargetTextures | undefined} resource
+ * @param {Mesh} mesh
+ * @returns {import("./resources/morphtargettextures.js").MorphTargetTextureState | undefined}
+ */
+function getMorphTextureState(resource, mesh) {
+  assert(resource, "MorphTargetTextures resource missing")
+  return resource.getOrAllocate(mesh)
 }
 
 /**
@@ -409,7 +438,8 @@ export const MeshKey = /**@type {const}*/({
   Triangles: 1n << 4n,
   TriangleStrip: 1n << 5n,
   TriangleFan: 1n << 6n,
-  Skinned: 1n << 7n
+  Skinned: 1n << 7n,
+  MorphTargets: 1n << 8n
 })
 
 /**
@@ -458,6 +488,9 @@ function createPipelineBitsFromMesh(mesh, object) {
   ) {
     key |= MeshKey.Skinned
   }
+  if (mesh.morphTargets.length > 0) {
+    key |= MeshKey.MorphTargets
+  }
   return key
 }
 
@@ -487,6 +520,10 @@ function getShaderDefs(meshLayout, meshBits, globalDefines) {
 
   if (meshLayout.hasAttribute(Attribute.Tangent)) {
     shaderdefs.push(["VERTEX_TANGENTS", ""])
+  }
+
+  if (meshBits & MeshKey.MorphTargets) {
+    shaderdefs.push(["MORPH_TARGETS", ""])
   }
 
   for (const [name, value] of globalDefines) {

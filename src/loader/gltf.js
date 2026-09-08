@@ -1798,6 +1798,10 @@ class GLTFPrimitive {
    */
   attributes = new Map()
   /**
+   * @type {Record<string, number>[]}
+   */
+  targets = []
+  /**
    * @type {number | undefined}
    */
   indices
@@ -1813,7 +1817,7 @@ class GLTFPrimitive {
    * @param {any} data
    */
   static deserialize(data) {
-    const { attributes, material, indices, mode } = data
+    const { attributes, material, indices, mode, targets } = data
     const primitive = new GLTFPrimitive()
 
     if (typeof indices === "number") {
@@ -1832,6 +1836,28 @@ class GLTFPrimitive {
         }
       }
     }
+
+    if (targets instanceof Array) {
+      primitive.targets = targets.map((target) => {
+        /** @type {Record<string, number>} */
+        const result = {}
+
+        if (target instanceof Object) {
+          for (const key in target) {
+            const value = target[key]
+
+            if (typeof value === "number") {
+              result[key] = value
+            }
+          }
+        }
+
+        return result
+      })
+    } else {
+      primitive.targets = []
+    }
+
     if (typeof mode === "number") {
       primitive.mode = mapPrimitiveMode(mode)
     } else {
@@ -2524,6 +2550,34 @@ function mapAccessorTypeToAttribute(name, accessor, buffer) {
   }
 }
 
+/**
+ * @param {string} name
+ * @param {GLTFAccessor} accessor
+ * @param {DataView} buffer
+ * @returns {[string, DataView] | undefined}
+ */
+function mapAccessorTypeToMorphTargetAttribute(name, accessor, buffer) {
+  switch (name) {
+    case GLTFAttributeName.Position:
+      if (accessor.type !== GLTFAccessorType.Vec3 || accessor.componentType !== GLTFComponentType.Float || accessor.normalized) {
+        throw "Attribute types do not match"
+      }
+      return ["position", convertAccessorToFloat32(accessor, buffer, 3)]
+    case GLTFAttributeName.Normal:
+      if (accessor.type !== GLTFAccessorType.Vec3 || accessor.componentType !== GLTFComponentType.Float || accessor.normalized) {
+        throw "Attribute types do not match"
+      }
+      return ["normal", convertAccessorToFloat32(accessor, buffer, 3)]
+    case GLTFAttributeName.Tangent:
+      if (accessor.type !== GLTFAccessorType.Vec3 || accessor.componentType !== GLTFComponentType.Float || accessor.normalized) {
+        throw "Attribute types do not match"
+      }
+      return ["tangent", convertAccessorToFloat32(accessor, buffer, 3)]
+    default:
+      return undefined
+  }
+}
+
 
 /**
  * @param {GLTFComponentType} componentType
@@ -2587,11 +2641,14 @@ function parseMeshObject(mesh, meshes, geometries, materials) {
   if (!meshData || !geometry) {
     throw "Invalid mesh index on node"
   }
+  const morphWeights = meshData.weights.length > 0 ? meshData.weights.slice() : undefined
   if (geometry.length === 1) {
     const item = /**@type {[Mesh,number | undefined]}*/(geometry[0])
     const material = item[1] !== undefined ? materials[item[1]] : defaultMaterial
+    const object = new MeshMaterial3D(item[0], material || defaultMaterial)
 
-    return new MeshMaterial3D(item[0], material || defaultMaterial)
+    object.morphWeights = morphWeights
+    return object
   }
   const root = new Object3D()
   for (let i = 0; i < geometry.length; i++) {
@@ -2599,6 +2656,7 @@ function parseMeshObject(mesh, meshes, geometries, materials) {
     const material = item[1] !== undefined ? materials[item[1]] : defaultMaterial
     const object = new MeshMaterial3D(item[0], material || defaultMaterial)
 
+    object.morphWeights = morphWeights?.slice()
     root.add(object)
   }
 
@@ -2640,6 +2698,7 @@ function parseGeometry(gltfMesh, gltf) {
     }
 
     mesh.normalizeJointWeights()
+    mesh.morphTargets = primitive.targets.map((target) => parseMorphTarget(target, gltf))
     results.push([mesh, primitive.material])
   }
   return results
@@ -2769,11 +2828,55 @@ function parseObject(index, node, gltf, geometries, materials) {
     transferTransform(object, transform)
   }
 
+  if (mesh !== undefined && node.weights) {
+    if (object instanceof MeshMaterial3D) {
+      object.morphWeights = node.weights.slice()
+    } else {
+      for (const child of object.children) {
+        if (child instanceof MeshMaterial3D) {
+          child.morphWeights = node.weights.slice()
+        }
+      }
+    }
+  }
+
   if (name.length > 0) {
     object.name = name
   }
 
   return object
+}
+
+/**
+ * @param {Record<string, number>} target
+ * @param {GLTF} gltf
+ * @returns {import("../mesh/mesh.js").MorphTarget}
+ */
+function parseMorphTarget(target, gltf) {
+  /** @type {import("../mesh/mesh.js").MorphTarget} */
+  const morphTarget = {}
+  /** @type {Record<string, DataView>} */
+  const morphTargetRecord = morphTarget
+
+  for (const name in target) {
+    const location = target[name]
+
+    if (typeof location !== "number") {
+      continue
+    }
+
+    const [buffer, accessor] = getAccessorData(location, gltf)
+    const attribute = mapAccessorTypeToMorphTargetAttribute(name, accessor, buffer)
+
+    if (!attribute) {
+      continue
+    }
+
+    const [attributeName, attributeBuffer] = attribute
+    morphTargetRecord[attributeName] = attributeBuffer
+  }
+
+  return morphTarget
 }
 
 /**

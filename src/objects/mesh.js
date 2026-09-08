@@ -64,6 +64,12 @@ export class MeshMaterial3D extends Object3D {
   skin
 
   /**
+   * Per-target morph weights for this instance.
+   * @type {number[] | undefined}
+   */
+  morphWeights
+
+  /**
    * @param {Mesh} mesh 
    * @param {U} material 
    */
@@ -82,7 +88,8 @@ export class MeshMaterial3D extends Object3D {
 
     newMesh.mesh = this.mesh
     newMesh.material = this.material
-    newMesh.skin = this.skin ? this.skin.clone() : undefined
+    newMesh.skin = this.skin?.clone()
+    newMesh.morphWeights = this.morphWeights?.slice()
 
     return newMesh
   }

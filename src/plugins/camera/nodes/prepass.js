@@ -8,6 +8,7 @@ import { snapUp } from "../../../math/index.js"
 import { Attribute } from "../../../mesh/index.js"
 import { basicVertex, prepassFragment } from "../../../shader/index.js"
 import { PrePassPipeline, PrePassTextures } from "../resources/index.js"
+import { MorphTargetTextures } from "../../meshmaterial/resources/index.js"
 
 const MESH_INSTANCE_BIND_GROUP_INDEX = 1
 
@@ -54,10 +55,12 @@ function renderItems(view, viewIndex, device, renderer, prePassTextures) {
   const sceneBindGroups = renderer.getResource(ViewBindGroups)
   const meshInstanceBindGroups = renderer.getResource(MeshInstanceBindGroups)
   const prePassPipelines = renderer.getResource(PrePassPipeline)
+  const morphTargetTextures = renderer.getResource(MorphTargetTextures)
 
   assert(sceneBindGroups, "SceneBindGroups resource missing")
   assert(meshInstanceBindGroups, "MeshInstanceBindGroups resource missing")
   assert(prePassPipelines, "PrePassPipeline resource missing")
+  assert(morphTargetTextures, "MorphTargetTextures resource missing")
 
   if (!(view.object instanceof Camera)) {
     throw "Camera pre-pass expects a camera view"
@@ -139,7 +142,8 @@ function renderItems(view, viewIndex, device, renderer, prePassTextures) {
     }
 
     const skinned = isSkinned(sourcePipeline, item)
-    const pipelineKey = createPrePassPipelineKey(pipelineKind, sourcePipeline, skinned)
+    const morphed = Boolean(item.morphBindGroup)
+    const pipelineKey = createPrePassPipelineKey(pipelineKind, sourcePipeline, skinned, morphed)
     const sceneBindGroupLayout = /** @type {import("../../../core/layouts/bindgroup.js").WebGLBindGroupLayout} */ (sceneBindGroupState.layout)
 
     assert(sceneBindGroupLayout, "Scene bind group layout missing")
@@ -152,9 +156,11 @@ function renderItems(view, viewIndex, device, renderer, prePassTextures) {
         renderer,
         sourcePipeline,
         skinned,
+        morphed,
         renderNormals,
         sceneBindGroupLayout,
-        meshInstanceBindGroups.getBindGroupLayout(device)
+        meshInstanceBindGroups.getBindGroupLayout(device),
+        morphTargetTextures
       )
     )
     const pipeline = caches.getRenderPipeline(pipelineId)
@@ -165,6 +171,9 @@ function renderItems(view, viewIndex, device, renderer, prePassTextures) {
 
     pass.setPipeline(pipeline)
     pass.setBindGroup(MESH_INSTANCE_BIND_GROUP_INDEX, phaseState.bindGroup, [phaseState.getOffset(i)])
+    if (item.morphBindGroup) {
+      pass.setBindGroup(3, item.morphBindGroup)
+    }
 
     const mesh = item.mesh
     for (let slot = 0; slot < mesh.vertexBuffers.length; slot++) {
@@ -205,15 +214,17 @@ function renderItems(view, viewIndex, device, renderer, prePassTextures) {
  * @param {string} kind
  * @param {import("../../../core/index.js").WebGLRenderPipeline} sourcePipeline
  * @param {boolean} skinned
+ * @param {boolean} morphed
  * @returns {string}
  */
-function createPrePassPipelineKey(kind, sourcePipeline, skinned) {
+function createPrePassPipelineKey(kind, sourcePipeline, skinned, morphed) {
   return [
     kind,
     sourcePipeline.topology,
     sourcePipeline.cullMode,
     sourcePipeline.frontFace,
-    skinned ? 1 : 0
+    skinned ? 1 : 0,
+    morphed ? 1 : 0
   ].join(":")
 }
 
@@ -222,9 +233,11 @@ function createPrePassPipelineKey(kind, sourcePipeline, skinned) {
  * @param {import("../../../renderer/renderer.js").WebGLRenderer} renderer
  * @param {import("../../../core/index.js").WebGLRenderPipeline} sourcePipeline
  * @param {boolean} skinned
+ * @param {boolean} morphed
  * @param {boolean} renderNormals
  * @param {import("../../../core/layouts/bindgroup.js").WebGLBindGroupLayout} sceneBindGroupLayout
  * @param {import("../../../core/layouts/bindgroup.js").WebGLBindGroupLayout} meshInstanceBindGroupLayout
+ * @param {MorphTargetTextures} morphTargetTextures
  * @returns {number}
  */
 function createPrePassPipeline(
@@ -232,9 +245,11 @@ function createPrePassPipeline(
   renderer,
   sourcePipeline,
   skinned,
+  morphed,
   renderNormals,
   sceneBindGroupLayout,
-  meshInstanceBindGroupLayout
+  meshInstanceBindGroupLayout,
+  morphTargetTextures
 ) {
   const vertexShader = new Shader({
     source: basicVertex,
@@ -244,6 +259,9 @@ function createPrePassPipeline(
 
   if (skinned) {
     vertexShader.defines.set("SKINNED", "")
+  }
+  if (morphed) {
+    vertexShader.defines.set("MORPH_TARGETS", "")
   }
 
   const meshLayout = sourcePipeline.vertexLayout
@@ -302,6 +320,9 @@ function createPrePassPipeline(
   const [pipeline, newId] = renderer.caches.createRenderPipeline(device, descriptor)
   pipeline.layout.setBindGroupLayout(0, sceneBindGroupLayout)
   pipeline.layout.setBindGroupLayout(1, meshInstanceBindGroupLayout)
+  if (morphed) {
+    pipeline.layout.setBindGroupLayout(3, morphTargetTextures.getBindGroupLayout(device))
+  }
 
   return newId
 }

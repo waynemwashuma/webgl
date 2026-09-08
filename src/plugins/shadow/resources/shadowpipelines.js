@@ -1,25 +1,25 @@
 export class ShadowPipelines {
 
   /**
-   * Layout hash is the key, pipeline id the value.
+   * Cache key is a string that includes mesh layout and vertex-shader variants.
    * @private
-   * @type {Map<number, number>}
+   * @type {Map<string, number>}
    */
   pipelines = new Map()
 
   /**
-   * @param {number} layoutHash
+   * @param {string} key
    * @returns {number | undefined}
    */
-  get(layoutHash) {
-    return this.pipelines.get(layoutHash)
+  get(key) {
+    return this.pipelines.get(key)
   }
 
   /**
-   * @param {number} layoutHash
+   * @param {string} key
    * @param {number} pipelineId
    */
-  set(layoutHash, pipelineId) {
-    this.pipelines.set(layoutHash, pipelineId)
+  set(key, pipelineId) {
+    this.pipelines.set(key, pipelineId)
   }
 }

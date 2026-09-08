@@ -356,6 +356,10 @@ export function drawRenderItem(pass, _context, caches, item, phaseState, bindGro
     pass.setBindGroup(1, item.bindGroup)
   }
 
+  if (item.morphBindGroup) {
+    pass.setBindGroup(3, item.morphBindGroup)
+  }
+
   for (let slot = 0; slot < mesh.vertexBuffers.length; slot++) {
     const binding = mesh.vertexBuffers[slot]
 
@@ -421,6 +425,11 @@ export class RenderItem {
   bindGroup
 
   /**
+   * @type {import("../../core/index.js").WebGLBindGroup | undefined}
+   */
+  morphBindGroup
+
+  /**
    * @type {string}
    */
   tag
@@ -438,6 +447,7 @@ export class RenderItem {
     mesh,
     tag,
     bindGroup,
+    morphBindGroup,
     meshInstance,
     transform
   }) {
@@ -446,6 +456,7 @@ export class RenderItem {
     this.mesh = mesh
     this.tag = tag
     this.bindGroup = bindGroup
+    this.morphBindGroup = morphBindGroup
     this.meshInstance = meshInstance
   }
 }
@@ -556,6 +567,7 @@ export class NonMeshRenderItem {
  * @property {GPUMesh} mesh
  * @property {number} pipelineId
  * @property {import("../../core/index.js").WebGLBindGroup} [bindGroup]
+ * @property {import("../../core/index.js").WebGLBindGroup} [morphBindGroup]
  * @property {MeshInstanceUniform} [meshInstance]
  * @property {string} tag
  */
