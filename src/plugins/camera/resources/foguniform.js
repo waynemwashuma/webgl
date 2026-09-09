@@ -1,5 +1,6 @@
 import { UniformBuffer } from "../../../core/resources/index.js"
 import { snapUp } from "../../../math/index.js"
+import { ExponentialMode, LinearMode } from "../../../objects/camera/fog.js"
 
 /**
  * CPU-side payload for fog color, distance parameters, and height fade parameters.
@@ -9,7 +10,7 @@ export class FogUniform {
    * std140 keeps the block aligned to a 16-byte slot.
    * @type {number}
    */
-  static BlockSize = 32
+  static BlockSize = 48
 
   /**
    * Size of a single fog slot in the shared buffer.
@@ -103,10 +104,22 @@ export class FogUniform {
     view.setFloat32(offset + 4, fog.color.g, true)
     view.setFloat32(offset + 8, fog.color.b, true)
     view.setFloat32(offset + 12, fog.color.a, true)
-    view.setFloat32(offset + 16, fog.start, true)
-    view.setFloat32(offset + 20, fog.end, true)
-    view.setFloat32(offset + 24, fog.height, true)
-    view.setFloat32(offset + 28, fog.heightFalloff ?? 8, true)
+
+    if (fog.mode instanceof ExponentialMode) {
+      view.setFloat32(offset + 16, 0, true)
+      view.setFloat32(offset + 20, 0, true)
+      view.setFloat32(offset + 24, fog.mode.density, true)
+      view.setFloat32(offset + 28, ExponentialMode.Type, true)
+    } else {
+      const mode = fog.mode instanceof LinearMode ? fog.mode : new LinearMode()
+      view.setFloat32(offset + 16, mode.start, true)
+      view.setFloat32(offset + 20, mode.end, true)
+      view.setFloat32(offset + 24, 0, true)
+      view.setFloat32(offset + 28, LinearMode.Type, true)
+    }
+
+    view.setFloat32(offset + 32, fog.height, true)
+    view.setFloat32(offset + 36, fog.heightFalloff ?? 8, true)
 
     this.buffer.data = data
 

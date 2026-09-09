@@ -7,10 +7,11 @@ import {
   CanvasTarget,
   Color,
   DirectionalLight,
+  ExponentialMode,
   Fog,
-
   GLTFLoader,
   LightPlugin,
+  LinearMode,
   MeshMaterialPlugin,
   OrbitCameraControls,
   PerspectiveProjection,
@@ -41,13 +42,11 @@ const scene = gltfLoader.load({
 
 const fog = new Fog({
   color: new Color(0.72, 0.76, 0.8, 1),
-  start: 1,
-  end: 8,
+  mode: new LinearMode({ start: 1, end: 8 }),
   height: 3,
   heightFalloff: 2,
 })
 camera.fog = fog
-camera.clearColor = fog.color.clone()
 camera.near = 0.05
 camera.far = 80
 
@@ -101,25 +100,37 @@ function applyFogEnabled(enabled) {
  */
 function applyFogColor(color) {
   fog.color.set(color.r / 255, color.g / 255, color.b / 255, fog.color.a)
-  if (camera.clearColor) {
-    camera.clearColor.set(color.r / 255, color.g / 255, color.b / 255, fog.color.a)
-  } else {
-    camera.clearColor = fog.color.clone()
-  }
 }
 
 /**
  * @param {number} value
  */
 function applyFogStart(value) {
-  fog.start = value
+  linearSettings.start = value
 }
 
 /**
  * @param {number} value
  */
 function applyFogEnd(value) {
-  fog.end = value
+  linearSettings.end = value
+}
+
+/**
+ * @param {"linear" | "exponential"} value
+ */
+function applyFogMode(value) {
+  fog.mode = value === "exponential"
+    ? exponentialSettings
+    : linearSettings
+  updateFogModeControls()
+}
+
+/**
+ * @param {number} value
+ */
+function applyFogDensity(value) {
+  exponentialSettings.density = value
 }
 
 /**
@@ -139,11 +150,12 @@ function applyFogHeightFalloff(value) {
 const settings = {
   enabled: true,
   color: fog.color.clone(),
-  start: fog.start,
-  end: fog.end,
+  mode: "linear",
   height: fog.height,
   heightFalloff: fog.heightFalloff,
 }
+const linearSettings = new LinearMode({ start: 1, end: 8 })
+const exponentialSettings = new ExponentialMode({ density: 0.35 })
 
 const controls = new GUI()
 const fogFolder = controls.addFolder("Fog")
@@ -157,13 +169,21 @@ fogFolder
   .name("Color")
   .onChange(applyFogColor)
 fogFolder
-  .add(settings, "start", 0, 60, 0.1)
+  .add(settings, "mode", ["linear", "exponential"])
+  .name("Mode")
+  .onChange(applyFogMode)
+const startController = fogFolder
+  .add(linearSettings, "start", 0, 60, 0.1)
   .name("Start")
   .onChange(applyFogStart)
-fogFolder
-  .add(settings, "end", 0, 60, 0.1)
+const endController = fogFolder
+  .add(linearSettings, "end", 0, 60, 0.1)
   .name("End")
   .onChange(applyFogEnd)
+const densityController = fogFolder
+  .add(exponentialSettings, "density", 0, 2, 0.01)
+  .name("Density")
+  .onChange(applyFogDensity)
 fogFolder
   .add(settings, "height", 0, 20, 0.1)
   .name("Height")
@@ -173,6 +193,14 @@ fogFolder
   .name("Height Falloff")
   .onChange(applyFogHeightFalloff)
 
+function updateFogModeControls() {
+  const linear = settings.mode === "linear"
+  startController.domElement.parentElement?.toggleAttribute("hidden", !linear)
+  endController.domElement.parentElement?.toggleAttribute("hidden", !linear)
+  densityController.domElement.parentElement?.toggleAttribute("hidden", linear)
+}
+
+updateFogModeControls()
 fogFolder.open()
 
 // demo-only performance monitor

@@ -9,7 +9,7 @@ uniform CameraBlock {
 
 layout(std140) uniform FogBlock {
   vec4 fogColor;
-  vec2 fogParams;
+  vec4 fogParams;
   float height;
   float heightFalloff;
 };
@@ -23,8 +23,23 @@ void main() {
   vec4 scene_color = texture(sceneTexture, v_uv);
   float sample_depth = texture(depthTexture, v_uv).r;
   float linear_depth = linearize_depth(sample_depth, camera.near, camera.far);
-  float distance_range = max(fogParams.y - fogParams.x, 1e-5);
-  float distance_fog = clamp((linear_depth - fogParams.x) / distance_range, 0.0, 1.0);
+  float fog_start = fogParams.x;
+  float fog_end = fogParams.y;
+  float fog_density = max(fogParams.z, 0.0);
+  int fog_type = int(fogParams.w);
+  float distance_fog = 0.0;
+
+  switch (fog_type) {
+    case 1: {
+      distance_fog = clamp(1.0 - exp(-fog_density * linear_depth), 0.0, 1.0);
+      break;
+    }
+    default: {
+      float distance_range = max(fog_end - fog_start, 1e-5);
+      distance_fog = clamp((linear_depth - fog_start) / distance_range, 0.0, 1.0);
+      break;
+    }
+  }
 
   vec3 world_position = reconstruct_world_position(camera.view, camera.projection, v_uv, sample_depth);
   float height_falloff = max(heightFalloff, 1e-5);
