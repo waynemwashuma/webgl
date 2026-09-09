@@ -233,6 +233,10 @@ export class AnimationPlayer extends Object3D {
     })
 
     this.animations.forEach((playback, clip) => {
+      if (playback.paused) {
+        return
+      }
+
       clip.tracks.forEach((tracks, targetName) => {
         if (targetName.length === 0) {
           return

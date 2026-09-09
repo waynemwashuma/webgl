@@ -1,4 +1,5 @@
 import { Quaternion, lerp } from "../math/index.js"
+import { MeshMaterial3D, Object3D } from "../objects/index.js"
 
 /**
  * Animation interpolation modes.
@@ -380,22 +381,37 @@ export class MorphWeightsAnimationTrack extends AnimationTrack {
   }
 
   /**
-   * @param {object} object
+   * @param {Object3D} object
    * @param {number[]} values
    * @override
    */
   apply(object, values) {
-    const morphWeights = /** @type {number[] | undefined} */ (/** @type {any} */ (object).morphWeights)
+    const size = this.elementSize()
+    const applyTo = /** @param {MeshMaterial3D} mesh */ (mesh) => {
+      const morphWeights = mesh.morphWeights
 
-    if (morphWeights === undefined) {
+      if (morphWeights === undefined) {
+        return
+      }
+
+      for (let i = 0; i < size; i++) {
+        morphWeights[i] = /** @type {number} */ (values[i])
+      }
+    }
+
+    if (object instanceof MeshMaterial3D) {
+      applyTo(object)
       return
     }
 
-    const size = this.elementSize()
-    morphWeights.length = size
+    const children = object.children
 
-    for (let i = 0; i < size; i++) {
-      morphWeights[i] = /** @type {number} */ (values[i])
+    for (let i = 0; i < children.length; i++) {
+      const child = /** @type {import("../objects/object3d.js").Object3D} */ (children[i])
+
+      if (child instanceof MeshMaterial3D) {
+        applyTo(child)
+      }
     }
   }
 }
