@@ -1,6 +1,6 @@
 import { UniformBuffer } from "../../../core/resources/index.js"
 import { snapUp } from "../../../math/index.js"
-import { ExponentialMode, LinearMode } from "../../../objects/camera/fog.js"
+import { ExponentialMode, ExponentialSquaredMode, LinearMode } from "../../../objects/camera/fog.js"
 
 /**
  * CPU-side payload for fog color, distance parameters, and height fade parameters.
@@ -105,7 +105,12 @@ export class FogUniform {
     view.setFloat32(offset + 8, fog.color.b, true)
     view.setFloat32(offset + 12, fog.color.a, true)
 
-    if (fog.mode instanceof ExponentialMode) {
+    if (fog.mode instanceof ExponentialSquaredMode) {
+      view.setFloat32(offset + 16, 0, true)
+      view.setFloat32(offset + 20, 0, true)
+      view.setFloat32(offset + 24, fog.mode.density, true)
+      view.setFloat32(offset + 28, ExponentialSquaredMode.Type, true)
+    } else if (fog.mode instanceof ExponentialMode) {
       view.setFloat32(offset + 16, 0, true)
       view.setFloat32(offset + 20, 0, true)
       view.setFloat32(offset + 24, fog.mode.density, true)

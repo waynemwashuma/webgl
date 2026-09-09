@@ -8,6 +8,7 @@ import {
   Color,
   DirectionalLight,
   ExponentialMode,
+  ExponentialSquaredMode,
   Fog,
   GLTFLoader,
   LightPlugin,
@@ -39,10 +40,13 @@ const gltfLoader = new GLTFLoader()
 const scene = gltfLoader.load({
   paths: ["/models/gltf/sponza/Sponza.gltf"],
 })
+const linearSettings = new LinearMode({ start: 1, end: 8 })
+const exponentialSettings = new ExponentialMode({ density: 0.35 })
+const exponentialSquaredSettings = new ExponentialSquaredMode({ density: 0.2 })
 
 const fog = new Fog({
   color: new Color(0.72, 0.76, 0.8, 1),
-  mode: new LinearMode({ start: 1, end: 8 }),
+  mode: linearSettings,
   height: 3,
   heightFalloff: 2,
 })
@@ -117,12 +121,20 @@ function applyFogEnd(value) {
 }
 
 /**
- * @param {"linear" | "exponential"} value
+ * @param {"linear" | "exponential" | "exponential squared"} value
  */
 function applyFogMode(value) {
-  fog.mode = value === "exponential"
-    ? exponentialSettings
-    : linearSettings
+  switch (value) {
+    case "exponential":
+      fog.mode = exponentialSettings
+      break
+    case "exponential squared":
+      fog.mode = exponentialSquaredSettings
+      break
+    default:
+      fog.mode = linearSettings
+      break
+  }
   updateFogModeControls()
 }
 
@@ -131,6 +143,13 @@ function applyFogMode(value) {
  */
 function applyFogDensity(value) {
   exponentialSettings.density = value
+}
+
+/**
+ * @param {number} value
+ */
+function applyFogSquaredDensity(value) {
+  exponentialSquaredSettings.density = value
 }
 
 /**
@@ -154,8 +173,6 @@ const settings = {
   height: fog.height,
   heightFalloff: fog.heightFalloff,
 }
-const linearSettings = new LinearMode({ start: 1, end: 8 })
-const exponentialSettings = new ExponentialMode({ density: 0.35 })
 
 const controls = new GUI()
 const fogFolder = controls.addFolder("Fog")
@@ -169,7 +186,7 @@ fogFolder
   .name("Color")
   .onChange(applyFogColor)
 fogFolder
-  .add(settings, "mode", ["linear", "exponential"])
+  .add(settings, "mode", ["linear", "exponential", "exponential squared"])
   .name("Mode")
   .onChange(applyFogMode)
 const startController = fogFolder
@@ -184,6 +201,10 @@ const densityController = fogFolder
   .add(exponentialSettings, "density", 0, 2, 0.01)
   .name("Density")
   .onChange(applyFogDensity)
+const squaredDensityController = fogFolder
+  .add(exponentialSquaredSettings, "density", 0, 2, 0.01)
+  .name("Density")
+  .onChange(applyFogSquaredDensity)
 fogFolder
   .add(settings, "height", 0, 20, 0.1)
   .name("Height")
@@ -195,9 +216,11 @@ fogFolder
 
 function updateFogModeControls() {
   const linear = settings.mode === "linear"
+  const exponential = settings.mode === "exponential"
   startController.domElement.parentElement?.toggleAttribute("hidden", !linear)
   endController.domElement.parentElement?.toggleAttribute("hidden", !linear)
-  densityController.domElement.parentElement?.toggleAttribute("hidden", linear)
+  densityController.domElement.parentElement?.toggleAttribute("hidden", !exponential)
+  squaredDensityController.domElement.parentElement?.toggleAttribute("hidden", linear || exponential)
 }
 
 updateFogModeControls()

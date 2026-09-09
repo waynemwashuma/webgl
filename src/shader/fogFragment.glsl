@@ -34,6 +34,11 @@ void main() {
       distance_fog = clamp(1.0 - exp(-fog_density * linear_depth), 0.0, 1.0);
       break;
     }
+    case 2: {
+      float depth_density = fog_density * linear_depth;
+      distance_fog = clamp(1.0 - exp(-depth_density * depth_density), 0.0, 1.0);
+      break;
+    }
     default: {
       float distance_range = max(fog_end - fog_start, 1e-5);
       distance_fog = clamp((linear_depth - fog_start) / distance_range, 0.0, 1.0);

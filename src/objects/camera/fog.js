@@ -82,6 +82,43 @@ export class ExponentialMode {
   }
 }
 
+export class ExponentialSquaredMode {
+  /**
+   * Numeric shader enum for exponential squared fog.
+   * @type {number}
+   */
+  static Type = 2
+
+  /**
+   * Exponential squared fog density.
+   * @type {number}
+   */
+  density
+
+  /**
+   * @param {ExponentialSquaredModeOptions} [options]
+   */
+  constructor(options = {}) {
+    this.density = options.density ?? 0.04
+  }
+
+  /**
+   * @param {ExponentialSquaredMode} object
+   * @returns {this}
+   */
+  copy(object) {
+    this.density = object.density
+    return this
+  }
+
+  /**
+   * @returns {ExponentialSquaredMode}
+   */
+  clone() {
+    return new ExponentialSquaredMode().copy(this)
+  }
+}
+
 export class Fog {
   /**
    * @type {Color}
@@ -103,7 +140,7 @@ export class Fog {
 
   /**
    * Distance fog mode.
-   * @type {LinearMode | ExponentialMode}
+   * @type {LinearMode | ExponentialMode | ExponentialSquaredMode}
    */
   mode
 
@@ -149,9 +186,14 @@ export class Fog {
  */
 
 /**
+ * @typedef ExponentialSquaredModeOptions
+ * @property {number} [density]
+ */
+
+/**
  * @typedef FogOptions
  * @property {Color} [color]
  * @property {number} [height]
  * @property {number} [heightFalloff]
- * @property {LinearMode | ExponentialMode} [mode]
+ * @property {LinearMode | ExponentialMode | ExponentialSquaredMode} [mode]
  */
